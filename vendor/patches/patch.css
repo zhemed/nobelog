@@ -922,3 +922,37 @@ footer {
 .markdown-body {
   background-color: transparent !important;
 }
+
+/* ==========================================================================
+   品牌块：金字塔式两行标题（居中、同级标题）
+   ========================================================================== */
+#sidebar .profile-wrapper {
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#sidebar .site-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  line-height: 1.4;
+}
+
+#sidebar .site-title a {
+  color: var(--ink);
+}
+
+#sidebar .site-subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  color: var(--ink);
+}
+
+#sidebar .profile-wrapper::after {
+  margin-left: auto;
+  margin-right: auto;
+}
