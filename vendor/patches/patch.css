@@ -1043,3 +1043,13 @@ a {
     text-align: center;
   }
 }
+
+/* 面包屑这一行加深（首页「主页」与文章页面包屑都生效） */
+#topbar-wrapper #breadcrumb,
+#topbar-wrapper #breadcrumb a,
+#topbar-wrapper #breadcrumb span {
+  color: var(--ink-body);
+}
+#topbar-wrapper #breadcrumb a:hover {
+  color: var(--accent);
+}
