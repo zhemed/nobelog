@@ -14,6 +14,9 @@ mkdir -p "$stage/rust/client" "$stage/deploy"
 install -m 755 rust/target/release/nobelog "$stage/nobelog"
 cp -a content vendor "$stage/"
 install -m 644 rust/client/main.js "$stage/rust/client/main.js"
+# 预构建 public：动态模式的 CSS 裁剪会从 public HTML 收集类名，缺了它 CSS 不会被裁剪
+./rust/target/release/nobelog build --self-assets --out public >/dev/null
+cp -a public "$stage/public"
 install -m 755 deploy/install.sh "$stage/install.sh"
 install -m 644 deploy/README-DEPLOY.md "$stage/README-DEPLOY.md"
 cp deploy/nobelog.service deploy/nginx.conf.example "$stage/deploy/"

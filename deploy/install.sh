@@ -32,6 +32,8 @@ install -m 755 "$SRC/nobelog" "$PREFIX/nobelog"
 rm -rf "$PREFIX/content" "$PREFIX/vendor"
 cp -a "$SRC/content" "$PREFIX/content"
 cp -a "$SRC/vendor" "$PREFIX/vendor"
+rm -rf "$PREFIX/public"
+if [ -d "$SRC/public" ]; then cp -a "$SRC/public" "$PREFIX/public"; fi
 install -m 644 "$SRC/rust/client/main.js" "$PREFIX/rust/client/main.js"
 install -m 644 "$SRC/deploy/nginx.conf.example" "$PREFIX/deploy/nginx.conf.example"
 chown -R "$USER_NAME:$USER_NAME" "$PREFIX"
