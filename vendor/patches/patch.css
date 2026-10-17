@@ -1028,3 +1028,18 @@ a {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* 移动端顶栏标题真正居中（主题给 title 70% 宽 + 左/右对齐，会偏） */
+@media all and (max-width: 849px) {
+  #topbar {
+    position: relative;
+  }
+  #topbar-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: 60%;
+    text-align: center;
+  }
+}
