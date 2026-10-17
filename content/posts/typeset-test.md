@@ -121,7 +121,7 @@ Get-ChildItem -Recurse | Where-Object { $_.Length -gt 1MB }
 ### 三级标题：折叠上下文
 
 - 列表中的代码：`cargo test --locked`
-- 列表中的链接：[GitHub](https://github.com/zhemed/nobelog)
+- 列表中的链接：[GitHub](https://github.com/cotes2020/jekyll-theme-chirpy)
 
 ### 三级标题：结尾
 
