@@ -35,7 +35,6 @@ cp -a "$SRC/vendor" "$PREFIX/vendor"
 rm -rf "$PREFIX/public"
 if [ -d "$SRC/public" ]; then cp -a "$SRC/public" "$PREFIX/public"; fi
 install -m 644 "$SRC/rust/client/main.js" "$PREFIX/rust/client/main.js"
-install -m 644 "$SRC/deploy/nginx.conf.example" "$PREFIX/deploy/nginx.conf.example"
 chown -R "$USER_NAME:$USER_NAME" "$PREFIX"
 
 if [ "$NO_SYSTEMD" = 1 ]; then
@@ -80,8 +79,24 @@ log "本机服务正常：http://127.0.0.1:$PORT/"
 cat <<NEXT
 
 下一步（对外提供访问，可选）：
-  sudo cp $PREFIX/deploy/nginx.conf.example /etc/nginx/sites-enabled/nobelog.conf
-  sudo nano /etc/nginx/sites-enabled/nobelog.conf   # 改 server_name 与证书路径
+  sudo tee /etc/nginx/sites-enabled/nobelog.conf >/dev/null <<'CONF'
+  server {
+      listen 80;
+      server_name ${DOMAIN:-你的域名};
+      return 301 https://\$host\$request_uri;
+  }
+  server {
+      listen 443 ssl http2;
+      server_name ${DOMAIN:-你的域名};
+      location / {
+          proxy_pass http://127.0.0.1:$PORT;
+          proxy_http_version 1.1;
+          proxy_set_header Host \$host;
+          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto \$scheme;
+      }
+  }
+  CONF
   sudo nginx -t && sudo systemctl reload nginx
   sudo certbot --nginx -d ${DOMAIN:-你的域名}
 

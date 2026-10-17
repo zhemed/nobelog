@@ -19,7 +19,7 @@ install -m 644 rust/client/main.js "$stage/rust/client/main.js"
 cp -a public "$stage/public"
 install -m 755 deploy/install.sh "$stage/install.sh"
 install -m 644 deploy/README-DEPLOY.md "$stage/README-DEPLOY.md"
-cp deploy/nobelog.service deploy/nginx.conf.example "$stage/deploy/"
+cp deploy/nobelog.service "$stage/deploy/"
 cp README.md LICENSE "$stage/"
 printf '%s\n' "$VERSION" > "$stage/VERSION"
 

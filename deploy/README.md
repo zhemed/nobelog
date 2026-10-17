@@ -55,10 +55,30 @@ sudo chown -R nobelog:nobelog /opt/nobelog
 sudo cp deploy/nobelog.service /etc/systemd/system/nobelog.service
 sudo systemctl daemon-reload && sudo systemctl enable --now nobelog
 
-# 3) nginx + TLS（deploy/nginx.conf.example）
-sudo cp deploy/nginx.conf.example /etc/nginx/sites-enabled/nobelog.conf
+# 3) nginx + TLS（配置直接写在命令里，不再依赖示例文件）
+sudo tee /etc/nginx/sites-enabled/nobelog.conf >/dev/null <<'CONF'
+server {
+    listen 80;
+    server_name 你的域名;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name 你的域名;
+
+    # certbot 会自动补全证书路径
+    location / {
+        proxy_pass http://127.0.0.1:10086;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+CONF
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d blog.example.com
+sudo certbot --nginx -d 你的域名
 ```
 
 ## 日常发布
