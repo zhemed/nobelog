@@ -997,7 +997,9 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
     if classes.is_empty() && ids.is_empty() && tags.is_empty() {
         return (true, "no-token".to_string());
     }
-    if classes.iter().any(|name| usage.has_class(name))
+    if classes
+        .iter()
+        .any(|name| usage.has_class(name) || is_layout_class(name))
         || ids.iter().any(|name| usage.has_id(name))
         || tags.iter().any(|name| usage.has_tag(name))
     {
@@ -1009,6 +1011,17 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
     missing.extend(ids.into_iter().map(|name| format!("id:{name}")));
     missing.extend(tags.into_iter().map(|name| format!("tag:{name}")));
     (false, format!("unused({})", missing.join(",")))
+}
+
+/// 栅格/布局类永远保留：模板里有些类是运行时拼出来的（如 `{main_col}`），
+/// 使用情况收集可能漏掉；漏掉这些类会让整页栅格塌掉，代价远大于多几 KB CSS。
+fn is_layout_class(name: &str) -> bool {
+    name == "row"
+        || name == "container"
+        || name.starts_with("col-")
+        || name.starts_with("g-")
+        || name.starts_with("offset-")
+        || name.starts_with("order-")
 }
 
 fn find_block_end(src: &str, open: usize) -> usize {
@@ -1067,6 +1080,13 @@ mod tests {
     }
 
     #[test]
+    fn keeps_layout_classes_even_if_unused() {
+        let u = Usage::default();
+        for sel in [".col-xl-9", ".row", ".container", ".g-4", ".offset-2"] {
+            assert!(selector_kept(sel, &u).0, "{sel} 应保留");
+        }
+    }
+
     fn keeps_special_selectors() {
         let u = usage();
         assert!(selector_kept(":root", &u).0);
