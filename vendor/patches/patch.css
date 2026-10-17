@@ -1043,3 +1043,20 @@ a {
     text-align: center;
   }
 }
+
+/* 面包屑加深，提升可读性 */
+#breadcrumb,
+#breadcrumb a,
+#breadcrumb span {
+  color: var(--ink-body);
+}
+#breadcrumb a:hover {
+  color: var(--accent);
+}
+
+/* 面包屑：提高优先级，确保容器本身也变深 */
+#topbar-wrapper #breadcrumb,
+#topbar-wrapper #breadcrumb a,
+#topbar-wrapper #breadcrumb span {
+  color: var(--ink-body);
+}
