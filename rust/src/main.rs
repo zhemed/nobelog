@@ -101,6 +101,24 @@ fn main() -> Result<()> {
 }
 
 fn default_root() -> PathBuf {
+    // 打包后的二进制不能依赖编译机路径：优先环境变量、当前目录、可执行文件所在目录，
+    // 最后才退回开发机上的 CARGO_MANIFEST_DIR。
+    if let Ok(root) = std::env::var("NOBELOG_ROOT") {
+        let path = PathBuf::from(root);
+        if path.join("vendor/chirpy/main.css").exists() {
+            return path;
+        }
+    }
+    if Path::new("vendor/chirpy/main.css").exists() {
+        return PathBuf::from(".");
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            if dir.join("vendor/chirpy/main.css").exists() {
+                return dir.to_path_buf();
+            }
+        }
+    }
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap_or(Path::new("."))
