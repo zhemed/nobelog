@@ -981,3 +981,14 @@ footer {
   vertical-align: middle;
   accent-color: var(--accent);
 }
+
+/* 置顶图钉 */
+.pin {
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+}
+.pin i {
+  font-size: 0.9rem;
+}
