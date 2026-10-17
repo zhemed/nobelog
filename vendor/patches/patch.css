@@ -855,3 +855,28 @@ html[data-mode="dark"] {
   --brand-line: #3a4552;
   --brand-hover: #242a31;
 }
+
+/* ==========================================================================
+   和纸配色（参考 Chaos / Retypeset 的纸墨配色）
+   ========================================================================== */
+html:not([data-mode]), html[data-mode="light"] {
+  --main-bg: #fbfaf5;
+  --sidebar-bg: #f5f2eb;
+  --text-color: #2b2b2b;
+  --text-muted-color: #595857;
+  --heading-color: #16160e;
+  --link-color: #9e3d3f;
+  --brand-line: rgba(158, 61, 63, 0.55);
+  --brand-hover: #efe9dc;
+}
+
+html[data-mode="dark"] {
+  --main-bg: #1b1b19;
+  --sidebar-bg: #151514;
+  --text-color: #cfcfce;
+  --text-muted-color: #989896;
+  --heading-color: #dcdddd;
+  --link-color: #d69090;
+  --brand-line: rgba(214, 144, 144, 0.45);
+  --brand-hover: #26231f;
+}
