@@ -215,7 +215,7 @@ fn sidebar(path: &str) -> String {
         String::new()
     } else {
         format!(
-            r##"    <p class="site-subtitle fst-italic">
+            r##"    <p class="site-subtitle">
       {}
     </p>"##,
             escape_html(SITE.subtitle)
