@@ -929,13 +929,13 @@ footer {
    品牌块：金字塔式两行标题（居中、同级标题）
    ========================================================================== */
 #sidebar .profile-wrapper {
-  text-align: left;
-  padding-left: 2.5rem;
-  padding-right: 1.25rem;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 #sidebar .site-title {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   line-height: 1.4;
@@ -947,7 +947,7 @@ footer {
 
 #sidebar .site-subtitle {
   margin: 0.25rem 0 0;
-  font-size: 1.55rem;
+  font-size: 1.7rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-indent: 0.06em;
@@ -955,7 +955,8 @@ footer {
 }
 
 #sidebar .profile-wrapper::after {
-  margin-left: 0;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* github-markdown 改写了 blockquote 的 padding，这里把提示块的内缩还回来 */
