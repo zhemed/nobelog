@@ -170,6 +170,14 @@ pub async fn run(root: &Path, host: &str, port: u16, dynamic: bool) -> Result<()
         .local_addr()
         .map(|addr| addr.to_string())
         .unwrap_or_else(|_| format!("{host}:{port}"));
+
+    // HTTP 响应常由多个小写入组成；关闭 Nagle，避免与延迟 ACK 叠加出 ~40ms 等待。
+    use axum::serve::ListenerExt;
+    let listener = listener.tap_io(|stream| {
+        if let Err(err) = stream.set_nodelay(true) {
+            eprintln!("设置 TCP_NODELAY 失败：{err}");
+        }
+    });
     if dynamic {
         println!("nobelog serve  http://{bound}  [dynamic]");
     } else {
