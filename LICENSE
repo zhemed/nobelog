@@ -24,12 +24,9 @@ SOFTWARE.
 第三方组件声明（本仓库内的 vendored 资源，各自遵循其自身许可）
 ================================================================================
 
-1. vendor/chirpy/main.css —— 基于 Jekyll Chirpy 的样式产物（经 Halo 移植）
+1. vendor/chirpy/main.css —— 官方 Jekyll Chirpy v6.1.0 样式编译产物
    - 原创设计：Chirpy v6.1.0 (https://github.com/cotes2020/jekyll-theme-chirpy)
      © 2019 Cotes Chung — MIT Licensed
-   - 中间移植：halo-theme-chirpy (https://github.com/AirboZH/halo-theme-chirpy)
-     © 2023 AirboZH — MIT Licensed（其 package.json 标注 GPL-3.0 属冲突元数据；
-     本项目以该仓库根 LICENSE 为准采用 MIT）
    - 内嵌 Bootstrap v5.3.2 (https://getbootstrap.com) © 2011-2023 The Bootstrap Authors — MIT
    - 内嵌 Font Awesome Free 6.4.2 (https://fontawesome.com)
      Icons: CC BY 4.0 · Fonts: SIL OFL 1.1 · Code: MIT

@@ -1,11 +1,15 @@
 /* ==========================================================================
-   patch.css —— 本站对 Chirpy 主题样式的最小补丁
+   patch.css —— 本站对官方 Chirpy v6.1.0 样式的最小补丁
    ==========================================================================
-   主题样式本体是 vendored 文件（vendor/chirpy/main.css，来自 halo-theme-chirpy）。
+   主题样式本体是 vendored 文件（vendor/chirpy/main.css）：
+     Bootstrap 5.3.2 + Font Awesome 6.4.2 + Jekyll Chirpy v6.1.0（© 2019 Cotes Chung, MIT），
+   其中 Bootstrap/FA 为官方发布产物，Chirpy 由官方 _sass 编译
+   （$font-family-heading 已改回 Lato，侧栏标题通过 #sidebar .site-title 继承 Source Sans Pro）。
    这里只放三类东西：
      1. 主题 CSS 无法覆盖的、我们渲染内核特有的元素；
      2. 构建产物与运行时的极少量修正；
-     3. 用户明确要求的外来样式接入（见下方 GitHub markdown 一节）。
+     3. 用户明确要求的外来样式接入（见下方 GitHub markdown 一节），
+        以及官方产物与旧版（Halo 移植版）的兼容层（见文件末尾 compat 一节）。
    任何新增规则都必须在注释里写清楚"为什么主题样式覆盖不到"。
    ========================================================================== */
 
@@ -181,3 +185,617 @@ html[data-mode="dark"] .markdown-body .copy-button.is-copied {
 
 /* 社交图标占位：href 为空时禁用点击 */
 #sidebar .sidebar-bottom a.social-disabled{cursor:default;opacity:.55}
+/* ==========================================================================
+   compat.css —— 官方 Chirpy v6.1.0 产物 ↔ 本站旧版样式的兼容层
+   --------------------------------------------------------------------------
+   旧版 CSS（Halo 移植版）与官方 v6.1.0 的差异只有三类，全部在这里兜底：
+     ① 调色板：官方 v6.1.0 换了一套 CSS 变量取值；
+     ② 版式：官方新版把文章/侧栏规则挂在 `.post`、`.access>div` 等作用域上，
+        而本站渲染内核输出的标记是旧版的 `.content`、`.access>section`；
+     ③ 少数组件（目录、页脚、回到顶部、代码高亮）官方产物的写法与旧版不同。
+   除此之外不做任何覆盖：主题规则全部来自官方 Bootstrap 5.3.2 + Chirpy 6.1.0。
+   ========================================================================== */
+
+/* ① 调色板：恢复旧版变量取值 ------------------------------------------------ */
+
+html:not([data-mode]),
+html[data-mode="light"] {
+  --text-muted-color: #757575;
+  --heading-color: #2a2a2a;
+  --label-color: #585858;
+  --link-color: #0056b2;
+  --btn-share-hover-color: #0056b2;
+  --blockquote-text-color: #757575;
+  --toc-highlight: #0550ae;
+  --highlight-bg-color: #f6f8fa;
+  --highlight-lineno-color: #9e9e9e;
+  --code-color: #3a3a3a;
+  --code-header-text-color: #a3a3a3;
+  --code-header-icon-color: #c9c8c8;
+  --code-header-muted-color: #e5e5e5;
+  --language-border-color: #ececec;
+  --sidebar-muted-color: #545454;
+  --search-wrapper-border-color: rgb(240, 240, 240);
+  --btn-paginator-border-color: #e9ecef;
+  --btn-text-color: #555555;
+  --relate-post-date: #757575;
+  --site-title-color: rgb(113, 113, 113);
+  --site-subtitle-color: #717171;
+  --sidebar-border-color: #efefef;
+}
+
+html[data-mode="dark"] {
+  --text-muted-color: #868686;
+  --heading-color: #cccccc;
+  --label-color: #a7a7a7;
+  --link-color: rgb(138, 180, 248);
+  --btn-share-hover-color: #bfc1ca;
+  --blockquote-text-color: #868686;
+  --toc-highlight: rgb(116, 178, 243);
+  --highlight-bg-color: #151515;
+  --highlight-lineno-color: #808080;
+  --highlighter-rouge-color: #c9def1;
+  --inline-code-bg: #323238;
+  --code-color: #b0b0b0;
+  --code-header-muted-color: #353535;
+  --language-border-color: #2d2d2d;
+  --sidebar-bg: #1e1e1e;
+  --sidebar-muted-color: #868686;
+  --sidebar-hover-bg: #262626;
+  --sidebar-btn-bg: #232328;
+  --btn-border-color: #2e2f31;
+  --btn-backtotop-border-color: #212122;
+  --btn-paginator-hover-color: #2e2e2e;
+  --btn-paginator-border-color: #2e2f31;
+  --btn-text-color: rgb(175, 176, 177);
+  --button-bg: #1e1e1e;
+  --card-header-bg: #292929;
+  --tb-odd-bg: #252526;
+  --tb-border-color: #252526;
+  --search-wrapper-border-color: rgb(55, 55, 55);
+  --search-tag-bg: #292828;
+  --filepath-text-color: #cacaca;
+  --relate-post-date: #868686;
+  --site-title-color: #717070;
+  --site-subtitle-color: #868686;
+  --sidebar-border-color: #292929;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode]) {
+    --text-muted-color: #868686;
+    --heading-color: #cccccc;
+    --label-color: #a7a7a7;
+    --link-color: rgb(138, 180, 248);
+    --btn-share-hover-color: #bfc1ca;
+    --blockquote-text-color: #868686;
+    --toc-highlight: rgb(116, 178, 243);
+    --highlight-bg-color: #151515;
+    --highlight-lineno-color: #808080;
+    --highlighter-rouge-color: #c9def1;
+    --inline-code-bg: #323238;
+    --code-color: #b0b0b0;
+    --code-header-muted-color: #353535;
+    --language-border-color: #2d2d2d;
+    --sidebar-bg: #1e1e1e;
+    --sidebar-muted-color: #868686;
+    --sidebar-hover-bg: #262626;
+    --sidebar-btn-bg: #232328;
+    --btn-border-color: #2e2f31;
+    --btn-backtotop-border-color: #212122;
+    --btn-paginator-hover-color: #2e2e2e;
+    --btn-paginator-border-color: #2e2f31;
+    --btn-text-color: rgb(175, 176, 177);
+    --button-bg: #1e1e1e;
+    --card-header-bg: #292929;
+    --tb-odd-bg: #252526;
+    --tb-border-color: #252526;
+    --search-wrapper-border-color: rgb(55, 55, 55);
+    --search-tag-bg: #292828;
+    --filepath-text-color: #cacaca;
+    --relate-post-date: #868686;
+    --site-title-color: #717070;
+    --site-subtitle-color: #868686;
+    --sidebar-border-color: #292929;
+  }
+}
+
+/* ② 版式：官方新版作用域（.post / .access>div）与本站标记不一致 ---------------- */
+
+/* 旧版强制显示纵向滚动条（官方 v6.1.0 去掉了这条） */
+@media all and (min-width: 850px) {
+  html {
+    overflow-y: scroll;
+  }
+}
+
+/* 正文行高 + 主栏最小高度：旧版 main 上 1.75 / calc(100vh - 8rem) */
+main {
+  line-height: 1.75;
+  min-height: calc(100vh - 8rem);
+}
+
+@media all and (max-width: 849px) {
+  main {
+    min-height: calc(100vh - 9rem);
+  }
+}
+
+/* 普通内容区（/archives/、/tags/、404）：官方新版没有 .content 的排版规则 */
+.content:not(.markdown-body) {
+  font-size: 1.08rem;
+  margin-top: 2rem;
+  overflow-wrap: break-word;
+}
+
+@media all and (min-width: 1200px) {
+  .content:not(.markdown-body) {
+    font-size: 1.03rem;
+  }
+}
+
+@media all and (max-width: 849px) {
+  h1.dynamic-title ~ .content {
+    margin-top: 2.5rem;
+  }
+}
+
+/* 文章主标题上下间距（官方规则在 `.post h1` 下） */
+main h1 {
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+@media all and (min-width: 850px) {
+  main h1 {
+    margin-top: 3rem;
+  }
+}
+
+/* 主内容栅格：旧版把 bootstrap 的负外边距归零 */
+#topbar-wrapper.row,
+#main-wrapper > .container > .row,
+#search-result-wrapper > .row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* 侧栏访问面板：官方新版是 `.access>div` + `.access-wrapper`，本站是 `.access>section` */
+.access > section {
+  padding-left: 1rem;
+  border-left: 1px solid var(--main-border-color);
+}
+
+.access > section:not(:last-child) {
+  margin-bottom: 4rem;
+}
+
+.access-sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 4rem;
+}
+
+/* 侧栏：旧版侧栏带 1px 右边框、标题用正文字体、链接用侧栏配色
+   （官方 v6.1.0 去掉了边框并把颜色写死成 rgba(117,117,117,.9)） */
+#main-wrapper {
+  background-color: transparent;
+}
+
+#sidebar {
+  border-right: 1px solid var(--sidebar-border-color);
+}
+
+#sidebar a {
+  color: var(--sidebar-muted-color);
+}
+
+#sidebar .site-title {
+  font-family: inherit;
+  color: var(--heading-color);
+}
+
+#sidebar .site-title a {
+  color: var(--site-title-color);
+}
+
+/* 侧栏内容面板字号：官方新版 .access .post-content 是 0.9rem，旧版继承 1rem */
+.access .post-content {
+  font-size: inherit;
+}
+
+/* 侧栏面板标题：旧版继承上下文字体与行高 */
+#panel-wrapper .panel-heading {
+  font-family: inherit;
+  line-height: inherit;
+  font-weight: 600;
+}
+
+/* ③ 组件细节 --------------------------------------------------------------- */
+
+/* 目录（tocbot）：官方产物缺少 tocbot 的基础规则与旧版间距 */
+.toc-list {
+  margin: 0;
+}
+
+#toc-wrapper ul {
+  margin-bottom: 0;
+}
+
+.toc-link::before {
+  background-color: #eee;
+  content: " ";
+  display: inline-block;
+  height: inherit;
+  left: 0;
+  margin-top: -1px;
+  position: absolute;
+  width: 2px;
+}
+
+.is-active-link::before {
+  background-color: #54bc4b;
+}
+
+#toc-wrapper ul .is-active-link::before {
+  display: inline-block;
+  width: 1px;
+  left: -1px;
+  height: 1.25rem;
+  background-color: var(--toc-highlight) !important;
+}
+
+/* 文章底部标签：官方新版去掉了边框与圆角 */
+.post-tag {
+  border: 1px solid var(--btn-border-color);
+  border-radius: 0.5rem;
+  color: var(--text-muted-color);
+}
+
+.post-tags .post-tag {
+  background: none;
+}
+
+/* 授权链接 / 页脚链接：旧版加粗并继承文字色 */
+.post-tail-wrapper .license-wrapper > a,
+footer a {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* 侧栏底部：旧版右侧内边距 1rem、按钮有一圈 1px 描边、分隔点用 --sidebar-btn-color */
+#sidebar .sidebar-bottom {
+  padding-right: 1rem;
+}
+
+#sidebar .sidebar-bottom .mode-toggle,
+#sidebar .sidebar-bottom a {
+  box-shadow: var(--sidebar-border-color) 0 0 0 1px;
+}
+
+#sidebar .sidebar-bottom .icon-border {
+  background-color: var(--sidebar-btn-color);
+}
+
+/* 分享图标：FA 6.4.2 里 x-twitter 换了类名，旧版配色规则要补上 */
+.post-tail-wrapper .share-wrapper .share-icons .fa-square-x-twitter {
+  color: var(--btn-share-color, black);
+}
+
+/* 分享图标间距 */
+.post-tail-wrapper .share-wrapper .share-icons > * {
+  margin-left: 0.25rem;
+}
+
+/* 页脚：旧版固定 5rem 高、无外边距、12.8px 字号，官方新版加了 260px 左边距和分隔符 */
+footer {
+  height: 5rem;
+  margin: 0;
+  font-size: 0.8rem;
+  border-top: 1px solid var(--main-border-color);
+}
+
+footer p {
+  line-height: 1.75;
+  text-align: center;
+  margin-bottom: 0;
+  width: auto;
+}
+
+footer p:last-child::before {
+  content: none;
+}
+
+@media all and (max-width: 849px) {
+  footer {
+    height: 6rem;
+    padding: 1.5rem 0;
+  }
+}
+
+/* 回到顶部按钮：官方新版 3rem，旧版 2.75rem，位置也不同 */
+#back-to-top {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+#back-to-top i {
+  line-height: 2.75rem;
+  position: relative;
+  bottom: 2px;
+}
+
+#back-to-top:hover {
+  transform: translate3d(0, -5px, 0);
+}
+
+@media all and (min-width: 850px) {
+  #back-to-top {
+    right: 5%;
+    bottom: 3.625rem;
+  }
+}
+
+@media all and (min-width: 1400px) {
+  #back-to-top {
+    right: calc((100vw - 1400px) / 2 + 3rem);
+  }
+}
+
+/* 首页文章卡片：官方新版首页卡片规则与旧版不同 */
+#post-list .card .card-body .card-title {
+  color: var(--heading-color) !important;
+}
+
+#post-list .card .card-body .post-meta,
+#post-list .card .card-body .card-text.content {
+  color: var(--text-muted-color) !important;
+}
+
+#post-list .card .card-body .card-text.content p,
+#post-list .card .card-body .card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+#post-list .card .card-body .card-text.content p {
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 面包屑：官方新版写死 gray，旧版跟随 --text-muted-color */
+#topbar #breadcrumb {
+  color: var(--text-muted-color);
+}
+
+/* 代码块内边距：官方新版上下都有留白，旧版只有下边距 */
+.highlight {
+  padding: 0 0 0.75rem;
+}
+
+/* 正文链接下划线：官方新版规则挂在 .post-content 下，本站正文是 .content */
+.content a:not(.img-link) {
+  border-bottom: 1px solid var(--link-underline-color);
+}
+
+/* 按钮阴影：官方新版改用 --btn-box-shadow，旧版用 --card-shadow */
+.btn-box-shadow {
+  box-shadow: var(--card-shadow) !important;
+}
+
+/* 表格：旧版 2px 分隔线在 tbody 首行，官方新版挪到了 thead（会让 th 高 0.5px） */
+.table-wrapper > table thead {
+  border-bottom-width: 0;
+  border-color: inherit;
+}
+
+.table-wrapper > table tbody tr:first-child {
+  border-bottom: solid 2px rgba(210, 215, 217, 0.75);
+}
+
+/* 表格：旧版内容区表格最小宽度 70%（官方规则挂在 .post-content 下，本站是 .content） */
+div.content .table-wrapper > table {
+  min-width: 70%;
+}
+
+.table-wrapper > table thead th {
+  font-size: inherit;
+  padding: 6px 13px;
+  white-space: normal;
+}
+
+/* 代码高亮：本站渲染器输出 highlight.js 的 .hljs-* 类名，官方 Chirpy 用 Rouge，
+   旧版 CSS 自带 GitHub 高亮配色；这一节按旧版取值恢复（light/dark 两套）。 */
+.hljs {
+  color: #24292e;
+  background: #fff;
+}
+
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  color: #d73a49;
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  color: #6f42c1;
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  color: #005cc5;
+}
+
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  color: #032f62;
+}
+
+.hljs-built_in,
+.hljs-symbol {
+  color: #e36209;
+}
+
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  color: #6a737d;
+}
+
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  color: #22863a;
+}
+
+.hljs-subst {
+  color: #24292e;
+}
+
+.hljs-section {
+  color: #005cc5;
+  font-weight: 700;
+}
+
+.hljs-bullet {
+  color: #735c0f;
+}
+
+.hljs-emphasis {
+  color: #24292e;
+  font-style: italic;
+}
+
+.hljs-strong {
+  color: #24292e;
+  font-weight: 700;
+}
+
+.hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+.hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+
+html[data-mode="dark"] .hljs {
+  color: #c9d1d9;
+  background: #0d1117;
+}
+
+html[data-mode="dark"] .hljs-doctag,
+html[data-mode="dark"] .hljs-keyword,
+html[data-mode="dark"] .hljs-meta .hljs-keyword,
+html[data-mode="dark"] .hljs-template-tag,
+html[data-mode="dark"] .hljs-template-variable,
+html[data-mode="dark"] .hljs-type,
+html[data-mode="dark"] .hljs-variable.language_ {
+  color: #ff7b72;
+}
+
+html[data-mode="dark"] .hljs-title,
+html[data-mode="dark"] .hljs-title.class_,
+html[data-mode="dark"] .hljs-title.class_.inherited__,
+html[data-mode="dark"] .hljs-title.function_ {
+  color: #d2a8ff;
+}
+
+html[data-mode="dark"] .hljs-attr,
+html[data-mode="dark"] .hljs-attribute,
+html[data-mode="dark"] .hljs-literal,
+html[data-mode="dark"] .hljs-meta,
+html[data-mode="dark"] .hljs-number,
+html[data-mode="dark"] .hljs-operator,
+html[data-mode="dark"] .hljs-variable,
+html[data-mode="dark"] .hljs-selector-attr,
+html[data-mode="dark"] .hljs-selector-class,
+html[data-mode="dark"] .hljs-selector-id {
+  color: #79c0ff;
+}
+
+html[data-mode="dark"] .hljs-regexp,
+html[data-mode="dark"] .hljs-string,
+html[data-mode="dark"] .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+
+html[data-mode="dark"] .hljs-built_in,
+html[data-mode="dark"] .hljs-symbol {
+  color: #ffa657;
+}
+
+html[data-mode="dark"] .hljs-comment,
+html[data-mode="dark"] .hljs-code,
+html[data-mode="dark"] .hljs-formula {
+  color: #8b949e;
+}
+
+html[data-mode="dark"] .hljs-name,
+html[data-mode="dark"] .hljs-quote,
+html[data-mode="dark"] .hljs-selector-tag,
+html[data-mode="dark"] .hljs-selector-pseudo {
+  color: #7ee787;
+}
+
+html[data-mode="dark"] .hljs-subst {
+  color: #c9d1d9;
+}
+
+html[data-mode="dark"] .hljs-section {
+  color: #1f6feb;
+  font-weight: 700;
+}
+
+html[data-mode="dark"] .hljs-bullet {
+  color: #f2cc60;
+}
+
+html[data-mode="dark"] .hljs-emphasis {
+  color: #c9d1d9;
+  font-style: italic;
+}
+
+html[data-mode="dark"] .hljs-strong {
+  color: #c9d1d9;
+  font-weight: 700;
+}
+
+html[data-mode="dark"] .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+html[data-mode="dark"] .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode]) .hljs {
+    color: #c9d1d9;
+    background: #0d1117;
+  }
+}

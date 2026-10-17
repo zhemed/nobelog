@@ -60,4 +60,4 @@ node scripts/fetch-fonts.mjs --force    # 强制重抓
 ## 回滚
 
 删除 `vendor/fonts/` 与 `STYLE_ORDER` 里的 `vendor/fonts/fonts.css` 一行，重新构建 ——
-即回到"依赖访客本机字体"的原状（与 airbozh.cn 当前行为一致）。
+即回到“依赖访客本机字体”的原状。
