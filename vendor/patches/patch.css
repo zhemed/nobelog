@@ -1020,3 +1020,11 @@ footer {
 a {
   -webkit-user-drag: none;
 }
+
+/* 标题与副标题保持不可选中（其余文字可选中） */
+#sidebar .site-title,
+#sidebar .site-title a,
+#sidebar .site-subtitle {
+  -webkit-user-select: none;
+  user-select: none;
+}
