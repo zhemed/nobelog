@@ -42,12 +42,12 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 | `content/images/` | 站内图片 |
 | `rust/` | 生成器与服务（content → render → artifacts） |
 | `vendor/` | 主题样式与字体 |
-| `deploy/` | 部署脚本、systemd 单元、nginx 示例 |
 | `public/` | 构建产物（不提交） |
 
-## 部署
+## 数据
 
-见 [deploy/README.md](deploy/README.md)。VPS 上只需要二进制、`content/`、`vendor/` 与客户端脚本。
+`content/` 就是博客的全部数据：文章、单页、图片。纯 Markdown + frontmatter，
+换任何部署方式都不需要迁移数据库。
 
 ## 许可
 
