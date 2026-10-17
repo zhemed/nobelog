@@ -319,7 +319,7 @@ fn footer() -> String {
     let title = escape_html(SITE.title);
     let note = escape_html(SITE.license_note);
     let reserved = escape_html("保留部分权利。");
-    let powered = escape_html("由 Node 内核驱动 · 无数据库、无后台");
+    let powered = escape_html("由 Rust 内核驱动 · 无数据库、无后台");
     format!(
         r##"        <footer aria-label="Site Info" class="d-flex flex-column justify-content-center text-muted flex-lg-row justify-content-lg-between align-items-lg-center pb-lg-3">
           <p>

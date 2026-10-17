@@ -799,3 +799,50 @@ html[data-mode="dark"] .hljs-deletion {
     background: #0d1117;
   }
 }
+
+/* ==========================================================================
+   品牌块：站点标题与副标题的排版打磨（本站自用）
+   ========================================================================== */
+#sidebar .profile-wrapper {
+  padding-top: 2.75rem;
+  padding-bottom: 1.75rem;
+}
+
+#sidebar .site-title {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1.3;
+  margin: 0;
+}
+
+#sidebar .site-title a {
+  color: #2a2a2a;
+}
+
+#sidebar .site-subtitle {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em; /* 抵消末字后的字距，视觉上居中 */
+  color: #8a939c;
+}
+
+#sidebar .profile-wrapper::after {
+  content: "";
+  display: block;
+  width: 2.25rem;
+  height: 1px;
+  margin-top: 1.1rem;
+  background: linear-gradient(90deg, #b9c7d6, rgba(185, 199, 214, 0));
+}
+
+#sidebar .nav-link {
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+}
+
+#sidebar .nav-link:hover {
+  background: #eef2f6;
+}
