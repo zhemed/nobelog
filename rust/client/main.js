@@ -86,7 +86,7 @@ function codeTextOf(button) {
 /**
  * 复制到剪贴板。
  * 注意：navigator.clipboard 只在**安全上下文**（https / localhost）存在；
- * 通过 http://<局域网IP>:4180 访问时它是 undefined —— 必须降级到 execCommand，
+ * 通过 http://<局域网IP>:10086 访问时它是 undefined —— 必须降级到 execCommand，
  * 否则就是“点了没反应、什么也复制不了”。
  */
 async function copyText(text) {
