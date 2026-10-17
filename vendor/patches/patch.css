@@ -881,6 +881,7 @@ html:not([data-mode]), html[data-mode="light"] {
   --text-muted-color: var(--ink-muted);
   --heading-color: var(--ink);
   --link-color: var(--accent);
+  --toc-highlight: var(--accent);
   --brand-line: rgba(158, 61, 63, 0.55);
   --brand-hover: #eef1f5;
   --sidebar-hover-bg: #eef1f5;
@@ -908,6 +909,7 @@ html[data-mode="dark"] {
   --text-muted-color: var(--ink-muted);
   --heading-color: var(--ink);
   --link-color: var(--accent);
+  --toc-highlight: var(--accent);
   --brand-line: rgba(214, 144, 144, 0.45);
   --brand-hover: #1d232a;
   --sidebar-hover-bg: #1d232a;
@@ -933,9 +935,9 @@ footer {
 }
 
 #sidebar .site-title {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   line-height: 1.4;
 }
 
@@ -944,15 +946,38 @@ footer {
 }
 
 #sidebar .site-subtitle {
-  margin: 0.35rem 0 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-indent: 0.22em;
+  margin: 0.3rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
   color: var(--ink);
 }
 
 #sidebar .profile-wrapper::after {
   margin-left: auto;
   margin-right: auto;
+}
+
+/* github-markdown 改写了 blockquote 的 padding，这里把提示块的内缩还回来 */
+.markdown-body blockquote[class^="prompt-"] {
+  padding: 1rem 1rem 1rem 3rem;
+  border-left: 0;
+  border-radius: 0.5rem;
+}
+
+/* 目录：非激活项用次要文字色，激活项用强调色 */
+#toc-wrapper .toc-link {
+  color: var(--text-muted-color);
+}
+#toc-wrapper .toc-link.is-active-link {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 任务列表复选框 */
+.markdown-body input[type="checkbox"] {
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  accent-color: var(--accent);
 }

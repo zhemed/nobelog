@@ -288,6 +288,7 @@ impl<'a> Renderer<'a> {
     fn run(mut self, source: &str) -> String {
         let mut opts = Options::empty();
         opts.insert(Options::ENABLE_TABLES);
+        opts.insert(Options::ENABLE_TASKLISTS);
         let events: Vec<Event<'_>> = Parser::new_ext(source, opts).collect();
         for event in events {
             if let (Some((_, buffer)), Event::Text(text)) = (self.code.as_mut(), &event) {
@@ -324,6 +325,15 @@ impl<'a> Renderer<'a> {
                         if let Some(h) = self.heading.as_mut() {
                             h.text.push(' ');
                         }
+                    }
+                }
+                Event::TaskListMarker(checked) => {
+                    if self.images.is_empty() {
+                        self.push(if checked {
+                            "<input type=\"checkbox\" checked disabled> "
+                        } else {
+                            "<input type=\"checkbox\" disabled> "
+                        });
                     }
                 }
                 Event::Rule => {
