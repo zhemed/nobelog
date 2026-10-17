@@ -992,3 +992,19 @@ footer {
 .pin i {
   font-size: 0.9rem;
 }
+
+/* 副标题字符之间的小点 */
+#sidebar .site-subtitle {
+  letter-spacing: 0.02em;
+  text-indent: 0;
+}
+.brand-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.45;
+  vertical-align: middle;
+  margin: 0 0.45em;
+}

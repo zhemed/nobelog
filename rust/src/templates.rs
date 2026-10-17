@@ -199,6 +199,18 @@ fn social_list() -> String {
         .join("\n")
 }
 
+fn brand_subtitle(text: &str) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    if chars.len() < 2 {
+        return escape_html(text);
+    }
+    chars
+        .iter()
+        .map(|c| escape_html(&c.to_string()))
+        .collect::<Vec<_>>()
+        .join(r#"<span class="brand-dot" aria-hidden="true"></span>"#)
+}
+
 fn sidebar(path: &str) -> String {
     let avatar_block = if SITE.avatar.is_empty() {
         String::new()
@@ -218,7 +230,7 @@ fn sidebar(path: &str) -> String {
             r##"    <p class="site-subtitle">
       {}
     </p>"##,
-            escape_html(SITE.subtitle)
+            brand_subtitle(SITE.subtitle)
         )
     };
     let nav = nav_list(path);
