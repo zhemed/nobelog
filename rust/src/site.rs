@@ -88,6 +88,11 @@ pub static SITE: SiteConfig = SiteConfig {
             href: "/archives/",
             icon: "fa-fw fas fa-inbox",
         },
+        NavItem {
+            name: "关于",
+            href: "/about/",
+            icon: "fa-fw fa-solid fa-circle-info",
+        },
     ],
     posts_per_page: 8,
     license_name: "CC BY 4.0",
