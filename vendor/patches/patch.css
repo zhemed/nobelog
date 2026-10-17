@@ -1008,3 +1008,15 @@ footer {
   vertical-align: middle;
   margin: 0 0.45em;
 }
+
+/* 允许选择/复制文字：侧栏文字恢复可选中，链接不再被鼠标拖走 */
+#sidebar a,
+#sidebar .site-subtitle,
+#sidebar .site-title {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+a {
+  -webkit-user-drag: none;
+}
