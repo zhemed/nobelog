@@ -1,4 +1,17 @@
-# VPS 部署（动态模式，本地写 + 一键发布）
+# VPS 部署
+
+## 方式 A：免编译部署包（推荐给任何机器）
+
+```bash
+./deploy/package.sh                       # 产出 dist/nobelog-<版本>-linux-x86_64.tar.gz
+scp dist/nobelog-*.tar.gz root@vps:/tmp/
+# VPS 上：
+tar xzf nobelog-*.tar.gz && cd nobelog-*/ && sudo DOMAIN=blog.example.com ./install.sh
+```
+
+包内含二进制、content、vendor、systemd/nginx 模板与 `install.sh`；目标机只需 systemd + glibc ≥ 2.35。
+
+## 方式 B：本地写 + 一键发布（动态模式）
 
 ## 架构
 
