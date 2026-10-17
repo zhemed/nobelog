@@ -1,0 +1,42 @@
+MIT License
+
+Copyright (c) 2026 nobelog contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+第三方组件声明（本仓库内的 vendored 资源，各自遵循其自身许可）
+================================================================================
+
+1. vendor/chirpy/main.css —— halo-theme-chirpy 的编译产物
+   - 上游血统：Chirpy v6.1.0 (https://github.com/cotes2020/jekyll-theme-chirpy)
+     © 2019 Cotes Chung — MIT Licensed
+   - 内嵌 Bootstrap v5.3.2 (https://getbootstrap.com) © 2011-2023 The Bootstrap Authors — MIT
+   - 内嵌 Font Awesome Free 6.4.2 (https://fontawesome.com)
+     Icons: CC BY 4.0 · Fonts: SIL OFL 1.1 · Code: MIT
+   - 移植自 halo-theme-chirpy (https://github.com/AirboZH/halo-theme-chirpy)
+     © 2023 AirboZH —— 该仓库根 LICENSE 为 MIT（其 package.json 标注 GPL-3.0，属冲突元数据；
+     本项目于 2026-10-17 裁定依据 LICENSE 文件采用 MIT，详见 docs/decisions.md §11.5）
+
+2. vendor/fonts —— Lato / Source Sans Pro 的 woff2 子集
+   - Lato: Copyright (c) 2010-2014 by tyPoland Lukasz Dziedzic — SIL OFL 1.1（见 vendor/fonts/OFL-Lato.txt）
+   - Source Sans 3 (原名 Source Sans Pro): Copyright 2010-2020 Adobe — SIL OFL 1.1
+     （见 vendor/fonts/OFL-Source-Sans.txt）
+
+以上组件的许可文本随各自目录保留，未被本 LICENSE 覆盖或替代。

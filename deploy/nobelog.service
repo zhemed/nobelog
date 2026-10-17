@@ -1,0 +1,22 @@
+# /etc/systemd/system/nobelog.service
+[Unit]
+Description=nobelog static blog (Rust)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nobelog
+Group=nobelog
+WorkingDirectory=/opt/nobelog
+ExecStart=/opt/nobelog/nobelog serve --host 127.0.0.1 --port 10086 --root /opt/nobelog $NOBELOG_FLAGS
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/nobelog
+
+[Install]
+WantedBy=multi-user.target

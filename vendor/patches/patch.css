@@ -1,0 +1,183 @@
+/* ==========================================================================
+   patch.css —— 本站对 Chirpy 主题样式的最小补丁
+   ==========================================================================
+   主题样式本体是 vendored 文件（vendor/chirpy/main.css，来自 halo-theme-chirpy）。
+   这里只放三类东西：
+     1. 主题 CSS 无法覆盖的、我们渲染内核特有的元素；
+     2. 构建产物与运行时的极少量修正；
+     3. 用户明确要求的外来样式接入（见下方 GitHub markdown 一节）。
+   任何新增规则都必须在注释里写清楚"为什么主题样式覆盖不到"。
+   ========================================================================== */
+
+/* 我们没有 vendored 主题的 main.js，侧栏/顶栏的少量状态类由自有 JS 控制，
+   这里只做兜底：确保 JS 未加载时布局不塌。 */
+[hidden] {
+  display: none !important;
+}
+
+/* ==========================================================================
+   GitHub markdown 正文（用户 2026-10-17 指定："直接把 GitHub 的拿过来"）
+   --------------------------------------------------------------------------
+   样式本体：vendor/github-markdown/github-markdown.css（github-markdown-css v5.9.0，
+   MIT，复刻 GitHub 的 .markdown-body 渲染）。
+   它只作用于带 .markdown-body 类的正文容器（文章页 .content、单页 .post-content），
+   侧栏/卡片/导航仍是 Chirpy —— 两套样式只在正文区交汇。
+
+   本文件只补三件包内没有的东西：
+     ① 正文字体：保留我们自托管的 Source Sans Pro（用户先前决定），不换成 GitHub 的系统栈；
+     ② 复制按钮：Markdown 的渲染样式不含 GitHub 应用的剪贴板按钮，按 GitHub 实测值补；
+     ③ 暗色变量：包的暗色只在 prefers-color-scheme 下生效，显式切到暗色（data-mode=dark）时需覆盖。
+   ========================================================================== */
+
+/* ① 字体：拉丁走自托管的 Source Sans Pro，中文回退系统字体（GitHub 的字体栈作后备） */
+.markdown-body {
+  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    "Microsoft Yahei", Helvetica, Arial, sans-serif;
+}
+
+/* ② 代码块：GitHub 的结构是 .highlight（flex 行）> pre + 右侧复制按钮。
+      包内的 .markdown-body .highlight pre 已给好内边距/底色/圆角，这里只把外层包成
+      "代码区可滚动 + 按钮独立列"（按钮不随代码横向滚动，也不会压住代码），并给按钮样式。 */
+.markdown-body .highlight {
+  display: flex;
+  align-items: stretch;
+  border-radius: 6px;
+  background-color: var(--bgColor-muted);
+}
+.markdown-body .highlight > pre.code-block {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+.markdown-body .highlight > pre.code-block > code {
+  display: block;
+}
+
+/* 复制按钮：GitHub 实测值（28×28、圆角 6、细边框、右上角 8px） */
+.markdown-body .copy-button {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 8px;
+  padding: 0;
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+  background-color: var(--bgColor-default, #ffffff);
+  color: var(--fgColor-muted, #59636e);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.markdown-body .copy-button:hover {
+  background-color: var(--bgColor-neutral-muted, #eef1f4);
+  color: var(--fgColor-default, #1f2328);
+}
+.markdown-body .copy-button .octicon {
+  display: block;
+  fill: currentColor;
+}
+/* 成功态：切到对勾图标（纯 CSS，JS 只加/删 .is-copied） */
+.markdown-body .copy-button .octicon-check {
+  display: none;
+}
+.markdown-body .copy-button.is-copied {
+  color: #1a7f37;
+  border-color: #1a7f37;
+}
+.markdown-body .copy-button.is-copied .octicon-copy {
+  display: none;
+}
+.markdown-body .copy-button.is-copied .octicon-check {
+  display: block;
+}
+
+/* ③ 暗色：显式 data-mode=dark 时套用 GitHub Dark 的同组变量（取自包内 @media 暗色块） */
+html[data-mode="dark"] .markdown-body {
+  /*dark */
+  color-scheme: dark;
+  --fgColor-accent: #4493f8;
+  --bgColor-attention-muted: #bb800926;
+  --bgColor-default: #0d1117;
+  --bgColor-muted: #151b23;
+  --bgColor-neutral-muted: #656c7633;
+  --borderColor-accent-emphasis: #1f6feb;
+  --borderColor-attention-emphasis: #9e6a03;
+  --borderColor-danger-emphasis: #da3633;
+  --borderColor-default: #3d444d;
+  --borderColor-done-emphasis: #8957e5;
+  --borderColor-success-emphasis: #238636;
+  --color-prettylights-syntax-brackethighlighter-angle: #9198a1;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
+  --color-prettylights-syntax-carriage-return-bg: #b62324;
+  --color-prettylights-syntax-carriage-return-text: #f0f6fc;
+  --color-prettylights-syntax-comment: #9198a1;
+  --color-prettylights-syntax-constant: #79c0ff;
+  --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+  --color-prettylights-syntax-entity: #d2a8ff;
+  --color-prettylights-syntax-entity-tag: #7ee787;
+  --color-prettylights-syntax-keyword: #ff7b72;
+  --color-prettylights-syntax-markup-bold: #f0f6fc;
+  --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+  --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+  --color-prettylights-syntax-markup-deleted-bg: #67060c;
+  --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+  --color-prettylights-syntax-markup-heading: #1f6feb;
+  --color-prettylights-syntax-markup-ignored-bg: #1158c7;
+  --color-prettylights-syntax-markup-ignored-text: #f0f6fc;
+  --color-prettylights-syntax-markup-inserted-bg: #033a16;
+  --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+  --color-prettylights-syntax-markup-italic: #f0f6fc;
+  --color-prettylights-syntax-markup-list: #f2cc60;
+  --color-prettylights-syntax-meta-diff-range: #d2a8ff;
+  --color-prettylights-syntax-storage-modifier-import: #f0f6fc;
+  --color-prettylights-syntax-string: #a5d6ff;
+  --color-prettylights-syntax-string-regexp: #7ee787;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #3d444d;
+  --color-prettylights-syntax-variable: #ffa657;
+  --fgColor-attention: #d29922;
+  --fgColor-danger: #f85149;
+  --fgColor-default: #f0f6fc;
+  --fgColor-done: #ab7df8;
+  --fgColor-muted: #9198a1;
+  --fgColor-success: #3fb950;
+  --borderColor-muted: #3d444db3;
+  --color-prettylights-syntax-invalid-illegal-bg: var(--bgColor-danger-muted);
+  --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
+  --focus-outlineColor: var(--borderColor-accent-emphasis);
+  --borderColor-neutral-muted: var(--borderColor-muted);
+}
+html[data-mode="dark"] .markdown-body .copy-button.is-copied {
+  color: #3fb950;
+  border-color: #3fb950;
+}
+
+/* ④ 标题锚点：github-markdown-css 把 .anchor 浮动到左侧并给 -20px 负边距（GitHub 的做法），
+      与主题"悬停才出现"的规则冲突，导致 # 常显且压到正文。这里统一成
+      "悬停时在标题前显示 #"，不用浮动、不产生布局位移。 */
+.markdown-body h2 > .anchor,
+.markdown-body h3 > .anchor,
+.markdown-body h4 > .anchor {
+  float: none;
+  margin: 0 4px 0 0;
+  padding: 0;
+  font-size: 80%;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease, visibility 0s ease 0.2s;
+}
+.markdown-body h2:hover > .anchor,
+.markdown-body h3:hover > .anchor,
+.markdown-body h4:hover > .anchor {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.2s ease, visibility 0s ease 0s;
+}
+
+/* 社交图标占位：href 为空时禁用点击 */
+#sidebar .sidebar-bottom a.social-disabled{cursor:default;opacity:.55}

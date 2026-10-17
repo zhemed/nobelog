@@ -1,0 +1,55 @@
+# 博客
+
+一个用 Rust 写的个人博客：Markdown 即内容源，构建成纯静态页面，也支持服务端实时渲染。
+
+## 写文章
+
+文章放在 `content/posts/`，文件名即 slug：
+
+```markdown
+---
+title: 标题
+date: 2026-10-17 12:00:00
+slug: my-post
+tags: [随笔]
+categories: [生活]
+description: 一句话摘要
+---
+
+正文用 Markdown。
+```
+
+单页放在 `content/pages/`（`about.md`、`me.md`）。
+
+## 本地运行
+
+```bash
+# 动态模式：改 md 后刷新即生效
+cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port 10086 --dynamic
+
+# 生成静态产物到 public/
+cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out public
+```
+
+也可以用仓库根的 pnpm 别名：`pnpm serve` / `pnpm serve:static` / `pnpm build`。
+
+## 目录
+
+| 路径 | 用途 |
+| --- | --- |
+| `content/posts/` | 文章（Markdown + frontmatter） |
+| `content/pages/` | 单页（关于、我） |
+| `content/images/` | 站内图片 |
+| `rust/` | 生成器与服务（content → render → artifacts） |
+| `vendor/` | 主题样式与字体 |
+| `deploy/` | 部署脚本、systemd 单元、nginx 示例 |
+| `public/` | 构建产物（不提交） |
+
+## 部署
+
+见 [deploy/README.md](deploy/README.md)。VPS 上只需要二进制、`content/`、`vendor/` 与客户端脚本。
+
+## 许可
+
+- 代码：[MIT](LICENSE)
+- 文章：CC BY 4.0

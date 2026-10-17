@@ -1,0 +1,14 @@
+# 构建缓存与产物
+rust/target/
+rust/dist/
+node_modules/
+.nobelog-cache/
+*.log
+.DS_Store
+
+# 本地运行/探针目录（通常在仓库外，防误提交）
+.run/
+.backups/
+
+# 构建产物（不跟踪，避免哈希变更噪音）
+public/
