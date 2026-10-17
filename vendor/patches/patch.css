@@ -1048,7 +1048,9 @@ a {
 #topbar-wrapper #breadcrumb,
 #topbar-wrapper #breadcrumb a,
 #topbar-wrapper #breadcrumb span {
-  color: var(--ink-body);
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 500;
 }
 #topbar-wrapper #breadcrumb a:hover {
   color: var(--accent);
