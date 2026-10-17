@@ -861,13 +861,13 @@ html[data-mode="dark"] {
    ========================================================================== */
 html:not([data-mode]), html[data-mode="light"] {
   /* 一套纸墨色：三个基色，其余表面全部由它们派生 */
-  --paper: #fbfaf5;
-  --paper-deep: #f5f2eb;
-  --paper-card: #fffdf8;
-  --ink: #16160e;
-  --ink-body: #2b2b2b;
-  --ink-muted: #595857;
-  --accent: #9e3d3f;
+  --paper: #ffffff;
+  --paper-deep: #f7f8fa;
+  --paper-card: #ffffff;
+  --ink: #111418;
+  --ink-body: #33373d;
+  --ink-muted: #6b7280;
+  --accent: #3b5b7a;
 
   --main-bg: var(--paper);
   --bs-body-bg: var(--paper);
@@ -876,25 +876,25 @@ html:not([data-mode]), html[data-mode="light"] {
   --sidebar-bg: var(--paper-deep);
   --sidebar-btn-bg: var(--paper-card);
   --sidebar-btn-color: var(--ink-muted);
-  --topbar-bg: rgba(251, 250, 245, 0.88);
+  --topbar-bg: rgba(255, 255, 255, 0.88);
   --text-color: var(--ink-body);
   --text-muted-color: var(--ink-muted);
   --heading-color: var(--ink);
   --link-color: var(--accent);
   --brand-line: rgba(158, 61, 63, 0.55);
-  --brand-hover: #efe9dc;
-  --sidebar-hover-bg: #efe9dc;
+  --brand-hover: #eef1f5;
+  --sidebar-hover-bg: #eef1f5;
   --sidebar-active-color: var(--ink);
 }
 
 html[data-mode="dark"] {
-  --paper: #1b1b19;
-  --paper-deep: #151514;
-  --paper-card: #232320;
-  --ink: #dcdddd;
-  --ink-body: #cfcfce;
-  --ink-muted: #989896;
-  --accent: #d69090;
+  --paper: #14171b;
+  --paper-deep: #101317;
+  --paper-card: #1a1e24;
+  --ink: #e6e9ec;
+  --ink-body: #c7ccd3;
+  --ink-muted: #8b939c;
+  --accent: #8fb3d9;
 
   --main-bg: var(--paper);
   --bs-body-bg: var(--paper);
@@ -903,14 +903,14 @@ html[data-mode="dark"] {
   --sidebar-bg: var(--paper-deep);
   --sidebar-btn-bg: var(--paper-card);
   --sidebar-btn-color: var(--ink-muted);
-  --topbar-bg: rgba(27, 27, 25, 0.85);
+  --topbar-bg: rgba(20, 23, 27, 0.85);
   --text-color: var(--ink-body);
   --text-muted-color: var(--ink-muted);
   --heading-color: var(--ink);
   --link-color: var(--accent);
   --brand-line: rgba(214, 144, 144, 0.45);
-  --brand-hover: #26231f;
-  --sidebar-hover-bg: #26231f;
+  --brand-hover: #1d232a;
+  --sidebar-hover-bg: #1d232a;
   --sidebar-active-color: var(--ink);
 }
 
