@@ -868,6 +868,8 @@ html:not([data-mode]), html[data-mode="light"] {
   --link-color: #9e3d3f;
   --brand-line: rgba(158, 61, 63, 0.55);
   --brand-hover: #efe9dc;
+  --sidebar-hover-bg: #efe9dc;
+  --sidebar-active-color: #16160e;
 }
 
 html[data-mode="dark"] {
@@ -879,4 +881,6 @@ html[data-mode="dark"] {
   --link-color: #d69090;
   --brand-line: rgba(214, 144, 144, 0.45);
   --brand-hover: #26231f;
+  --sidebar-hover-bg: #26231f;
+  --sidebar-active-color: #dcdddd;
 }
