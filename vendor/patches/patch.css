@@ -817,7 +817,7 @@ html[data-mode="dark"] .hljs-deletion {
 }
 
 #sidebar .site-title a {
-  color: #2a2a2a;
+  color: var(--heading-color);
 }
 
 #sidebar .site-subtitle {
@@ -826,7 +826,7 @@ html[data-mode="dark"] .hljs-deletion {
   font-weight: 400;
   letter-spacing: 0.32em;
   text-indent: 0.32em; /* 抵消末字后的字距，视觉上居中 */
-  color: #7f8891;
+  color: var(--text-muted-color);
 }
 
 #sidebar .profile-wrapper::after {
@@ -835,7 +835,7 @@ html[data-mode="dark"] .hljs-deletion {
   width: 2.25rem;
   height: 1px;
   margin-top: 1.1rem;
-  background: linear-gradient(90deg, #b9c7d6, rgba(185, 199, 214, 0));
+  background: linear-gradient(90deg, var(--brand-line), rgba(185, 199, 214, 0));
 }
 
 #sidebar .nav-link {
@@ -844,5 +844,14 @@ html[data-mode="dark"] .hljs-deletion {
 }
 
 #sidebar .nav-link:hover {
-  background: #eef2f6;
+  background: var(--brand-hover);
+}
+
+:root {
+  --brand-line: #b9c7d6;
+  --brand-hover: #eef2f6;
+}
+html[data-mode="dark"] {
+  --brand-line: #3a4552;
+  --brand-hover: #242a31;
 }
