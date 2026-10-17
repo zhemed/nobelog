@@ -278,7 +278,7 @@ impl Site {
             return not_found(path);
         }
 
-        // 通用单页 /about/、/me/
+        // 通用单页 /about/
         if let Some(raw_slug) = path.strip_prefix('/').and_then(|r| r.strip_suffix('/'))
             && !raw_slug.is_empty()
             && raw_slug

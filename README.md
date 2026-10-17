@@ -19,7 +19,7 @@ description: 一句话摘要
 正文用 Markdown。
 ```
 
-单页放在 `content/pages/`（`about.md`、`me.md`）。
+单页放在 `content/pages/`（如 `about.md`）。
 
 ## 本地运行
 

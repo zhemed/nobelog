@@ -88,11 +88,6 @@ pub static SITE: SiteConfig = SiteConfig {
             href: "/archives/",
             icon: "fa-fw fas fa-inbox",
         },
-        NavItem {
-            name: "我",
-            href: "/me/",
-            icon: "fa-fw fa-solid fa-user",
-        },
     ],
     posts_per_page: 8,
     license_name: "CC BY 4.0",
