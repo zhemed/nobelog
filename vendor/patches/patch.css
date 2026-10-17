@@ -870,6 +870,10 @@ html:not([data-mode]), html[data-mode="light"] {
   --brand-hover: #efe9dc;
   --sidebar-hover-bg: #efe9dc;
   --sidebar-active-color: #16160e;
+  --topbar-bg: rgba(251, 250, 245, 0.88);
+  --bs-body-bg: #fbfaf5;
+  --card-bg: #fffdf8;
+  --button-bg: #fffdf8;
 }
 
 html[data-mode="dark"] {
@@ -883,4 +887,8 @@ html[data-mode="dark"] {
   --brand-hover: #26231f;
   --sidebar-hover-bg: #26231f;
   --sidebar-active-color: #dcdddd;
+  --topbar-bg: rgba(27, 27, 25, 0.85);
+  --bs-body-bg: #1b1b19;
+  --card-bg: #232320;
+  --button-bg: #232320;
 }
