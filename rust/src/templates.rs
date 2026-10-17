@@ -319,7 +319,11 @@ fn footer() -> String {
     let title = escape_html(SITE.title);
     let note = escape_html(SITE.license_note);
     let reserved = escape_html("保留部分权利。");
-    let powered = escape_html("由 Rust 内核驱动 · 无数据库、无后台");
+    let powered = concat!(
+        "主题：",
+        r#"<a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a>"#,
+        " · 作者 Cotes Chung"
+    );
     format!(
         r##"        <footer aria-label="Site Info" class="d-flex flex-column justify-content-center text-muted flex-lg-row justify-content-lg-between align-items-lg-center pb-lg-3">
           <p>
