@@ -937,7 +937,7 @@ footer {
 #sidebar .site-title {
   font-size: 1.3rem;
   font-weight: 600;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.16em;
   line-height: 1.4;
 }
 
@@ -949,8 +949,8 @@ footer {
   margin: 0.3rem 0 0;
   font-size: 1.75rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-indent: 0.18em;
+  letter-spacing: 0.1em;
+  text-indent: 0.1em;
   color: var(--ink);
 }
 
