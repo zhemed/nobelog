@@ -12,3 +12,5 @@ node_modules/
 
 # 构建产物（不跟踪，避免哈希变更噪音）
 public/
+
+dist/
