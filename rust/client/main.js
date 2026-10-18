@@ -246,7 +246,7 @@ copyLink?.addEventListener("click", async (event) => {
   }
 });
 
-/* --- 7. 图片查看：点击放大到全屏浮层 ------------------------------- */
+/* --- 7. 图片查看：点击放大到全屏浮层（支持缩放/拖拽/双指） ---------- */
 function initLightbox() {
   const images = document.querySelectorAll(".markdown-body img");
   if (!images.length) return;
@@ -260,15 +260,78 @@ function initLightbox() {
 
   const preview = document.createElement("img");
   preview.alt = "";
+  preview.draggable = false;
   overlay.appendChild(preview);
   document.body.appendChild(overlay);
 
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 4;
+  const DOUBLE_TAP_ZOOM = 2.5;
+
   let lastFocused = null;
+  let baseWidth = 0; // 1x 时图片的实际显示宽度
+  let zoom = 1;
+  let suppressClick = false;
+  let drag = null; // 鼠标拖拽
+  let pinch = null; // 双指
+
+  const clampZoom = (value) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+  const distance = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  const midpoint = (a, b) => ({
+    x: (a.clientX + b.clientX) / 2,
+    y: (a.clientY + b.clientY) / 2,
+  });
+
+  function resetZoom() {
+    zoom = 1;
+    overlay.classList.remove("lightbox-zoomed");
+    preview.style.width = "";
+    preview.style.height = "";
+    preview.style.flex = "";
+    overlay.scrollLeft = 0;
+    overlay.scrollTop = 0;
+    drag = null;
+    pinch = null;
+  }
+
+  // 缩放到 next，并尽量让屏幕点 (x, y) 下的图像内容保持不动
+  function zoomAt(next, x, y) {
+    next = clampZoom(next);
+    if (next === zoom) return;
+    if (!baseWidth) measure();
+    if (!baseWidth) return;
+    const before = preview.getBoundingClientRect();
+    const u = before.width ? (x - before.left) / before.width : 0.5;
+    const v = before.height ? (y - before.top) / before.height : 0.5;
+
+    zoom = next;
+    if (zoom === 1) {
+      resetZoom();
+      return;
+    }
+
+    overlay.classList.add("lightbox-zoomed");
+    preview.style.flex = "0 0 auto";
+    preview.style.width = `${Math.round(baseWidth * zoom)}px`;
+    const after = preview.getBoundingClientRect();
+    overlay.scrollLeft += after.left + u * after.width - x;
+    overlay.scrollTop += after.top + v * after.height - y;
+  }
+
+  function measure() {
+    if (overlay.hidden || zoom !== 1) return;
+    const width =
+      preview.clientWidth ||
+      preview.getBoundingClientRect().width ||
+      preview.naturalWidth;
+    if (width > 0) baseWidth = width;
+  }
 
   const close = () => {
     if (overlay.hidden) return;
     overlay.hidden = true;
     preview.removeAttribute("src");
+    resetZoom();
     document.body.classList.remove("lightbox-open");
     lastFocused?.focus?.();
   };
@@ -276,15 +339,141 @@ function initLightbox() {
   const open = (src, alt) => {
     if (!src) return;
     lastFocused = document.activeElement;
+    resetZoom();
     preview.src = src;
     preview.alt = alt || "";
     overlay.hidden = false;
     document.body.classList.add("lightbox-open");
+    // 等布局完成后记录 1x 宽度
+    if (preview.complete) {
+      requestAnimationFrame(measure);
+    } else {
+      preview.addEventListener("load", () => requestAnimationFrame(measure), { once: true });
+    }
   };
 
-  overlay.addEventListener("click", close);
+  // 点击背景关闭；拖拽后不误触
+  overlay.addEventListener("click", () => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
+    close();
+  });
+
+  // 滚轮缩放（锚点在鼠标位置）
+  overlay.addEventListener(
+    "wheel",
+    (event) => {
+      if (overlay.hidden) return;
+      event.preventDefault();
+      zoomAt(zoom * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
+    },
+    { passive: false },
+  );
+
+  // 双击 1x ↔ 2.5x
+  preview.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+    zoomAt(zoom > 1 ? 1 : DOUBLE_TAP_ZOOM, event.clientX, event.clientY);
+  });
+
+  // 鼠标拖拽平移（图片放大后）
+  overlay.addEventListener("pointerdown", (event) => {
+    if (overlay.hidden || event.pointerType !== "mouse" || zoom <= 1) return;
+    event.preventDefault();
+    drag = {
+      x: event.clientX,
+      y: event.clientY,
+      left: overlay.scrollLeft,
+      top: overlay.scrollTop,
+      moved: false,
+    };
+    overlay.setPointerCapture?.(event.pointerId);
+  });
+
+  overlay.addEventListener("pointermove", (event) => {
+    if (!drag || event.pointerType !== "mouse") return;
+    const dx = event.clientX - drag.x;
+    const dy = event.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+    overlay.scrollLeft = drag.left - dx;
+    overlay.scrollTop = drag.top - dy;
+  });
+
+  const endDrag = (event) => {
+    if (!drag || event.pointerType !== "mouse") return;
+    if (drag.moved) suppressClick = true;
+    drag = null;
+  };
+  overlay.addEventListener("pointerup", endDrag);
+  overlay.addEventListener("pointercancel", endDrag);
+
+  // 双指捏合（触摸）
+  overlay.addEventListener(
+    "touchstart",
+    (event) => {
+      if (overlay.hidden || event.touches.length !== 2) return;
+      event.preventDefault();
+      if (!baseWidth) measure();
+      if (!baseWidth) return;
+      const [a, b] = event.touches;
+      const rect = preview.getBoundingClientRect();
+      pinch = {
+        startDistance: distance(a, b) || 1,
+        startZoom: zoom,
+        u: rect.width ? (midpoint(a, b).x - rect.left) / rect.width : 0.5,
+        v: rect.height ? (midpoint(a, b).y - rect.top) / rect.height : 0.5,
+      };
+    },
+    { passive: false },
+  );
+
+  overlay.addEventListener(
+    "touchmove",
+    (event) => {
+      if (!pinch || event.touches.length < 2) return;
+      event.preventDefault();
+      const [a, b] = event.touches;
+      const next = clampZoom((pinch.startZoom * distance(a, b)) / pinch.startDistance);
+      if (next === 1) {
+        resetZoom();
+        return;
+      }
+      zoom = next;
+      overlay.classList.add("lightbox-zoomed");
+      preview.style.flex = "0 0 auto";
+      preview.style.width = `${Math.round(baseWidth * zoom)}px`;
+      const after = preview.getBoundingClientRect();
+      const center = midpoint(a, b);
+      overlay.scrollLeft += after.left + pinch.u * after.width - center.x;
+      overlay.scrollTop += after.top + pinch.v * after.height - center.y;
+    },
+    { passive: false },
+  );
+
+  overlay.addEventListener("touchend", (event) => {
+    if (event.touches.length < 2) pinch = null;
+  });
+
+  // 键盘：Esc 关闭，+/- 缩放，0 复位
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") close();
+    if (overlay.hidden) return;
+    if (event.key === "Escape") {
+      close();
+      return;
+    }
+    if (event.key === "+" || event.key === "=" || event.key === "-" || event.key === "0") {
+      event.preventDefault();
+      const rect = preview.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      if (event.key === "0") {
+        resetZoom();
+      } else {
+        zoomAt(zoom * (event.key === "-" ? 0.8 : 1.25), centerX, centerY);
+      }
+    }
   });
 
   images.forEach((image) => {

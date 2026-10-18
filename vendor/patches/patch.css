@@ -1102,3 +1102,29 @@ body.lightbox-open {
 .post-tail-wrapper {
   margin-bottom: 9.2rem;
 }
+
+/* 图片浮层：缩放与平移 */
+.lightbox {
+  overflow: auto;
+}
+.lightbox img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.lightbox-zoomed {
+  align-items: flex-start;
+  justify-content: flex-start;
+  cursor: grab;
+}
+.lightbox-zoomed img {
+  flex: 0 0 auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+}
+
+/* 缩放时不要过渡，避免宽度动画导致锚点计算漂移 */
+.lightbox img,
+.lightbox-zoomed img {
+  transition: none;
+}
