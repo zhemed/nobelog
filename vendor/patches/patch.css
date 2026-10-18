@@ -1176,3 +1176,13 @@ body.lightbox-open {
 .categories .card-header .category-trigger {
   pointer-events: none;
 }
+
+/* 分类链接与标签胶囊保持一致的视觉 */
+.post-tail-wrapper > .post-meta a {
+  display: inline-block;
+  padding: 0 0.4rem;
+  border: 1px solid var(--tag-border);
+  border-radius: 0.5rem;
+  color: var(--ink-muted);
+  line-height: 1.3rem;
+}
