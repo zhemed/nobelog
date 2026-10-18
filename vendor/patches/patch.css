@@ -1138,3 +1138,11 @@ body.lightbox-open {
     align-items: center;
   }
 }
+
+/* 手机端：分类与标签行也靠右 */
+@media all and (max-width: 576px) {
+  .post-tail-wrapper > .post-meta,
+  .post-tail-wrapper > .post-tags {
+    text-align: right;
+  }
+}
