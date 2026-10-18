@@ -1103,28 +1103,21 @@ body.lightbox-open {
   margin-bottom: 9.2rem;
 }
 
-/* 图片浮层：缩放与平移 */
+/* 图片浮层：以 transform 缩放，始终居中，不再改动布局 */
 .lightbox {
-  overflow: auto;
+  overflow: hidden;
+  touch-action: none;
 }
 .lightbox img {
+  transform-origin: center center;
+  will-change: transform;
   user-select: none;
   -webkit-user-drag: none;
+  transition: none;
 }
 .lightbox-zoomed {
-  align-items: flex-start;
-  justify-content: flex-start;
   cursor: grab;
 }
 .lightbox-zoomed img {
-  flex: 0 0 auto;
-  max-width: none;
-  max-height: none;
-  margin: 0;
-}
-
-/* 缩放时不要过渡，避免宽度动画导致锚点计算漂移 */
-.lightbox img,
-.lightbox-zoomed img {
-  transition: none;
+  cursor: grab;
 }
