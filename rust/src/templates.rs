@@ -1011,13 +1011,7 @@ pub fn list_page(ctx: &Ctx, title: &str, posts: &[&Post], crumbs: &[Breadcrumb])
     )
 }
 
-pub fn post_page(
-    ctx: &Ctx,
-    post: &Post,
-    related: &[RelatedLink],
-    prev: Option<&Post>,
-    next: Option<&Post>,
-) -> String {
+pub fn post_page(ctx: &Ctx, post: &Post, related: &[RelatedLink]) -> String {
     let tooltip = format_date_time(&post.date);
     let updated = match &post.updated {
         Some(updated) => format!(
@@ -1150,34 +1144,6 @@ pub fn post_page(
         )
     };
 
-    let neighbors = if prev.is_some() || next.is_some() {
-        let prev_class = if prev.is_some() { "" } else { " disabled" };
-        let prev_href = prev.map(post_url).unwrap_or_else(|| "#".to_string());
-        let prev_title = prev
-            .map(|p| escape_html(&p.title))
-            .unwrap_or_else(|| "没有了".to_string());
-        let next_class = if next.is_some() { "" } else { " disabled" };
-        let next_href = next.map(post_url).unwrap_or_else(|| "#".to_string());
-        let next_title = next
-            .map(|p| escape_html(&p.title))
-            .unwrap_or_else(|| "没有了".to_string());
-        format!(
-            r##"        <nav class="post-navigation d-flex justify-content-between pt-0" aria-label="Post Navigation">
-          <a class="btn btn-outline-primary{prev_class}" href="{prev_href}">
-            <span style="color: #a4a4a4; font-size: 8px">下一篇</span>
-            <p>{prev_title}</p>
-          </a>
-          <a class="btn btn-outline-primary{next_class}" href="{next_href}">
-            <span style="color: #a4a4a4; font-size: 8px">上一篇</span>
-            <p>{next_title}</p>
-          </a>
-        </nav>
-"##
-        )
-    } else {
-        String::new()
-    };
-
     let title = escape_html(&post.title);
     let date = format_date(&post.date);
     let author_block = if SITE.author.is_empty() {
@@ -1236,7 +1202,7 @@ pub fn post_page(
   <!-- further reading -->
   <div class="row">
     <div class="col-12 px-md-4">
-{related}{neighbors}    </div>
+{related}    </div>
   </div>
 "##
     );

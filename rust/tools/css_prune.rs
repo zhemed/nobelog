@@ -934,6 +934,10 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
     if sel.is_empty() {
         return (false, "empty".to_string());
     }
+    // 已删除组件的选择器直接丢弃（含 :not() 等保守分支）
+    if sel.contains(".post-navigation") {
+        return (false, "removed-component".to_string());
+    }
     // 转义标识符、属性选择器、函数式伪类一律保守保留
     if sel.contains('\\') {
         return (true, "escape".to_string());
@@ -997,6 +1001,10 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
     if classes.is_empty() && ids.is_empty() && tags.is_empty() {
         return (true, "no-token".to_string());
     }
+    // 已删除的组件：即使选择器里还有别的在用类（如 .btn），也整条丢弃
+    if classes.iter().any(|name| is_removed_class(name)) {
+        return (false, "removed-component".to_string());
+    }
     if classes
         .iter()
         .any(|name| usage.has_class(name) || is_layout_class(name))
@@ -1015,6 +1023,10 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
 
 /// 栅格/布局类永远保留：模板里有些类是运行时拼出来的（如 `{main_col}`），
 /// 使用情况收集可能漏掉；漏掉这些类会让整页栅格塌掉，代价远大于多几 KB CSS。
+fn is_removed_class(name: &str) -> bool {
+    name == "post-navigation"
+}
+
 fn is_layout_class(name: &str) -> bool {
     name == "row"
         || name == "container"
@@ -1078,6 +1090,15 @@ mod tests {
         assert!(selector_kept("div .child", &u).0);
         assert!(!selector_kept(".other .child", &u).0);
         assert!(!selector_kept("span.foo", &u).0);
+    }
+
+    #[test]
+    fn drops_removed_component_selectors() {
+        let mut u = Usage::default();
+        u.add_class("btn");
+        assert!(!selector_kept(".post-navigation .btn", &u).0);
+        assert!(!selector_kept(".post-navigation .btn:not(:hover)", &u).0);
+        assert!(selector_kept(".btn", &u).0);
     }
 
     #[test]

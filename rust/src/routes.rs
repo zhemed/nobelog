@@ -146,20 +146,6 @@ impl Site {
         {
             let slug = decode(slug);
             if let Some(post) = self.content.posts.iter().find(|p| p.slug == slug) {
-                let mut chronological = self.content.posts.iter().collect::<Vec<_>>();
-                chronological.sort_by_key(|p| p.date);
-                let at = chronological.iter().position(|p| p.slug == slug);
-                let (prev, next) = match at {
-                    Some(i) => (
-                        if i > 0 {
-                            Some(chronological[i - 1])
-                        } else {
-                            None
-                        },
-                        chronological.get(i + 1).copied(),
-                    ),
-                    None => (None, None),
-                };
                 let related: Vec<RelatedLink> = self
                     .content
                     .posts
@@ -179,7 +165,7 @@ impl Site {
                 return RenderedPage {
                     status: 200,
                     path: path.to_string(),
-                    html: templates::post_page(&ctx, post, &related, prev, next),
+                    html: templates::post_page(&ctx, post, &related),
                     kind: PageKind::Post,
                 };
             }
