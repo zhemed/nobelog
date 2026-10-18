@@ -4,7 +4,7 @@ date: 2026-10-18 12:15:00
 slug: server-init-commands
 tags: [运维, Linux]
 categories: [备忘]
-description: 新机器到手后的常用命令：系统更新、Docker、防火墙与 SSH 设置。
+description: 新机器到手后的常用命令：系统更新、Docker 与 SSH 设置。
 ---
 
 新机器到手，先跑一遍这些。内容主要是 Debian/Ubuntu 系，个别是 OpenWrt。
@@ -71,21 +71,6 @@ chmod +x /usr/local/bin/docker-compose
 
 docker --version
 docker-compose --version
-```
-
-## 防火墙 ufw
-
-```bash
-apt-get update
-apt-get install ufw
-
-ufw enable          # 开启并开机自启
-ufw allow 端口号     # 放行 tcp/udp 端口
-ufw delete allow 端口号
-ufw reload
-ufw status
-ufw status verbose
-ufw reset           # 重置规则
 ```
 
 ## OpenWrt 备注

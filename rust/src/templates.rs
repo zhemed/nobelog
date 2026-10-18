@@ -104,18 +104,27 @@ fn format_date_time(date: &DateTime<Utc>) -> String {
 
 /// 卡片日期：超过 30 天给绝对日期，否则给相对说法。JS 用 Math.floor，这里用 div_euclid 保持负数语义。
 fn card_date(date: &DateTime<Utc>) -> String {
-    let now = Utc::now();
-    let days = (now.timestamp_millis() - date.timestamp_millis()).div_euclid(86_400_000);
-    if days > 30 {
+    // 站内日期按 UTC+8 挂钟存储（frontmatter 写的是本地时间），而服务器可能是 UTC，
+    // 所以“现在”也要换算到同一挂钟再比较，否则刚发的文章会被判成未来、一律显示“刚刚”。
+    let now = Utc::now() + chrono::Duration::hours(8);
+    let diff = now.signed_duration_since(*date);
+    if diff.num_minutes() < 0 {
         return format_date(date);
     }
-    if days > 1 {
-        return format!("{days}+ 天前");
+    if diff.num_minutes() < 60 {
+        return "刚刚".to_string();
     }
+    if diff.num_hours() < 24 {
+        return format!("{} 小时前", diff.num_hours());
+    }
+    let days = diff.num_days();
     if days == 1 {
         return "昨天".to_string();
     }
-    "刚刚".to_string()
+    if days <= 30 {
+        return format!("{days} 天前");
+    }
+    format_date(date)
 }
 
 pub fn post_url(post: &Post) -> String {
