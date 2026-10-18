@@ -768,6 +768,9 @@ fn render_layout(
   <meta name="generator" content="nobelog">
   <link rel="canonical" href="{url}{path}">
   <link rel="alternate" type="application/rss+xml" title="{site_title}" href="/feed.xml">
+  <link rel="icon" type="image/png" sizes="512x512" href="/images/favicon.png">
+  <link rel="shortcut icon" href="/images/favicon.png">
+  <link rel="apple-touch-icon" href="/images/favicon.png">
 {EARLY_SCRIPT}
   <link rel="stylesheet" href="{css}">
   <meta property="og:title" content="{page_title}">
