@@ -214,3 +214,56 @@ copyLink?.addEventListener("click", async () => {
     glyph.className = prevClass;
   }, 2000);
 });
+
+/* --- 7. 图片查看：点击放大到全屏浮层 ------------------------------- */
+function initLightbox() {
+  const images = document.querySelectorAll(".markdown-body img");
+  if (!images.length) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "lightbox";
+  overlay.hidden = true;
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", "图片预览");
+
+  const preview = document.createElement("img");
+  preview.alt = "";
+  overlay.appendChild(preview);
+  document.body.appendChild(overlay);
+
+  let lastFocused = null;
+
+  const close = () => {
+    if (overlay.hidden) return;
+    overlay.hidden = true;
+    preview.removeAttribute("src");
+    document.body.classList.remove("lightbox-open");
+    lastFocused?.focus?.();
+  };
+
+  const open = (src, alt) => {
+    if (!src) return;
+    lastFocused = document.activeElement;
+    preview.src = src;
+    preview.alt = alt || "";
+    overlay.hidden = false;
+    document.body.classList.add("lightbox-open");
+  };
+
+  overlay.addEventListener("click", close);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") close();
+  });
+
+  images.forEach((image) => {
+    image.addEventListener("click", (event) => {
+      const link = image.closest("a.img-link, a.popup");
+      const src = link?.getAttribute("href") || image.currentSrc || image.src;
+      event.preventDefault();
+      event.stopPropagation();
+      open(src, image.alt);
+    });
+  });
+}
+initLightbox();

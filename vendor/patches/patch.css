@@ -1055,3 +1055,33 @@ a {
 #topbar-wrapper #breadcrumb a:hover {
   color: var(--accent);
 }
+
+/* 图片查看浮层 */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.86);
+  cursor: zoom-out;
+}
+.lightbox[hidden] {
+  display: none;
+}
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 4px;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+}
+body.lightbox-open {
+  overflow: hidden;
+}
+@media (max-width: 600px) {
+  .lightbox {
+    padding: 0.75rem;
+  }
+}
