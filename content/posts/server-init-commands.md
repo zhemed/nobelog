@@ -66,11 +66,10 @@ shutdown -h now   # 关机
 ## 安装 Docker
 
 ```bash
+# 安装 Docker（国内镜像源一键脚本）
 bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
-chmod +x /usr/local/bin/docker-compose
 
-docker --version
-docker-compose --version
+docker --version    # 查看版本
 ```
 
 ## OpenWrt 备注
