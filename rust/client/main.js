@@ -200,19 +200,50 @@ if (toc) {
 
 /* --- 6. 分享：复制链接 ------------------------------------------------- */
 const copyLink = document.querySelector("[data-copy-link]");
-copyLink?.addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-  } catch {
-    return;
-  }
+copyLink?.addEventListener("click", async (event) => {
+  event.preventDefault();
   const glyph = copyLink.querySelector("i");
-  if (!glyph) return;
-  const prevClass = glyph.className;
-  glyph.className = "fa-fw fas fa-check small";
-  window.setTimeout(() => {
-    glyph.className = prevClass;
-  }, 2000);
+  const prevClass = glyph?.className;
+  const text = window.location.href;
+
+  const feedback = (ok) => {
+    if (glyph) {
+      glyph.className = ok ? "fa-fw fas fa-check small" : "fa-fw fas fa-xmark small";
+    }
+    copyLink.setAttribute("title", ok ? "已复制" : "复制失败");
+    window.setTimeout(() => {
+      if (glyph && prevClass) glyph.className = prevClass;
+      copyLink.setAttribute("title", "复制链接");
+    }, 2000);
+  };
+
+  // 安全上下文用 Clipboard API
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      feedback(true);
+      return;
+    } catch {
+      // 权限被拒时继续走回退方案
+    }
+  }
+
+  // 非 HTTPS（如局域网 http://IP）没有 Clipboard API，用隐藏 textarea 回退
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, text.length);
+    const ok = document.execCommand("copy");
+    area.remove();
+    feedback(ok);
+  } catch {
+    feedback(false);
+  }
 });
 
 /* --- 7. 图片查看：点击放大到全屏浮层 ------------------------------- */
