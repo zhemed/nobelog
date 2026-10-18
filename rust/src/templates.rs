@@ -1043,13 +1043,13 @@ pub fn post_page(ctx: &Ctx, post: &Post, related: &[RelatedLink]) -> String {
             .iter()
             .map(|name| {
                 format!(
-                    r##"<a href="{}">{}</a>"##,
+                    r##"<a class="post-tag no-text-decoration" href="{}">{}</a>"##,
                     category_url(name),
                     escape_html(name)
                 )
             })
             .collect::<Vec<_>>()
-            .join(", ");
+            .join("");
         format!(
             r##"      <div class="post-meta mb-3">
         <i class="far fa-folder-open fa-fw me-1"></i>
