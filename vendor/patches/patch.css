@@ -1146,3 +1146,33 @@ body.lightbox-open {
     text-align: right;
   }
 }
+
+/* 分类列表：整张卡片头部可点击 */
+.categories .card-header {
+  position: relative;
+  cursor: pointer;
+}
+.categories .card-header > span > a[href^="/categories/"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+/* 分类/标签详情：整行可点击（点日期、虚线也能进入） */
+#page-category li.d-flex,
+#page-tag li.d-flex {
+  position: relative;
+  cursor: pointer;
+}
+#page-category li.d-flex > a[href^="/posts/"]::after,
+#page-tag li.d-flex > a[href^="/posts/"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+}
+
+/* 分类卡片右侧箭头（无子分类时禁用）不拦截整行点击 */
+.categories .card-header .category-trigger {
+  pointer-events: none;
+}
