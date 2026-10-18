@@ -1085,3 +1085,10 @@ body.lightbox-open {
     padding: 0.75rem;
   }
 }
+
+/* 提示块图标与首行文字垂直居中（主题的 margin-top 在 github-markdown 行高下偏上） */
+.markdown-body blockquote[class^="prompt-"]::before {
+  top: 1.25rem;
+  margin-top: 0;
+  line-height: 1;
+}
