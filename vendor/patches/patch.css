@@ -1121,3 +1121,20 @@ body.lightbox-open {
 .lightbox-zoomed img {
   cursor: grab;
 }
+
+/* 手机端：分享与许可两行都靠右 */
+@media all and (max-width: 576px) {
+  .post-tail-bottom {
+    justify-content: flex-end !important;
+  }
+  .post-tail-bottom .license-wrapper {
+    width: 100% !important;
+    text-align: right;
+  }
+  .post-tail-bottom .share-wrapper {
+    width: 100% !important;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+}
