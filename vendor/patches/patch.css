@@ -1098,8 +1098,7 @@ body.lightbox-open {
   padding: 0;
 }
 
-/* 移除文章底部上一篇/下一篇后，保留原有的纵向留白：
-   原先 nav 的 padding-top 3rem + 卡片高度 + padding-bottom 4rem ≈ 13rem */
+/* 移除文章底部上一篇/下一篇后，保留原 nav 占用的高度（实测 147px ≈ 9.2rem） */
 .post-tail-wrapper {
-  margin-bottom: 13rem;
+  margin-bottom: 9.2rem;
 }
