@@ -112,12 +112,11 @@ fn default_root() -> PathBuf {
     if Path::new("vendor/chirpy/main.css").exists() {
         return PathBuf::from(".");
     }
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(dir) = exe.parent() {
-            if dir.join("vendor/chirpy/main.css").exists() {
-                return dir.to_path_buf();
-            }
-        }
+    if let Ok(exe) = std::env::current_exe()
+        && let Some(dir) = exe.parent()
+        && dir.join("vendor/chirpy/main.css").exists()
+    {
+        return dir.to_path_buf();
     }
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()

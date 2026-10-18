@@ -1083,11 +1083,20 @@ mod tests {
     #[test]
     fn keeps_layout_classes_even_if_unused() {
         let u = Usage::default();
-        for sel in [".col-xl-9", ".row", ".container", ".g-4", ".offset-2", ".lightbox", ".lightbox img"] {
+        for sel in [
+            ".col-xl-9",
+            ".row",
+            ".container",
+            ".g-4",
+            ".offset-2",
+            ".lightbox",
+            ".lightbox img",
+        ] {
             assert!(selector_kept(sel, &u).0, "{sel} 应保留");
         }
     }
 
+    #[test]
     fn keeps_special_selectors() {
         let u = usage();
         assert!(selector_kept(":root", &u).0);
