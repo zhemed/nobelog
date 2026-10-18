@@ -259,7 +259,10 @@ function initLightbox() {
   images.forEach((image) => {
     image.addEventListener("click", (event) => {
       const link = image.closest("a.img-link, a.popup");
-      const src = link?.getAttribute("href") || image.currentSrc || image.src;
+      const href = link?.getAttribute("href") || "";
+      // 只有链接本身指向图片时才用 href；普通链接里的图片仍显示图片本身
+      const imageHref = /\.(png|jpe?g|gif|webp|svg|avif)([?#]|$)/i.test(href) ? href : "";
+      const src = imageHref || image.currentSrc || image.src;
       event.preventDefault();
       event.stopPropagation();
       open(src, image.alt);

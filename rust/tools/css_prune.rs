@@ -1018,6 +1018,7 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
 fn is_layout_class(name: &str) -> bool {
     name == "row"
         || name == "container"
+        || name.starts_with("lightbox")
         || name.starts_with("col-")
         || name.starts_with("g-")
         || name.starts_with("offset-")
@@ -1082,7 +1083,7 @@ mod tests {
     #[test]
     fn keeps_layout_classes_even_if_unused() {
         let u = Usage::default();
-        for sel in [".col-xl-9", ".row", ".container", ".g-4", ".offset-2"] {
+        for sel in [".col-xl-9", ".row", ".container", ".g-4", ".offset-2", ".lightbox", ".lightbox img"] {
             assert!(selector_kept(sel, &u).0, "{sel} 应保留");
         }
     }
