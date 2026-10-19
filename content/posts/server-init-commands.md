@@ -25,6 +25,9 @@ apt update -y && apt install -y curl wget socat sudo unzip
 
 ```bash
 sudo passwd root
+```
+
+```bash
 sudo nano /etc/ssh/sshd_config
 ```
 
@@ -60,6 +63,9 @@ sudo deluser --remove-home ubuntu
 
 ```bash
 shutdown -r now   # 重启
+```
+
+```bash
 shutdown -h now   # 关机
 ```
 
@@ -68,7 +74,9 @@ shutdown -h now   # 关机
 ```bash
 # 安装 Docker（国内镜像源一键脚本）
 bash <(curl -sSL https://gitee.com/SuperManito/LinuxMirrors/raw/main/DockerInstallation.sh)
+```
 
+```bash
 docker --version    # 查看版本
 ```
 
@@ -78,6 +86,9 @@ docker --version    # 查看版本
 
 ```bash
 opkg update
+```
+
+```bash
 opkg install openssh-sftp-server
 ```
 
