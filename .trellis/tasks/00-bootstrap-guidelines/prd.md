@@ -1,127 +1,41 @@
 # Bootstrap Task: Fill Project Development Guidelines
 
-**You (the AI) are running this task. The developer does not read this file.**
+**状态：已完成（2026-10-19）。** 本文件保留作为本次填充结果与依据的记录。
 
-The developer just ran `trellis init` on this project for the first time.
-`.trellis/` now exists with empty spec scaffolding, and this bootstrap task
-exists under `.trellis/tasks/`. When they want to work on it, they should start
-this task from a session that provides Trellis session identity.
+## 背景
 
-**Your job**: help them populate `.trellis/spec/` with the team's real
-coding conventions. Every future AI session — this project's
-`trellis-implement` and `trellis-check` sub-agents — auto-loads spec files
-listed in per-task jsonl manifests. Empty spec = sub-agents write generic
-code. Real spec = sub-agents match the team's actual patterns.
+开发者首次运行 `trellis init`，`.trellis/spec/` 是空模板（React 假设：components / hooks / state / TypeScript）。
+本项目实际是 **Rust 静态站生成器 + axum 服务**，模板层用 `format!` 拼 HTML、浏览器只跑一个
+零依赖 `rust/client/main.js`，因此模板里的 React 类指南不适用。
 
-Don't dump instructions. Open with a short greeting, figure out if the repo
-has any existing convention docs (CLAUDE.md, .cursorrules, etc.), and drive
-the rest conversationally.
+## 本次填充结果
 
----
+### 最终文件集（`.trellis/spec/frontend/`）
 
-## Status (update the checkboxes as you complete each item)
+| 文件 | 内容 | 依据 |
+| --- | --- | --- |
+| `index.md` | 层次速览、指南索引、三条不可协商规则、与 TS 版的逐字节兼容背景 | `README.md`、`rust/src/main.rs` |
+| `directory-structure.md` | 真实目录布局、Rust 模块表、vendor 规则、反模式 | `rust/src/*`、`vendor/`、`tools/package.sh` |
+| `content-and-frontmatter.md` | frontmatter 字段表、UTC 时区约定、排序、摘要 UTF-16 截断、阅读时长公式 | `content.rs`、`model.rs` |
+| `rendering-templates.md` | `Ctx`/`PageAssets` 契约、转义、三种日期格式、分页、侧栏高亮、sitemap/RSS | `templates.rs`、`routes.rs` |
+| `markdown-pipeline.md` | 共享/独立渲染器、标题 id、提示块、代码块结构、TOC 2–4 级 | `markdown.rs`、`highlight*.rs` |
+| `styling-and-assets.md` | `STYLE_ORDER`、暗色三态、字体、哈希命名、CSS 裁剪开关 | `paths.rs`、`assets.rs`、`patch.css` |
+| `routes-and-urls.md` | 路由表、新增路由清单、`encodeURIComponent` 对齐、`SITE_URL` 优先级 | `routes.rs`、`url.rs`、`site.rs` |
+| `build-serve-deploy.md` | 构建两阶段、静态/动态模式、缓存头、压缩、打包与 systemd 部署 | `build.rs`、`serve.rs`、`tools/package.sh` |
+| `quality-guidelines.md` | fmt/clippy/test/diff、提交前缀与任务锚点、禁止事项、常见事故 | 仓库历史与全局 git 钩子行为 |
 
-- [ ] Fill frontend guidelines
-- [ ] Add code examples
+### 删除的模板文件
 
----
+`component-guidelines.md`、`hook-guidelines.md`、`state-management.md`、`type-safety.md`
+—— 本项目没有组件库、hooks、前端状态管理或 TypeScript。
 
-## Spec files to populate
+### 保留
 
+`.trellis/spec/guides/` 两个 thinking guide 与项目无冲突，未改动。
 
-### Frontend guidelines
+## Acceptance
 
-| File | What to document |
-|------|------------------|
-| `.trellis/spec/frontend/directory-structure.md` | Component/page/hook organization |
-| `.trellis/spec/frontend/component-guidelines.md` | Component patterns, props conventions |
-| `.trellis/spec/frontend/hook-guidelines.md` | Custom hook naming, patterns |
-| `.trellis/spec/frontend/state-management.md` | State library, patterns, what goes where |
-| `.trellis/spec/frontend/type-safety.md` | TypeScript conventions, type organization |
-| `.trellis/spec/frontend/quality-guidelines.md` | Linting, testing, accessibility |
-
-
-### Thinking guides (already populated)
-
-`.trellis/spec/guides/` contains general thinking guides pre-filled with
-best practices. Customize only if something clearly doesn't fit this project.
-
----
-
-## How to fill the spec
-
-### Step 1: Import from existing convention files first (preferred)
-
-Search the repo for existing convention docs. If any exist, read them and
-extract the relevant rules into the matching `.trellis/spec/` files —
-usually much faster than documenting from scratch.
-
-| File / Directory | Tool |
-|------|------|
-| `CLAUDE.md` / `CLAUDE.local.md` | Claude Code |
-| `AGENTS.md` | Codex / Claude Code / agent-compatible tools |
-| `.cursorrules` | Cursor |
-| `.cursor/rules/*.mdc` | Cursor (rules directory) |
-| `.windsurfrules` | Windsurf |
-| `.clinerules` | Cline |
-| `.roomodes` | Roo Code |
-| `.github/copilot-instructions.md` | GitHub Copilot |
-| `.vscode/settings.json` → `github.copilot.chat.codeGeneration.instructions` | VS Code Copilot |
-| `CONVENTIONS.md` / `.aider.conf.yml` | aider |
-| `CONTRIBUTING.md` | General project conventions |
-| `.editorconfig` | Editor formatting rules |
-
-### Step 2: Analyze the codebase for anything not covered by existing docs
-
-Scan real code to discover patterns. Before writing each spec file:
-- Find 2-3 real examples of each pattern in the codebase.
-- Reference real file paths (not hypothetical ones).
-- Document anti-patterns the team clearly avoids.
-
-### Step 3: Document reality, not ideals
-
-**Critical**: write what the code *actually does*, not what it should do.
-Sub-agents match the spec, so aspirational patterns that don't exist in the
-codebase will cause sub-agents to write code that looks out of place.
-
-If the team has known tech debt, document the current state — improvement
-is a separate conversation, not a bootstrap concern.
-
----
-
-## Quick explainer of the runtime (share when they ask "why do we need spec at all")
-
-- Every AI coding task spawns two sub-agents: `trellis-implement` (writes
-  code) and `trellis-check` (verifies quality).
-- Each task has `implement.jsonl` / `check.jsonl` manifests listing which
-  spec files to load.
-- The platform hook auto-injects those spec files + the task's `prd.md`
-  into every sub-agent prompt, so the sub-agent codes/reviews per team
-  conventions without anyone pasting them manually.
-- Source of truth: `.trellis/spec/`. That's why filling it well now pays
-  off forever.
-
----
-
-## Completion
-
-When the developer confirms the checklist items above are done with real
-examples (not placeholders), guide them to run:
-
-```bash
-python3 ./.trellis/scripts/task.py finish
-python3 ./.trellis/scripts/task.py archive 00-bootstrap-guidelines
-```
-
-After archive, every new developer who joins this project will get a
-`00-join-<slug>` onboarding task instead of this bootstrap task.
-
----
-
-## Suggested opening line
-
-"Welcome to Trellis! Your init just set me up to help you fill the project
-spec — a one-time setup so every future AI session follows the team's
-conventions instead of writing generic code. Before we start, do you have
-any existing convention docs (CLAUDE.md, .cursorrules, CONTRIBUTING.md,
-etc.) I can pull from, or should I scan the codebase from scratch?"
+- [x] 每个文件都指向真实路径/函数，而不是通用建议。
+- [x] 无 `TBD` / `To fill` / 空标题 / 复制样板（已 grep 校验）。
+- [x] `index.md` 与实际文件集一致。
+- [x] 记录了关键的项目特有约束：`public/` 是冻结基准、逐字节 `diff`、UTC 日期语义、CSS 裁剪开关。
