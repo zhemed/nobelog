@@ -1209,3 +1209,10 @@ body.lightbox-open {
 .post-meta-line .post-tags .post-tag:last-child {
   margin-right: 0;
 }
+
+/* 顶部分类标签行：与正文二级标题一致的分隔线与上下留白 */
+.post-meta-line {
+  margin: 24px 0 16px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+}
