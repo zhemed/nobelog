@@ -137,3 +137,37 @@ slug/标签/分类路径穿越双层拦截、Host/XFH 白名单 + base_url 转�
 ### Next Steps
 
 - 用户决定提交/部署；剩余 P2（CSS 裁剪依赖 public、动态热更新删除检测等）待排期
+
+
+## Session 5: 同步 spec 并部署 P1 修复
+<!-- trellis-session: v=2 fp=603e5aa57300dbb2 -->
+
+**Date**: 2026-10-19
+**Task**: 同步 spec 并部署 P1 修复
+**Branch**: `main`
+
+### Summary
+
+spec 时区约定改为 UTC+8 挂钟存储/RSS 输出真实 UTC；提交并推送 9ad2ee3；release 重建后重启 nobelog-local（PID 830→63373），feed pubDate 与注入头实测均符合预期
+
+### Main Changes
+
+- .trellis/spec/frontend/*
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9ad2ee3` | fix: 修复构建期路径穿越、Host 注入与 RSS 时区（P1） [task:10-19-fix-p1-audit] |
+
+### Testing
+
+- [OK] 线上 8 路由 200/404；feed pubDate 14:40/04:15 GMT；XFH 注入回退；52 测试全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 剩余 P2：CSS 裁剪依赖 public/、热更新删除检测、SITE_URL、panic=unwind
