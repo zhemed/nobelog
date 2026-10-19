@@ -39,3 +39,37 @@
 ### Next Steps
 
 - 可选：处理 00-bootstrap-guidelines 填充 spec
+
+
+## Session 2: 填充 .trellis/spec/frontend
+<!-- trellis-session: v=2 fp=1a0be6a9380b0b25 -->
+
+**Date**: 2026-10-19
+**Task**: 填充 .trellis/spec/frontend
+**Branch**: `main`
+
+### Summary
+
+按 Rust 静态站真实结构重写 frontend 指南：9 个文件，删除 React 类模板；记录 public/ 冻结基准、逐字节 diff、UTC 日期语义、CSS 裁剪等约束
+
+### Main Changes
+
+- .trellis/spec/frontend/*
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f4c1099` | docs: 填充 .trellis/spec/frontend（按 Rust 静态站真实结构） [task:00-bootstrap-guidelines] |
+
+### Testing
+
+- [OK] grep 校验无占位符；index 与文件集一致
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 按 trellis-update-spec 增量维护
