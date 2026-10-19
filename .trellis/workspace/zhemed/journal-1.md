@@ -203,3 +203,37 @@ CSS 裁剪与 public 解耦（静态/动态同哈希 1f82b0f7）、动态热更�
 ### Next Steps
 
 - 用户决定提交与部署；P3（符号链接、.mdx 扫描、保留名大小写）待排期
+
+
+## Session 7: 修复 P3 并部署 P2+P3
+<!-- trellis-session: v=2 fp=30c07a0d6c0fff27 -->
+
+**Date**: 2026-10-19
+**Task**: 修复 P3 并部署 P2+P3
+**Branch**: `main`
+
+### Summary
+
+P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且补 11 项、updated 非法 fail-fast；87 测试全绿；release 重建后重启 nobelog-local（PID 63373→97813），线上 CSS 1f82b0f7、feed 时区与注入回退均保持
+
+### Main Changes
+
+- rust/src/{serve,assets,content}.rs
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e12cfd0` | fix: P3 修复（符号链接指纹、.mdx 扫描、保留名大小写、updated 校验） [task:10-19-fix-p3] |
+
+### Testing
+
+- [OK] cargo fmt/clippy/test 87；部署后 9 路由冒烟、CSS 确定性 cmp、pubDate、/images no-cache、XFH 回退
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- SITE_URL 待域名；可选图片哈希化；P3 剩余（broken link 语义、date fail-fast）需产品决策
