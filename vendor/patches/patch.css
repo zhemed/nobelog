@@ -1216,3 +1216,13 @@ body.lightbox-open {
   padding-bottom: 7px;
   border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
 }
+
+/* 暗色下分隔线与二级标题保持一致 */
+html[data-mode="dark"] .post-meta-line {
+  border-bottom-color: rgba(61, 68, 77, 0.7);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-mode]) .post-meta-line {
+    border-bottom-color: rgba(61, 68, 77, 0.7);
+  }
+}
