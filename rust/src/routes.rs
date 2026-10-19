@@ -53,10 +53,7 @@ impl Site {
         if home_pages.is_empty() {
             home_pages.push(Vec::new());
         }
-        let root_url = std::env::var("SITE_URL")
-            .unwrap_or_else(|_| SITE.url.to_string())
-            .trim_end_matches('/')
-            .to_string();
+        let root_url = crate::site::env_url().unwrap_or_else(|| SITE.url.to_string());
         Ok(Self {
             content,
             home_pages,
@@ -94,12 +91,13 @@ impl Site {
             .collect()
     }
 
-    pub fn page(&self, pathname: &str, assets: &PageAssets) -> RenderedPage {
+    pub fn page(&self, pathname: &str, assets: &PageAssets, base_url: &str) -> RenderedPage {
         let path = if pathname.is_empty() { "/" } else { pathname };
         let recent = self.recent_links();
         let top_tags = self.top_tag_links();
         let ctx = Ctx {
             assets,
+            base_url,
             path,
             recent: &recent,
             top_tags: &top_tags,
@@ -287,7 +285,7 @@ impl Site {
             return RenderedPage {
                 status: 200,
                 path: path.to_string(),
-                html: templates::feed_xml(&refs, &self.root_url, SITE.description),
+                html: templates::feed_xml(&refs, base_url, SITE.description),
                 kind: PageKind::Feed,
             };
         }
@@ -297,7 +295,7 @@ impl Site {
             return RenderedPage {
                 status: 200,
                 path: path.to_string(),
-                html: templates::sitemap_xml(&paths, &self.root_url),
+                html: templates::sitemap_xml(&paths, base_url),
                 kind: PageKind::Sitemap,
             };
         }
@@ -336,7 +334,7 @@ impl Site {
         paths.push("/feed.xml".to_string());
         paths.push("/sitemap.xml".to_string());
         for path in paths {
-            result.push(self.page(&path, assets));
+            result.push(self.page(&path, assets, &self.root_url));
         }
         result
     }

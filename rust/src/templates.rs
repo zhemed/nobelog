@@ -41,6 +41,7 @@ pub struct Breadcrumb {
 
 pub struct Ctx<'a> {
     pub assets: &'a PageAssets,
+    pub base_url: &'a str,
     pub path: &'a str,
     pub recent: &'a [Link],
     pub top_tags: &'a [TagLink],
@@ -335,7 +336,7 @@ fn topbar(crumbs: &str, title: &str) -> String {
 
 /* ------------------------------------------------------------ 页脚 */
 
-fn footer() -> String {
+fn footer(base_url: &str) -> String {
     let year = Utc::now().year();
     let title = escape_html(SITE.title);
     let note = escape_html(SITE.license_note);
@@ -358,7 +359,7 @@ fn footer() -> String {
             {powered}
           </p>
         </footer>"##,
-        url = SITE.url
+        url = base_url
     )
 }
 
@@ -743,7 +744,7 @@ fn render_layout(
     let path = escape_html(ctx.path);
     let sidebar = sidebar(ctx.path);
     let topbar = topbar(crumbs, &topbar_title);
-    let footer = footer();
+    let footer = footer(ctx.base_url);
     let panel = panel(ctx, toc);
     let main_col = if panel.is_empty() {
         "col-12 col-lg-11 col-xl-12"
@@ -754,7 +755,7 @@ fn render_layout(
     let css = &ctx.assets.css;
     let js = &ctx.assets.js;
     let lang = SITE.lang;
-    let url = SITE.url;
+    let url = ctx.base_url;
     format!(
         r##"<!DOCTYPE html>
 <html lang="{lang}">
@@ -863,6 +864,7 @@ pub fn home_page(ctx: &Ctx, posts: &[&Post], page: usize, total: usize) -> Strin
     };
     let ctx = Ctx {
         assets: ctx.assets,
+        base_url: ctx.base_url,
         path: ctx.path,
         recent,
         top_tags: ctx.top_tags,
@@ -996,6 +998,7 @@ pub fn list_page(ctx: &Ctx, title: &str, posts: &[&Post], crumbs: &[Breadcrumb])
     };
     let ctx = Ctx {
         assets: ctx.assets,
+        base_url: ctx.base_url,
         path: ctx.path,
         recent,
         top_tags: ctx.top_tags,
@@ -1082,7 +1085,7 @@ pub fn post_page(ctx: &Ctx, post: &Post, related: &[RelatedLink]) -> String {
         )
     };
 
-    let share_url = url::encode(&format!("{}{}", SITE.url, post_url(post)));
+    let share_url = url::encode(&format!("{}{}", ctx.base_url, post_url(post)));
     let share = format!(
         r##"      <div class="share-wrapper">
         <span class="share-label text-muted me-1">分享</span>
@@ -1393,6 +1396,7 @@ pub fn taxonomy_index(ctx: &Ctx, kind: &str, map: &Taxonomy, posts: &[Post]) -> 
     };
     let ctx = Ctx {
         assets: ctx.assets,
+        base_url: ctx.base_url,
         path: ctx.path,
         recent,
         top_tags,
@@ -1451,6 +1455,7 @@ pub fn not_found_page(ctx: &Ctx, path: &str) -> String {
     let effective_path = if path.is_empty() { "/" } else { path };
     let ctx = Ctx {
         assets: ctx.assets,
+        base_url: ctx.base_url,
         path: effective_path,
         recent: ctx.recent,
         top_tags: ctx.top_tags,

@@ -215,6 +215,31 @@ pub async fn run(root: &Path, host: &str, port: u16, dynamic: bool) -> Result<()
     Ok(())
 }
 
+/// 动态模式下根据请求推断站点绝对地址：SITE_URL 优先，否则用 Host + X-Forwarded-Proto。
+fn request_base_url(headers: &HeaderMap, fallback: &str) -> String {
+    if let Some(url) = crate::site::env_url() {
+        return url;
+    }
+    let host = headers
+        .get("x-forwarded-host")
+        .or_else(|| headers.get(header::HOST))
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.split(',').next())
+        .map(str::trim)
+        .filter(|value| !value.is_empty() && !value.contains('/') && !value.contains(' '));
+    let Some(host) = host else {
+        return fallback.to_string();
+    };
+    let proto = headers
+        .get("x-forwarded-proto")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.split(',').next())
+        .map(str::trim)
+        .filter(|value| *value == "http" || *value == "https")
+        .unwrap_or("http");
+    format!("{proto}://{host}")
+}
+
 /* ------------------------------------------------------------ 响应压缩 */
 
 /// 压缩谓词：只压白名单文本类、≥1KB，且不是 206/304/204。
@@ -388,7 +413,7 @@ fn render_page(state: &AppState, raw_path: &str, head: bool) -> Response {
         );
     };
 
-    let page = site.page(raw_path, &state.assets);
+    let page = site.page(raw_path, &state.assets, &site.root_url);
     let status = StatusCode::from_u16(page.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let content_type = match page.kind {
         PageKind::Feed => "application/rss+xml; charset=utf-8",
@@ -488,7 +513,8 @@ fn render_dynamic(
     request_headers: &HeaderMap,
     if_none_match: Option<&str>,
 ) -> Response {
-    let page = runtime.site.page(raw_path, &runtime.assets);
+    let base = request_base_url(request_headers, &runtime.site.root_url);
+    let page = runtime.site.page(raw_path, &runtime.assets, &base);
     let status = StatusCode::from_u16(page.status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let content_type = match page.kind {
         PageKind::Feed => "application/rss+xml; charset=utf-8",

@@ -33,6 +33,14 @@ pub struct SiteConfig {
     pub license_note: &'static str,
 }
 
+/// 部署时用 SITE_URL 覆盖站点绝对地址；未设置时回退到默认值。
+pub fn env_url() -> Option<String> {
+    std::env::var("SITE_URL")
+        .ok()
+        .map(|value| value.trim().trim_end_matches('/').to_string())
+        .filter(|value| !value.is_empty())
+}
+
 pub static SITE: SiteConfig = SiteConfig {
     url: "http://127.0.0.1:10086",
     lang: "zh-CN",

@@ -44,6 +44,11 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 | `vendor/` | 主题样式与字体 |
 | `public/` | 构建产物（不提交） |
 
+## 部署提示
+
+对外部署时设置 `SITE_URL`（例如 `SITE_URL=https://你的域名`），sitemap、RSS、canonical、页脚与分享链接都会使用它。
+未设置时，动态模式会按请求的 `Host` / `X-Forwarded-Proto` 自动推断；静态构建则回退到默认地址。
+
 ## 数据
 
 `content/` 就是博客的全部数据：文章、单页、图片。纯 Markdown + frontmatter，

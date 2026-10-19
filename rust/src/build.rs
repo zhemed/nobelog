@@ -63,8 +63,10 @@ pub fn build(root: &Path, out: &Path, self_assets: bool) -> Result<()> {
     }
 
     // 静态托管的 404 约定文件
+    let base_url = crate::site::env_url().unwrap_or_else(|| crate::site::SITE.url.to_string());
     let ctx = crate::templates::Ctx {
         assets: &assets,
+        base_url: &base_url,
         path: "/",
         recent: &[],
         top_tags: &[],
