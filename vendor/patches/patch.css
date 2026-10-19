@@ -1184,3 +1184,16 @@ body.lightbox-open {
   background: var(--tag-hover);
   transition: background 0.35s ease-in-out;
 }
+
+/* 临时试验：分类与标签合并到文章顶部一行 */
+.post-meta-line {
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.post-meta-line .post-meta {
+  margin-bottom: 0 !important;
+}
+.post-meta-line .post-tags {
+  line-height: 1;
+  margin: 0 !important;
+}

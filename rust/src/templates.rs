@@ -1182,14 +1182,15 @@ pub fn post_page(ctx: &Ctx, post: &Post, related: &[RelatedLink]) -> String {
     <!-- .post-meta -->
   </header>
 
+  <div class="post-meta-line d-flex align-items-center flex-wrap text-muted">
+{categories}{tags}  </div>
+
   <div class="content markdown-body">
 {html}
   </div>
 
   <div class="post-tail-wrapper text-muted">
-    <!-- categories -->
-{categories}    <!-- tags -->
-{tags}    <!-- license && sharing -->
+    <!-- license && sharing -->
     <div class="post-tail-bottom d-flex justify-content-between align-items-center mt-3 pt-5 pb-2">
       <div class="license-wrapper">
         许可协议:&nbsp;
