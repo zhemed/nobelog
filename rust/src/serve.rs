@@ -984,7 +984,7 @@ fn resolve_file_under(base: &Path, url_suffix: &str) -> Option<PathBuf> {
     has_segment.then_some(path)
 }
 
-/// content/ 的指纹：所有文件的「相对路径 + 大小 + mtime」整体哈希。
+/// content/ 的指纹：所有文件的「相对路径 + 大小 + mtime（符号链接再加链接目标）」整体哈希。
 ///
 /// 只取最大 mtime 会漏掉两类变化：删除文章（剩余文件的最大值不变）和用备份还原
 /// （mtime 反而更旧），结果旧快照一直对外服务、删掉的文章还在。整体哈希能把
@@ -992,24 +992,47 @@ fn resolve_file_under(base: &Path, url_suffix: &str) -> Option<PathBuf> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct ContentStamp(u64);
 
+/// content/ 下的一个文件入指纹的要素。
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct StampEntry {
+    /// 相对 content/ 的路径。
+    path: String,
+    len: u64,
+    mtime_ns: i128,
+    /// 符号链接的原始目标（相对链接按原样保存）；普通文件为 None。
+    link_target: Option<String>,
+}
+
 /// content/ 下每个文件的（相对路径、字节数、mtime 纳秒）；目录不存在时是空集合。
+///
+/// 会**跟随符号链接**：`content.rs::read_posts` / `read_pages` 用 `fs::read_to_string` 读文件，
+/// 对符号链接是跟随的。指纹必须和加载范围一致，否则「新增一篇链接文章」或「改链接目标」
+/// 都不会触发重建（线上表现为改了 md 但页面永远不变）。
 fn content_stamp(root: &Path) -> ContentStamp {
     let base = root.join("content");
-    let mut entries: Vec<(String, u64, i128)> = Vec::new();
+    let mut entries = Vec::new();
     for entry in walkdir::WalkDir::new(&base)
         .into_iter()
         .filter_map(|entry| entry.ok())
     {
-        if !entry.file_type().is_file() {
+        let path = entry.path();
+        // 目录交给 walkdir 递归，不进指纹；目录符号链接也跳过（walkdir 默认不跟随目录链接，
+        // content.rs 也是逐目录 read_dir，两边范围一致，同时避免链接成环）。
+        if entry.file_type().is_dir() {
             continue;
         }
-        let Ok(meta) = entry.metadata() else {
+        // 普通文件与符号链接一律用 fs::metadata（跟随链接）取目标元数据：
+        // 链接断掉时这里返回 Err，直接跳过，不 panic，也不影响其它文件。
+        let Ok(meta) = std::fs::metadata(path) else {
             continue;
         };
+        if !meta.is_file() {
+            continue;
+        }
         let Ok(modified) = meta.modified() else {
             continue;
         };
-        let Ok(relative) = entry.path().strip_prefix(&base) else {
+        let Ok(relative) = path.strip_prefix(&base) else {
             continue;
         };
         // 1970 年之前的 mtime 用负数表示，避免与「拿不到 mtime」混成同一个值。
@@ -1017,24 +1040,35 @@ fn content_stamp(root: &Path) -> ContentStamp {
             Ok(elapsed) => elapsed.as_nanos() as i128,
             Err(error) => -(error.duration().as_nanos() as i128),
         };
-        entries.push((
-            relative.to_string_lossy().into_owned(),
-            meta.len(),
+        // 链接目标本身也算身份的一部分：把链接改指向另一个（大小 / mtime 恰好相同的）文件时，
+        // 只靠目标元数据会漏掉，带上目标路径就一定能察觉。
+        let link_target = if entry.file_type().is_symlink() {
+            std::fs::read_link(path)
+                .ok()
+                .map(|target| target.to_string_lossy().into_owned())
+        } else {
+            None
+        };
+        entries.push(StampEntry {
+            path: relative.to_string_lossy().into_owned(),
+            len: meta.len(),
             mtime_ns,
-        ));
+            link_target,
+        });
     }
     stamp_digest(entries)
 }
 
 /// 把文件清单折成指纹。先排序：walkdir 的遍历顺序依赖文件系统，不排序会得到不稳定的哈希。
-fn stamp_digest(mut entries: Vec<(String, u64, i128)>) -> ContentStamp {
+fn stamp_digest(mut entries: Vec<StampEntry>) -> ContentStamp {
     entries.sort_unstable();
     let mut hasher = DefaultHasher::new();
     entries.len().hash(&mut hasher);
-    for (path, len, mtime_ns) in entries {
-        path.hash(&mut hasher);
-        len.hash(&mut hasher);
-        mtime_ns.hash(&mut hasher);
+    for entry in entries {
+        entry.path.hash(&mut hasher);
+        entry.len.hash(&mut hasher);
+        entry.mtime_ns.hash(&mut hasher);
+        entry.link_target.hash(&mut hasher);
     }
     ContentStamp(hasher.finish())
 }
@@ -1324,6 +1358,16 @@ mod tests {
         }
     }
 
+    /// 普通文件（非链接）的指纹要素。
+    fn entry(path: &str, len: u64, mtime_ns: i128) -> StampEntry {
+        StampEntry {
+            path: path.to_string(),
+            len,
+            mtime_ns,
+            link_target: None,
+        }
+    }
+
     #[test]
     fn content_stamp_tracks_added_and_removed_files() {
         let dir = TempDir::new("stamp-files");
@@ -1355,19 +1399,87 @@ mod tests {
         // 不引入依赖就没法把 mtime 改回旧值，所以在「折叠成指纹」这一层验证：
         // 路径与 mtime 完全相同、只有大小不同，指纹必须不同。
         let at: i128 = 1_700_000_000_000_000_000;
-        let small = stamp_digest(vec![("posts/a.md".to_string(), 10, at)]);
-        let larger = stamp_digest(vec![("posts/a.md".to_string(), 11, at)]);
+        let small = stamp_digest(vec![entry("posts/a.md", 10, at)]);
+        let larger = stamp_digest(vec![entry("posts/a.md", 11, at)]);
         assert_ne!(small, larger, "同 mtime 下大小变化必须触发重建");
         assert!(is_stale(larger, small));
         assert!(!is_stale(small, small));
     }
 
     #[test]
+    fn stamp_digest_tracks_link_target() {
+        // 链接目标也要算身份：否则「改指向另一个大小/mtime 恰好相同的文件」会漏检。
+        let plain = entry("posts/linked.md", 10, 5);
+        let mut linked_a = plain.clone();
+        linked_a.link_target = Some("/tmp/a.md".to_string());
+        let mut linked_b = plain.clone();
+        linked_b.link_target = Some("/tmp/b.md".to_string());
+
+        assert_ne!(
+            stamp_digest(vec![linked_a.clone()]),
+            stamp_digest(vec![linked_b.clone()]),
+            "链接目标不同必须触发重建"
+        );
+        assert_ne!(
+            stamp_digest(vec![linked_a]),
+            stamp_digest(vec![plain]),
+            "链接与普通文件不能同指纹"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn content_stamp_follows_symlinked_posts() {
+        use std::os::unix::fs::symlink;
+
+        let dir = TempDir::new("stamp-link");
+        let content = dir.path().join("content");
+        std::fs::create_dir_all(content.join("posts")).unwrap();
+        // 链接目标放在 content/ 之外，模拟「仓库里只放链接、正文在别处」。
+        let target = dir.path().join("outside").join("post.md");
+        std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+        std::fs::write(&target, "第一版").unwrap();
+        symlink(&target, content.join("posts").join("linked.md")).unwrap();
+
+        let linked = content_stamp(dir.path());
+        assert_eq!(linked, content_stamp(dir.path()), "链接未变时指纹稳定");
+
+        let empty_dir = TempDir::new("stamp-link-empty");
+        let empty = content_stamp(empty_dir.path());
+        assert_ne!(linked, empty, "链接文章必须计入指纹（新增链接也要重建）");
+
+        // 目标文件变大 / mtime 变化 → 指纹必须变化（不跟随链接的旧实现恒为 linked）。
+        std::fs::write(&target, "第二版（更长一些）").unwrap();
+        assert_ne!(
+            content_stamp(dir.path()),
+            linked,
+            "链接目标改动必须触发重建"
+        );
+
+        // 目标被删 → 链接变 broken：跳过即可，不 panic，指纹退回「没有这个文件」。
+        std::fs::remove_file(&target).unwrap();
+        assert_eq!(
+            content_stamp(dir.path()),
+            empty,
+            "broken 链接必须被稳定跳过，且不 panic"
+        );
+
+        // content/ 内的目录符号链接不展开、不计入指纹（walkdir 默认不跟随目录链接，
+        // content.rs 也是逐目录 read_dir，两边范围一致，也避免链接成环）。
+        let shared_dir = dir.path().join("outside-dir");
+        std::fs::create_dir_all(&shared_dir).unwrap();
+        std::fs::write(shared_dir.join("nested.md"), "nested").unwrap();
+        symlink(&shared_dir, content.join("posts").join("linked-dir")).unwrap();
+        assert_eq!(
+            content_stamp(dir.path()),
+            empty,
+            "目录链接不展开、不计入指纹"
+        );
+    }
+
+    #[test]
     fn stamp_digest_is_order_independent_and_path_sensitive() {
-        let entries = vec![
-            ("posts/a.md".to_string(), 10_u64, 1_i128),
-            ("posts/b.md".to_string(), 20, 2),
-        ];
+        let entries = vec![entry("posts/a.md", 10, 1), entry("posts/b.md", 20, 2)];
         let mut reversed = entries.clone();
         reversed.reverse();
         assert_eq!(
@@ -1376,10 +1488,7 @@ mod tests {
             "遍历顺序不同不能算出不同指纹"
         );
 
-        let renamed = vec![
-            ("posts/a.md".to_string(), 10_u64, 1_i128),
-            ("posts/c.md".to_string(), 20, 2),
-        ];
+        let renamed = vec![entry("posts/a.md", 10, 1), entry("posts/c.md", 20, 2)];
         assert_ne!(
             stamp_digest(entries),
             stamp_digest(renamed),

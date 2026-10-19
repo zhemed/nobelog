@@ -137,7 +137,7 @@ fn parse_source(root: &Path, path: &Path) -> Result<Post> {
                 .map(wall_clock_from_system_time)
         })
         .unwrap_or_else(|| Utc.timestamp_opt(0, 0).unwrap());
-    let updated = get_str(&data, "updated").as_deref().and_then(parse_date);
+    let updated = parse_updated(&data, &display)?;
     let tags = get_list(&data, "tags");
     let categories = get_list(&data, "categories");
     for tag in &tags {
@@ -268,37 +268,51 @@ fn validate_slug(slug: &str) -> Result<()> {
     Ok(())
 }
 
-/// 单页 `/<slug>/` 抢占的一级路径：这些名字在 `routes::Site::page` 里有固定路由
-/// （`/tags/`、`/categories/` 是分类索引，`/page/N/` 是分页，`/posts/`、`/archives/` 同理），
-/// 撞上就永远被固定路由挡住——sitemap 会收录一个拿不到单页的 URL。
+/// 固定路由占用的一级路径（**小写**比较）：`/tags/`、`/categories/` 是分类索引，
+/// `/page/N/` 是分页，`/posts/`、`/archives/` 同理。
 const RESERVED_PAGE_ROUTES: [&str; 5] = ["archives", "categories", "page", "posts", "tags"];
 
-/// 单页 `/<slug>/` 的目录名与构建器写在输出根的同名文件冲突
-/// （`feed.xml` / `sitemap.xml` / `404.html` / `index.html` / `assets-manifest.json`）：
-/// 写盘时必然是 `Is a directory`，入口就该拒绝。
-const RESERVED_OUTPUT_NAMES: [&str; 5] = [
+/// 输出根 / 部署根里被构建器与 `public/` 固定资产占用的名字（**小写**比较）：
+/// - 构建产物文件 `feed.xml` / `sitemap.xml` / `404.html` / `index.html` / `assets-manifest.json`：
+///   `/<slug>/` 目录与之同名，写盘必然 `Is a directory`；
+/// - 构建器维护的资源目录 `assets` / `images`；
+/// - `public/` 里的部署配置 `CNAME` / `robots.txt` / `_headers` / `_redirects`
+///   （见 `paths::PRESERVE_IN_PUBLIC`），部署时和站点产物合并到同一个根目录。
+const RESERVED_OUTPUT_NAMES: [&str; 11] = [
     "404.html",
+    "_headers",
+    "_redirects",
+    "assets",
     "assets-manifest.json",
+    "cname",
     "feed.xml",
+    "images",
     "index.html",
+    "robots.txt",
     "sitemap.xml",
 ];
 
-/// 单页 slug 是否与站内固定产物（固定路由或输出根文件）抢名字
+/// 单页 slug 是否与站内固定产物（固定路由 / 输出根名字）抢名字
 /// （`routes` 层据此让固定路由优先，`read_pages` 据此 fail-fast）。
+///
+/// **大小写不敏感**：产物会落在大小写不敏感的文件系统或主机上（macOS / Windows），
+/// `Tags` 与 `tags` 指向同一路径，所以两边都按小写比较。
 pub fn is_reserved_page_slug(slug: &str) -> bool {
-    RESERVED_PAGE_ROUTES.contains(&slug) || RESERVED_OUTPUT_NAMES.contains(&slug)
+    let lower = slug.to_lowercase();
+    RESERVED_PAGE_ROUTES.contains(&lower.as_str())
+        || RESERVED_OUTPUT_NAMES.contains(&lower.as_str())
 }
 
 /// 单页 slug：在通用校验之上再拒绝保留名（fail-fast，而不是静默产出 404 / 写盘失败）。
 fn validate_page_slug(slug: &str) -> Result<()> {
     validate_slug(slug)?;
-    if RESERVED_PAGE_ROUTES.contains(&slug) {
+    let lower = slug.to_lowercase();
+    if RESERVED_PAGE_ROUTES.contains(&lower.as_str()) {
         anyhow::bail!("单页 slug 不能是保留路由名 {slug:?}（/{slug}/ 会被固定路由遮挡）");
     }
-    if RESERVED_OUTPUT_NAMES.contains(&slug) {
+    if RESERVED_OUTPUT_NAMES.contains(&lower.as_str()) {
         anyhow::bail!(
-            "单页 slug 不能与输出根的文件同名 {slug:?}（/{slug}/ 目录会与 {slug} 文件冲突）"
+            "单页 slug 不能与输出根的同名产物冲突 {slug:?}（/{slug}/ 会与同名文件或目录撞路径）"
         );
     }
     Ok(())
@@ -409,6 +423,25 @@ pub fn parse_date(value: &str) -> Option<DateTime<Utc>> {
         return Some(Utc.from_utc_datetime(&d.and_hms_opt(0, 0, 0)?));
     }
     None
+}
+
+/// frontmatter 的 `updated`：语义与 `date` 一致（UTC+8 挂钟），但**不再允许静默失效**。
+///
+/// 以前是 `get_str(...).and_then(parse_date)`：`updated: 2026-13-45` 这种写错的值会悄悄变成
+/// `None`，页面/feed 都当"没更新过"，没有任何提示。现在带文件路径 fail-fast，
+/// 并保留原值方便定位（`updated 无法解析: content/posts/x.md（"2026-13-45"）`）。
+/// 显式留空（`updated:` / `updated: ""`）仍视为"未设置"——那是 YAML 里的正常写法，
+/// 与 `date` 缺省时回退 mtime 的约定不冲突。
+fn parse_updated(data: &serde_yaml::Value, display: &str) -> Result<Option<DateTime<Utc>>> {
+    let Some(raw) = get_str(data, "updated") else {
+        return Ok(None);
+    };
+    if raw.trim().is_empty() {
+        return Ok(None);
+    }
+    parse_date(&raw)
+        .map(Some)
+        .with_context(|| format!("updated 无法解析: {display}（{raw:?}）"))
 }
 
 fn build_taxonomy(posts: &[Post], pick: impl Fn(&Post) -> &Vec<String>) -> Taxonomy {
@@ -947,11 +980,154 @@ mod tests {
             let msg = format!("{err:#}");
             assert!(
                 msg.contains("content/pages/feed.md")
-                    && msg.contains("单页 slug 不能与输出根的文件同名"),
+                    && msg.contains("单页 slug 不能与输出根的同名产物冲突"),
                 "单页 slug {reserved:?} 应被拒绝：{msg}"
             );
             let _ = fs::remove_dir_all(&root);
         }
+    }
+
+    #[test]
+    fn reserved_page_slug_names_cover_output_root_and_public_assets() {
+        // 输出根与部署根里被占用的名字：构建产物、资源目录、public/ 固定资产。
+        for name in [
+            "assets",
+            "images",
+            "CNAME",
+            "robots.txt",
+            "_headers",
+            "_redirects",
+            "feed.xml",
+            "sitemap.xml",
+            "404.html",
+            "index.html",
+            "assets-manifest.json",
+        ] {
+            assert!(
+                is_reserved_page_slug(name),
+                "{name:?} 应被识别为输出根保留名"
+            );
+            let root = temp_root("reserved-output");
+            write_file(
+                &root,
+                "content/pages/p.md",
+                &format!("---\ntitle: t\nslug: {name}\n---\n\n正文\n"),
+            );
+            let err = load(&root).unwrap_err();
+            let msg = format!("{err:#}");
+            assert!(
+                msg.contains("content/pages/p.md") && msg.contains("输出根的同名产物"),
+                "单页 slug {name:?} 应带文件路径被拒绝：{msg}"
+            );
+            let _ = fs::remove_dir_all(&root);
+        }
+    }
+
+    #[test]
+    fn reserved_page_slug_check_is_case_insensitive() {
+        // 产物可能落在大小写不敏感的主机上：`Tags` 与 `tags` 是同一个路径。
+        for upper in [
+            "Tags",
+            "TAGS",
+            "Archives",
+            "Posts",
+            "Feed.xml",
+            "FEED.XML",
+            "Sitemap.xml",
+            "Index.html",
+            "Robots.txt",
+            "CNAME",
+            "_Headers",
+            "Assets",
+            "Images",
+        ] {
+            assert!(
+                is_reserved_page_slug(upper),
+                "{upper:?} 应按小写比较被识别为保留名"
+            );
+        }
+        // 不相关的名字不能被误伤。
+        for ok in ["about", "About", "关于我", "tagsx", "post", "tag-archive"] {
+            assert!(!is_reserved_page_slug(ok), "{ok:?} 不该被当成保留名");
+        }
+
+        // 端到端：`Tags` 单页以前能通过（大小写敏感比较），现在必须在 load 阶段被拒绝。
+        let root = temp_root("case-insensitive");
+        write_file(
+            &root,
+            "content/pages/tags-upper.md",
+            "---\ntitle: 冒充\nslug: Tags\n---\n\n正文\n",
+        );
+        let err = load(&root).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("content/pages/tags-upper.md") && msg.contains("保留路由名 \"Tags\""),
+            "大写 Tags 单页应被拒绝：{msg}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn load_rejects_invalid_updated_with_file_path() {
+        // 以前 `updated` 写错会静默变成 None（页面/feed 当"没更新过"），现在带路径 fail-fast。
+        let root = temp_root("bad-updated");
+        write_file(
+            &root,
+            "content/posts/bad-updated.md",
+            "---\ntitle: t\nslug: bad-updated\ndate: 2026-10-17 22:40:00\nupdated: 2026-13-45 99:99\n---\n\n正文\n",
+        );
+        let err = load(&root).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("updated 无法解析: content/posts/bad-updated.md"),
+            "错误需带文件路径：{msg}"
+        );
+        assert!(
+            msg.contains("2026-13-45 99:99"),
+            "错误需带原始值方便定位：{msg}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn load_keeps_valid_updated_and_treats_blank_as_absent() {
+        let root = temp_root("updated");
+        write_file(
+            &root,
+            "content/posts/upd.md",
+            "---\ntitle: t\nslug: upd\ndate: 2026-10-17 22:40:00\nupdated: 2026-10-18 22:40:00 +08:00\n---\n\n正文\n",
+        );
+        write_file(
+            &root,
+            "content/posts/blank.md",
+            "---\ntitle: b\nslug: blank\ndate: 2026-10-17 22:40:00\nupdated:\n---\n\n正文\n",
+        );
+        write_file(
+            &root,
+            "content/posts/absent.md",
+            "---\ntitle: a\nslug: absent\ndate: 2026-10-17 22:40:00\n---\n\n正文\n",
+        );
+        let content = load(&root).unwrap();
+        let by_slug = |slug: &str| {
+            content
+                .posts
+                .iter()
+                .find(|p| p.slug == slug)
+                .unwrap_or_else(|| panic!("缺文章 {slug}"))
+        };
+        // 合法 updated：与 date 同一套 UTC+8 挂钟语义（+08:00 与裸写等价）。
+        assert_eq!(
+            by_slug("upd")
+                .updated
+                .expect("updated 应被解析")
+                .format("%Y-%m-%d %H:%M:%S")
+                .to_string(),
+            "2026-10-18 22:40:00"
+        );
+        // 显式留空 / 未写：都视为未设置，不报错。
+        assert!(by_slug("blank").updated.is_none());
+        assert!(by_slug("absent").updated.is_none());
+        let _ = fs::remove_dir_all(&root);
     }
 
     #[test]

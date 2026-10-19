@@ -75,8 +75,19 @@ posts.sort_by(|a, b| match (a.pinned, b.pinned) {
 
 - `content/pages/*.md`：`title` / `slug` 通过 `front_line` 用正则从 frontmatter 读（**不是完整 YAML 解析**），
   缺省都用文件名 stem。
+- 单页 slug **大小写不敏感地**拒绝保留名（固定路由 `tags`/`categories`/`archives`/`about`/`posts` 与输出根
+  `index.html`/`404.html`/`feed.xml`/`sitemap.xml`/`assets-manifest.json`/`assets`/`images`/`CNAME`/
+  `robots.txt`/`_headers`/`_redirects`）。新增构建产物时要同步 `content.rs` 的保留名单。
 - 单页渲染时每篇各自新建 renderer（`markdown::render`），可以并行；文章之间必须串行共享 renderer，
   因为标题 id 的 `slugCount` 要跨文章累积（见 markdown-pipeline.md）。
+
+## 内容边界
+
+- 文章扩展名接受 `.md` 与 `.mdx`；CSS 裁剪的正文扫描也必须覆盖两者（`assets::collect_content_usage`）。
+- `updated` 非法值会 **fail-fast**（带文件路径与原始值），`updated:` 为空/缺省视为未设置；
+  `date` 非法仍按既有约定回退 mtime（见上文），两者语义不同。
+- `content/` 下的符号链接**会被加载**（`fs::read_to_string` 跟随）：动态模式的指纹也跟随链接，
+  并把链接目标路径计入哈希；broken link 不会 panic，表现为旧快照 + 失败日志 + 10s 重试。
 
 ## 反模式
 

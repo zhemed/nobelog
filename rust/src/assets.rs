@@ -202,6 +202,8 @@ fn collect_css_usage(root: &Path) -> Result<css_prune::Usage> {
 ///
 /// Markdown 渲染器自己生成的类由 `add_builtin_dynamic` 的白名单覆盖；正文手写的
 /// class/id 只有内容层知道，静态构建与动态模式读同一份 `content/`，所以不会破坏确定性。
+/// 文章扩展名与 `content::read_posts` 保持一致：`.md` 与 `.mdx` 都要扫
+/// （漏掉 `.mdx` 会让正文里的 class 被当成未使用而裁掉）。
 /// 代码块里的示例 HTML 会被一并收进来——多留样式无害，漏删才会出问题。
 fn collect_content_usage(root: &Path, usage: &mut css_prune::Usage) -> Result<()> {
     let content_dir = root.join("content");
@@ -214,7 +216,10 @@ fn collect_content_usage(root: &Path, usage: &mut css_prune::Usage) -> Result<()
             continue;
         }
         let path = entry.path();
-        if path.extension().is_some_and(|ext| ext == "md") {
+        if matches!(
+            path.extension().and_then(|ext| ext.to_str()),
+            Some("md" | "mdx")
+        ) {
             let markdown = fs::read_to_string(path)
                 .with_context(|| format!("读取 Markdown 失败：{}", path.display()))?;
             css_prune::collect_markdown_source_usage(&markdown, usage);
@@ -684,6 +689,44 @@ mod tests {
         // 没有 rust/src、没有 main.js 时走编译期内嵌副本，仍然能拿到模板里的类。
         assert!(usage.has_class("pagination"));
         assert!(usage.has_class("preview-img"));
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// 文章扩展名是 `.md` / `.mdx`（见 `content::read_posts`），正文扫描必须都覆盖：
+    /// `.mdx` 里的原生 HTML class 要进入 usage，不能被 CSS 裁剪丢掉。
+    #[test]
+    fn content_source_scan_includes_mdx() {
+        let root = temp_dir("mdx");
+        fs::create_dir_all(root.join("content/posts")).unwrap();
+        fs::write(
+            root.join("content/posts/with-html.md"),
+            r##"<div class="md-only-widget">md</div>"##,
+        )
+        .unwrap();
+        fs::write(
+            root.join("content/posts/with-html.mdx"),
+            r##"<div class="mdx-only-widget" id="mdx-anchor">mdx</div>"##,
+        )
+        .unwrap();
+
+        let usage = collect_css_usage(&root).unwrap();
+        assert!(
+            usage.has_class("md-only-widget"),
+            ".md 正文的 class 应进入 usage"
+        );
+        assert!(
+            usage.has_class("mdx-only-widget"),
+            ".mdx 正文的 class 应进入 usage"
+        );
+        assert!(usage.has_id("mdx-anchor"));
+
+        let css = ".mdx-only-widget{color:red}.totally-unused-xyz{color:red}";
+        let pruned = css_prune::prune_css(css, &usage, false).css;
+        assert!(
+            pruned.contains(".mdx-only-widget{"),
+            ".mdx 里的 class 不应被裁掉：{pruned}"
+        );
+        assert!(!pruned.contains("totally-unused-xyz"));
         let _ = fs::remove_dir_all(&root);
     }
 
