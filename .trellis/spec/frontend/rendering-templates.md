@@ -43,12 +43,16 @@ fn escape_html(input: &str) -> String {
 
 | 函数 | 输出 | 用途 |
 | --- | --- | --- |
-| `format_date` | `2026-10-17`（月日补零） | 卡片、归档、RSS、sitemap |
+| `format_date` | `2026-10-17`（月日补零） | 卡片、归档 |
 | `format_date_time` | `2024-2-22  周四  2:55 下午`（月日**不**补零，双空格分隔） | 主题 tooltip |
 | `card_date` | `刚刚` / `N 小时前` / `昨天` / `N 天前` / 绝对日期（>30 天） | 首页卡片 |
+| `rss_pub_date` | `Sat, 17 Oct 2026 14:40:00 GMT` | RSS `pubDate`（**挂钟 −8h** 还原真实 UTC） |
 
 `card_date` 的注意点：注释写明"站内日期按 UTC+8 挂钟存储"，比较时把 `Utc::now()` 加 8 小时，
 否则刚发的文章会被判成未来、一律显示"刚刚"。未来时间直接退回绝对日期。
+
+`rss_pub_date` 的注意点：`Post::date` 是 UTC+8 挂钟，RSS 需要真实 UTC，所以序列化前减 8 小时；
+`lastBuildDate` 用 `Utc::now()`（本就是真实 UTC），**不要**跟着减。任何新的"绝对时间"输出点都要先想清楚属于哪一侧。
 
 ## 分页
 

@@ -41,6 +41,18 @@ pub fn env_url() -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
+/// 启动时检查部署配置：`SITE_URL` 未设置就回退到内置默认地址（本机地址），
+/// canonical / og:url / feed / sitemap 里的绝对链接会跟着指向本机。
+/// 只告警一次，不 panic、不拒绝启动——开发态正依赖这个回退。
+pub fn warn_if_env_url_missing() {
+    if env_url().is_none() {
+        eprintln!(
+            "警告：未设置 SITE_URL，站点绝对链接回退到内置默认地址 {}；生产部署请设置 SITE_URL=https://你的域名。",
+            SITE.url
+        );
+    }
+}
+
 pub static SITE: SiteConfig = SiteConfig {
     url: "http://127.0.0.1:10086",
     lang: "zh-CN",

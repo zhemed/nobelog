@@ -163,6 +163,9 @@ fn build_runtime(root: &Path) -> Result<Runtime> {
 /// 启动常驻服务。`root` 是仓库根（`public/`、`content/` 的父目录）。
 /// `dynamic = true` 时不读 `public/`，改用内存资源 + 运行时渲染 + 内容热更新。
 pub async fn run(root: &Path, host: &str, port: u16, dynamic: bool) -> Result<()> {
+    // SITE_URL 决定所有绝对链接；缺失时只告警一次，继续用内置默认值启动。
+    crate::site::warn_if_env_url_missing();
+
     let listener = tokio::net::TcpListener::bind((host, port))
         .await
         .with_context(|| format!("无法监听 {host}:{port}"))?;
@@ -220,16 +223,21 @@ fn request_base_url(headers: &HeaderMap, fallback: &str) -> String {
     if let Some(url) = crate::site::env_url() {
         return url;
     }
+    base_url_from_headers(headers, fallback)
+}
+
+/// 从请求头推断 base_url。Host / X-Forwarded-Host / X-Forwarded-Proto 全部按白名单校验，
+/// 不合法的那一条整条丢弃（回退到下一个来源），绝不把原始值拼进结果：
+/// 它们会进入 canonical、og:url、页脚链接与 feed，是典型的头注入落点。
+fn base_url_from_headers(headers: &HeaderMap, fallback: &str) -> String {
     let host = headers
         .get("x-forwarded-host")
-        .or_else(|| headers.get(header::HOST))
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.split(',').next())
-        .map(str::trim)
-        .filter(|value| !value.is_empty() && !value.contains('/') && !value.contains(' '));
+        .and_then(validated_host)
+        .or_else(|| headers.get(header::HOST).and_then(validated_host));
     let Some(host) = host else {
         return fallback.to_string();
     };
+    // X-Forwarded-Proto 只认精确的 http / https；file、javascript 等一律当没写。
     let proto = headers
         .get("x-forwarded-proto")
         .and_then(|value| value.to_str().ok())
@@ -238,6 +246,21 @@ fn request_base_url(headers: &HeaderMap, fallback: &str) -> String {
         .filter(|value| *value == "http" || *value == "https")
         .unwrap_or("http");
     format!("{proto}://{host}")
+}
+
+/// 取反向代理链上的第一个 Host 值并校验字符集：只允许主机名/端口/IPv6 方括号。
+/// 出现 `"` `<` `>` `@` `/` `\` 空白或控制字符时返回 None（调用方回退）。
+fn validated_host(value: &HeaderValue) -> Option<String> {
+    let host = value.to_str().ok()?.split(',').next()?.trim();
+    if host.is_empty() || !host.chars().all(is_host_char) {
+        return None;
+    }
+    Some(host.to_string())
+}
+
+/// Host 白名单：`[A-Za-z0-9.\-:\[\]]`（字母数字、点、连字符、端口冒号、IPv6 方括号）。
+fn is_host_char(ch: char) -> bool {
+    ch.is_ascii_alphanumeric() || matches!(ch, '.' | '-' | ':' | '[' | ']')
 }
 
 /* ------------------------------------------------------------ 响应压缩 */
@@ -1257,6 +1280,119 @@ mod tests {
         assert_eq!(
             parse_range(&range_header("items=0-1"), 1000),
             RangeRequest::Whole
+        );
+    }
+
+    /* ---------------------------- request_base_url / Host 校验 */
+
+    /// 恶意 Host 必须整条丢弃、回退到 fallback，绝不能出现在返回值里。
+    const FALLBACK_URL: &str = "http://127.0.0.1:10086";
+
+    fn request_headers(pairs: &[(&'static str, &'static str)]) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        for (name, value) in pairs {
+            headers.insert(*name, HeaderValue::from_static(value));
+        }
+        headers
+    }
+
+    #[test]
+    fn base_url_uses_host_and_forwarded_proto() {
+        // 正常反代：X-Forwarded-Proto: https + 带端口的 host。
+        let headers =
+            request_headers(&[("host", "example.com:8080"), ("x-forwarded-proto", "https")]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL),
+            "https://example.com:8080"
+        );
+
+        // 没有 XFP 时按 http；X-Forwarded-Host 优先于 Host；逗号列表只取第一个。
+        let headers = request_headers(&[
+            ("host", "origin.example"),
+            ("x-forwarded-host", "example.com:8080, proxy.internal"),
+        ]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL),
+            "http://example.com:8080"
+        );
+
+        // IPv6 方括号主机 + 端口。
+        let headers = request_headers(&[("host", "[::1]:10086")]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL),
+            "http://[::1]:10086"
+        );
+    }
+
+    #[test]
+    fn base_url_rejects_injected_hosts() {
+        for evil in [
+            // 试图闭合并跳出 href / 属性
+            "x\"><img src=x>",
+            // userinfo 注入：真实 host 是 evil.com
+            "good.com:80@evil.com",
+            // 把路径拼进主机
+            "evil.com/",
+            "evil.com\\path",
+            // 空白
+            "evil .com",
+            // 结构字符
+            "evil.com;x",
+            "evil.com(x)",
+        ] {
+            // X-Forwarded-Host 非法且没有 Host：整条丢弃，回退 fallback。
+            let headers = request_headers(&[("x-forwarded-host", evil)]);
+            let base = base_url_from_headers(&headers, FALLBACK_URL);
+            assert_eq!(base, FALLBACK_URL, "恶意 XFH 未回退：{evil:?} → {base}");
+            assert!(!base.contains(evil), "恶意值进入了 base_url：{evil:?}");
+
+            // Host 头同样要校验。
+            let headers = request_headers(&[("host", evil)]);
+            let base = base_url_from_headers(&headers, FALLBACK_URL);
+            assert_eq!(base, FALLBACK_URL, "恶意 Host 未回退：{evil:?} → {base}");
+            assert!(!base.contains(evil), "恶意值进入了 base_url：{evil:?}");
+        }
+
+        // Host 是合法值时，非法的 X-Forwarded-Host 只是被丢弃，回退到 Host。
+        let headers = request_headers(&[
+            ("x-forwarded-host", "good.com:80@evil.com"),
+            ("host", "example.com"),
+        ]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL),
+            "http://example.com"
+        );
+
+        // 控制字符：HeaderValue 允许 tab，但 host 白名单不接受（内部 tab 不会被 trim 掉）。
+        let value = HeaderValue::from_bytes(b"evil\tcom").unwrap();
+        assert!(validated_host(&value).is_none());
+        for ch in ['\u{0}', '\u{1}', '\t', '\n', '\r', ' ', '\u{7f}'] {
+            assert!(!is_host_char(ch), "控制字符/空白通过了白名单：{ch:?}");
+        }
+    }
+
+    #[test]
+    fn base_url_ignores_unknown_forwarded_proto() {
+        // XFP 只认精确的 http / https；file 之类当没写。
+        let headers = request_headers(&[("host", "example.com"), ("x-forwarded-proto", "file")]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL),
+            "http://example.com"
+        );
+
+        let headers = request_headers(&[("host", "example.com"), ("x-forwarded-proto", "HTTPS")]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL),
+            "http://example.com"
+        );
+
+        let headers = request_headers(&[
+            ("host", "example.com"),
+            ("x-forwarded-proto", "https, http"),
+        ]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL),
+            "https://example.com"
         );
     }
 }

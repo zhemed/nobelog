@@ -65,6 +65,23 @@ fn escape_html(input: &str) -> String {
     out
 }
 
+/// XML 文本/属性转义：与 escape_html 规则相同，但用于 feed / sitemap 这类 XML 上下文。
+/// base_url 可能来自请求头，未过滤的 `&` `<` `>` 会让 feed/sitemap 变成坏 XML（甚至注入节点）。
+fn escape_xml(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for ch in input.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&apos;"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
 fn pad2(value: u32) -> String {
     format!("{value:02}")
 }
@@ -338,6 +355,7 @@ fn topbar(crumbs: &str, title: &str) -> String {
 
 fn footer(base_url: &str) -> String {
     let year = Utc::now().year();
+    let url = escape_html(base_url);
     let title = escape_html(SITE.title);
     let note = escape_html(SITE.license_note);
     let reserved = escape_html("保留部分权利。");
@@ -358,8 +376,7 @@ fn footer(base_url: &str) -> String {
           <p>
             {powered}
           </p>
-        </footer>"##,
-        url = base_url
+        </footer>"##
     )
 }
 
@@ -755,7 +772,8 @@ fn render_layout(
     let css = &ctx.assets.css;
     let js = &ctx.assets.js;
     let lang = SITE.lang;
-    let url = ctx.base_url;
+    // base_url 可能来自请求头（动态模式），进 HTML 属性前必须转义；path 已在上面转过。
+    let url = escape_html(ctx.base_url);
     format!(
         r##"<!DOCTYPE html>
 <html lang="{lang}">
@@ -1085,6 +1103,8 @@ pub fn post_page(ctx: &Ctx, post: &Post, related: &[RelatedLink]) -> String {
         )
     };
 
+    // 整条 URL（含 base_url）过 url::encode 后才进 HTML 属性：`"` `&` `<` 等都会被百分号编码，
+    // 所以这里不需要再叠加 escape_html（叠加会写坏查询串）。
     let share_url = url::encode(&format!("{}{}", ctx.base_url, post_url(post)));
     let share = format!(
         r##"      <div class="share-wrapper">
@@ -1479,12 +1499,26 @@ pub fn not_found_page(ctx: &Ctx, path: &str) -> String {
 
 /* ------------------------------------------------------------ feed / sitemap */
 
+/// 站内日期约定（与 content.rs、card_date 一致）：`Post::date` 存的是 **UTC+8 挂钟**
+/// （frontmatter 里写的是本地时间，`content::parse_date` 直接按 UTC 存下来）。
+/// RSS 的 pubDate 必须给真实 UTC，所以序列化前减 8 小时；`lastBuildDate` 用 `Utc::now()`（本就是真实 UTC），
+/// 不要跟着减。
+const WALL_CLOCK_OFFSET_HOURS: i64 = 8;
+
+/// 把 UTC+8 挂钟转成 RSS 要求的 RFC 1123 GMT 时间串。
+fn rss_pub_date(wall_clock: &DateTime<Utc>) -> String {
+    let utc = *wall_clock - chrono::Duration::hours(WALL_CLOCK_OFFSET_HOURS);
+    utc.format("%a, %d %b %Y %H:%M:%S GMT").to_string()
+}
+
 pub fn feed_xml(posts: &[&Post], root_url: &str, description: &str) -> String {
+    // root_url 来自 SITE_URL 或请求头推断值，作为 XML 文本必须转义。
+    let root = escape_xml(root_url);
     let items = posts
         .iter()
         .take(20)
         .map(|post| {
-            let url = format!("{root_url}{}", post_url(post));
+            let url = escape_xml(&format!("{root_url}{}", post_url(post)));
             let categories = post
                 .tags
                 .iter()
@@ -1501,7 +1535,7 @@ pub fn feed_xml(posts: &[&Post], root_url: &str, description: &str) -> String {
     {categories}
   </item>"##,
                 title = escape_html(&post.title),
-                pub_date = post.date.format("%a, %d %b %Y %H:%M:%S GMT"),
+                pub_date = rss_pub_date(&post.date),
                 description = escape_html(&post.summary)
             )
         })
@@ -1516,10 +1550,10 @@ pub fn feed_xml(posts: &[&Post], root_url: &str, description: &str) -> String {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
   <title>{title}</title>
-  <link>{root_url}/</link>
+  <link>{root}/</link>
   <description>{description}</description>
   <language>{lang}</language>
-  <atom:link href="{root_url}/feed.xml" rel="self" type="application/rss+xml"/>
+  <atom:link href="{root}/feed.xml" rel="self" type="application/rss+xml"/>
   <lastBuildDate>{last_build}</lastBuildDate>
 {items}
 </channel>
@@ -1532,7 +1566,11 @@ pub fn feed_xml(posts: &[&Post], root_url: &str, description: &str) -> String {
 pub fn sitemap_xml(paths: &[String], root_url: &str) -> String {
     let entries = paths
         .iter()
-        .map(|path| format!("  <url><loc>{root_url}{path}</loc></url>"))
+        .map(|path| {
+            // 路径本身已百分号编码；整条 loc 再按 XML 文本转义一次，兜住 root_url 里的特殊字符。
+            let loc = escape_xml(&format!("{root_url}{path}"));
+            format!("  <url><loc>{loc}</loc></url>")
+        })
         .collect::<Vec<_>>()
         .join("\n");
     format!(
@@ -1542,4 +1580,92 @@ pub fn sitemap_xml(paths: &[String], root_url: &str) -> String {
 </urlset>
 "##
     )
+}
+
+/* ------------------------------------------------------------ 测试 */
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 只填模板层会读到的字段，日期由调用方指定。
+    fn post_at(date: DateTime<Utc>) -> Post {
+        Post {
+            slug: "typeset-test".to_string(),
+            title: "排版测试".to_string(),
+            date,
+            updated: None,
+            tags: vec!["排版".to_string()],
+            categories: vec![],
+            description: "摘要".to_string(),
+            cover: None,
+            pinned: false,
+            draft: false,
+            body: String::new(),
+            file_path: "content/posts/typeset-test.md".to_string(),
+            html: String::new(),
+            toc: Vec::new(),
+            summary: "摘要".to_string(),
+            reading_minutes: 1,
+        }
+    }
+
+    fn wall_clock(value: &str) -> DateTime<Utc> {
+        DateTime::parse_from_rfc3339(value)
+            .unwrap()
+            .with_timezone(&Utc)
+    }
+
+    #[test]
+    fn pub_date_converts_utc8_wall_clock_to_real_utc() {
+        // frontmatter `date: 2026-10-17 22:40:00` 是 UTC+8 挂钟，RSS 要给真实 UTC：22:40 - 8h = 14:40。
+        let post = post_at(wall_clock("2026-10-17T22:40:00Z"));
+        let xml = feed_xml(&[&post], "https://example.com", "站点描述");
+        assert!(
+            xml.contains("<pubDate>Sat, 17 Oct 2026 14:40:00 GMT</pubDate>"),
+            "pubDate 未按 UTC+8 挂钟换算：{xml}"
+        );
+        // lastBuildDate 是真实 UTC，不能被同一个偏移带偏（只断言存在，秒级时间不可比）。
+        assert!(xml.contains("<lastBuildDate>"));
+    }
+
+    #[test]
+    fn feed_escapes_root_url() {
+        let post = post_at(wall_clock("2026-10-17T22:40:00Z"));
+        let xml = feed_xml(&[&post], "https://example.com/?a=1&b=<x>", "站点描述");
+        assert!(!xml.contains("<x>"), "root_url 未转义被注入成节点：{xml}");
+        assert!(xml.contains("https://example.com/?a=1&amp;b=&lt;x&gt;/"));
+        assert!(xml.contains("&amp;b=&lt;x&gt;/feed.xml"));
+    }
+
+    #[test]
+    fn sitemap_escapes_root_url() {
+        let xml = sitemap_xml(&["/".to_string()], "https://example.com/?a=1&b=<x>");
+        assert!(!xml.contains("<x>"), "root_url 未转义被注入成节点：{xml}");
+        assert!(xml.contains("<loc>https://example.com/?a=1&amp;b=&lt;x&gt;/</loc>"));
+    }
+
+    #[test]
+    fn html_context_escapes_base_url() {
+        let assets = PageAssets {
+            css: "main.css".to_string(),
+            js: "main.js".to_string(),
+        };
+        let evil = "https://e.com/\"onmouseover=\"alert(1)";
+        let ctx = Ctx {
+            assets: &assets,
+            base_url: evil,
+            path: "/",
+            recent: &[],
+            top_tags: &[],
+        };
+        let html = home_page(&ctx, &[], 1, 1);
+        assert!(
+            !html.contains("\"onmouseover=\"alert(1)\""),
+            "base_url 未转义就进了 HTML 属性：{html}"
+        );
+        assert!(html.contains("https://e.com/&quot;onmouseover=&quot;alert(1)"));
+        // 页脚链接同样要转义。
+        assert!(html.contains("href=\"https://e.com/&quot;onmouseover=&quot;alert(1)\">"));
+    }
 }

@@ -63,7 +63,10 @@ pnpm build                 # = ... build --self-assets --out public
 ## 部署
 
 - **必须设置 `SITE_URL`**（如 `SITE_URL=https://example.com`）：canonical / RSS / sitemap / 页脚 / 分享链接都用它；
-  未设置时动态模式按 `Host` + `X-Forwarded-Proto` 推断，静态构建回退到 `SITE.url`（`http://127.0.0.1:10086`）。
+  未设置时动态模式按 `Host` + `X-Forwarded-Proto` 推断（两个头都经白名单校验，非法值整条丢弃），
+  静态构建回退到 `SITE.url`（`http://127.0.0.1:10086`），`serve` 启动时会打一行告警。
+  即便有白名单，未设 `SITE_URL` 时**字符合法**的 `X-Forwarded-Host` 仍能改写 canonical（无注入，但可被缓存污染），
+  生产环境必须显式设置。
 - 本机当前以 systemd 单元 `nobelog-local.service` 托管 release 二进制：
   `nobelog serve --host 0.0.0.0 --port 10086 --root <仓库根> --dynamic`。
   排查"线上页面不对"时先 `systemctl status nobelog-local`，再确认它跑的是 `rust/target/release/nobelog`

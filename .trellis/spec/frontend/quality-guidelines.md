@@ -61,6 +61,10 @@ Trellis 仓库的提交必须绑定任务锚点：`[task:<任务目录名>]`（�
    写了未来日期会直接显示绝对日期。
 4. **草稿被发布**：`draft: true` 在 `content::load` 过滤；若在别处绕过 `load` 直接读文件就会漏。
 5. **改了代码但线上没变**：服务跑的是 release 二进制，需重新 `cargo build --release` 并重启单元。
+6. **RSS 时间偏 8 小时**：`Post::date` 是 UTC+8 挂钟，RSS 必须经 `templates::rss_pub_date` 减 8h；
+   新增绝对时间输出（JSON-LD、sitemap lastmod 等）时同样要换算，别直接序列化 `DateTime<Utc>`。
+7. **构建报 slug/标签非法**：内容层与 `file_for_route` 都有校验（拒绝 `/`、`\`、`.`/`..` 段、控制字符），
+   这是安全拦截不是 bug；改内容命名，不要放宽校验。
 
 ## 文档与流程
 

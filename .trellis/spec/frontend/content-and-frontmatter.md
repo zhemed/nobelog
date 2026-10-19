@@ -34,9 +34,16 @@ updated: 2026-10-18 09:00:00
 
 解析细节（`content.rs`，改动前必读）：
 
-- **时区统一 UTC。** 文件头注释写明：构建机 `TZ=UTC`，Node 的 `new Date("YYYY-MM-DD HH:MM:SS")` 也按 UTC 解析。
-  `parse_date` 先试 RFC3339，再试 `%Y-%m-%dT%H:%M:%S` / `%Y-%m-%dT%H:%M`，最后试纯日期；空格会被换成 `T`。
-  **不要改成按服务器本地时区解析**，否则日期显示整体偏移。
+- **日期统一存「UTC+8 挂钟」。** `Post::date` 里装的是北京时间墙钟值（`Utc` 只是承载体，不代表时区）：
+  - 裸写 `2026-10-17 22:40:00`、`2026-10-17T22:40:00+08:00`、`2026-10-17T14:40:00Z` 是同一时刻，
+    解析后都等于挂钟 `2026-10-17 22:40:00`（RFC3339 分支先换算真实 UTC，再 `+8h` 转挂钟）。
+  - 无 `date` 时回退文件 mtime，同样经 `wall_clock_from_system_time` 换算成挂钟（不要直接 `DateTime::from(mtime)`）。
+  - `parse_date` 的顺序：RFC3339 → `%Y-%m-%dT%H:%M:%S` / `%Y-%m-%dT%H:%M` → 纯日期；
+    `normalize_date` 把首个空白换成 `T` 并删除其余空白，所以 `2026-10-17 22:40:00 +08:00` 也能解析。
+  - 展示层（`format_date` / `format_date_time` / `card_date`）直接读挂钟分量；**RSS 输出前再减 8 小时**
+    还原真实 UTC（`templates::rss_pub_date`）。
+  - **不要改成按服务器本地时区解析**，也不要新增"直接用 `DateTime<Utc>` 序列化"的输出点，
+    否则日期会整体偏移 8 小时。
 - frontmatter 只认文件开头 `---` 到下一行 `\n---` 之间的块；没有 frontmatter 时整篇都是正文。
 - 字符串字段接受 YAML 的 string/number/bool（`get_str`），数组字段也接受数字元素。
 - 文章正文先 `trim()`，再交给 `markdown::render_shared` 渲染。
@@ -73,6 +80,8 @@ posts.sort_by(|a, b| match (a.pinned, b.pinned) {
 
 ## 反模式
 
-- 在 frontmatter 里写 `date: 2026-10-17 22:40:00 +08:00` 这种"本地时区"意图 → 会被当 UTC 解析，显示会差 8 小时。
 - 给文章加"只在这个模板用"的字段却不改进 `Post` 结构 → 解析层直接忽略，静默无效。
 - 把 `draft` 判断放到模板层 → 草稿会漏进首页分页/sitemap/RSS；必须在 `load()` 阶段过滤（现状即如此）。
+- 把挂钟值当真实 UTC 直接用（例如新增 JSON-LD、直接序列化 `Post::date`）→ 全站时间偏 8 小时；
+  要 UTC 时先减 8 小时，或复用 `rss_pub_date` 的换算。
+- 写 `date: 2026-10-18 09:00:00 UTC` 这类非 RFC3339 的时区后缀 → 会落到 naive 分支被当挂钟，语义不符预期。
