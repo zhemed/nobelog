@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 5
+- **Total Sessions**: 6
 - **Last Active**: 2026-10-19
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~173 | Active |
+| `journal-1.md` | ~205 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 6 | 2026-10-19 | 修复 P2：CSS 确定性、热更新可靠性、内容一致性 | - | `main` |
 | 5 | 2026-10-19 | 同步 spec 并部署 P1 修复 | `9ad2ee3` | `main` |
 | 4 | 2026-10-19 | 修复审查发现的 P1 与日期回归 | - | `main` |
 | 3 | 2026-10-19 | 博客全面审查（安全/渲染/构建/线上） | - | `main` |

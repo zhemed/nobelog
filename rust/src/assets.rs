@@ -9,10 +9,21 @@
 // 哈希算法与命名对齐 server/build.ts 的 contentHash：sha256(内容) 的十六进制前 8 位。
 // CSS/JS 的压缩器是自写的轻量实现（不追 esbuild 逐字节一致，只要求视觉等价）。
 //
-// CSS 裁剪（阶段三）：压缩后再按 public/**/*.html + rust/client/main.js 的实际使用情况
-// 保守删除未使用选择器（实现见 rust/tools/css_prune.rs）。默认开启；
+// CSS 裁剪（阶段三）：压缩后按「源码字面量 + 正文原生 HTML + main.js + 动态白名单」的
+// 使用情况保守删除未使用选择器（实现见 rust/tools/css_prune.rs）。默认开启；
 // `NOBELOG_CSS_PRUNE=0`（或 off/false/no）可回退到未裁剪版本，
 // `NOBELOG_CSS_REPORT=1` 会在构建时打印一行裁剪统计。
+//
+// 使用集合**不读 `public/**/*.html`**：静态构建（`build --self-assets --out public`）会先清空
+// public，部署包也可能根本没有 public，而动态模式（`build_in_memory`）必须与静态构建产出同一份
+// CSS。因此这里只用与产物位置无关、两种模式都能拿到的确定输入：
+//   1. `rust/src` 里模板/渲染器的 class/id 字面量（编译期内嵌，部署包缺源码也一致）；
+//   2. `content/**/*.md` 正文里直接写的原生 HTML class/id（两模式都读得到）；
+//   3. `rust/client/main.js` 动态使用的选择器（缺文件时用编译期内嵌副本）；
+//   4. 渲染器运行时才生成、且只在特定页面状态出现的类（hljs-*/prompt-*/分页/栅格等）白名单。
+// 渲染出的路由 HTML 完全由上述源码与内容决定，所以资源层不需要自己加载页面内容。
+// 回归测试（本文件 `tests`）用真实仓库断言：静态 build_assets 与动态 build_in_memory 的 CSS
+// 内容与哈希一致，且源码使用集合覆盖真实渲染页面用到的选择器。
 
 use crate::paths::{STYLE_ORDER, VENDORED_ASSETS};
 use crate::templates::PageAssets;
@@ -91,8 +102,26 @@ pub fn build_assets(root: &Path, out: &Path) -> Result<PageAssets> {
     Ok(assets)
 }
 
-/// 按 STYLE_ORDER 拼接样式并压缩；默认再用 HTML/JS 使用情况做保守裁剪。
+/// 按 STYLE_ORDER 拼接样式并压缩；默认再用源码/内容使用情况做保守裁剪。
 fn build_css(root: &Path) -> Result<String> {
+    let css = load_styles(root)?;
+    if !css_prune_enabled() {
+        return Ok(css);
+    }
+    let usage = collect_css_usage(root)?;
+    let result = css_prune::prune_css(&css, &usage, false);
+    if std::env::var_os("NOBELOG_CSS_REPORT").is_some() {
+        let (classes, ids, tags) = usage.counts();
+        eprintln!(
+            "css prune: {} ; usage classes={classes} ids={ids} tags={tags}",
+            result.report.summary()
+        );
+    }
+    Ok(result.css)
+}
+
+/// 按 STYLE_ORDER 拼接并压缩样式，不裁剪。
+fn load_styles(root: &Path) -> Result<String> {
     let mut raw = String::new();
     for name in STYLE_ORDER {
         let file = root.join(name);
@@ -105,90 +134,93 @@ fn build_css(root: &Path) -> Result<String> {
         raw.push_str(&text);
         raw.push('\n');
     }
-    let css = minify_css(&raw);
-    if !css_prune_enabled() {
-        return Ok(css);
-    }
-    let Some(usage) = collect_css_usage(root)? else {
-        eprintln!("css prune: 没有可用的 public HTML 或 rust/src 源码，跳过裁剪（输出未裁剪 CSS）");
-        return Ok(css);
-    };
-    let result = css_prune::prune_css(&css, &usage, false);
-    if std::env::var_os("NOBELOG_CSS_REPORT").is_some() {
-        let (classes, ids, tags) = usage.counts();
-        eprintln!(
-            "css prune: {} ; usage classes={classes} ids={ids} tags={tags}",
-            result.report.summary()
-        );
-    }
-    Ok(result.css)
+    Ok(minify_css(&raw))
 }
 
 /// CSS 裁剪开关：默认开启，`NOBELOG_CSS_PRUNE=0|off|false|no` 关闭。
 fn css_prune_enabled() -> bool {
-    match std::env::var("NOBELOG_CSS_PRUNE") {
-        Ok(value) => !matches!(
+    css_prune_enabled_from(std::env::var("NOBELOG_CSS_PRUNE").ok().as_deref())
+}
+
+fn css_prune_enabled_from(value: Option<&str>) -> bool {
+    match value {
+        Some(value) => !matches!(
             value.trim().to_ascii_lowercase().as_str(),
             "0" | "off" | "false" | "no"
         ),
-        Err(_) => true,
+        None => true,
     }
 }
 
-/// 收集 CSS 裁剪的使用情况：优先 `public/**/*.html`（最准确），
-/// 没有 HTML 时回退到 `rust/src/**/*.rs` 源码字面量。
+/// 编译期内嵌的源码字面量。
 ///
-/// 静态构建可能 `--out public`（先清空 public），动态部署也可能根本没有 public，
-/// 这两种情况都靠源码兜底；两处都不可用时返回 None，调用方保守跳过裁剪。
-fn collect_css_usage(root: &Path) -> Result<Option<css_prune::Usage>> {
-    let mut usage = css_prune::Usage::new();
-    let public = root.join("public");
-    let mut html_files = 0usize;
-    if public.is_dir() {
-        for entry in walkdir::WalkDir::new(&public) {
-            let entry = entry.with_context(|| format!("遍历 {} 失败", public.display()))?;
-            if !entry.file_type().is_file() {
-                continue;
-            }
-            let path = entry.path();
-            if path.extension().is_some_and(|ext| ext == "html") {
-                let html = fs::read_to_string(path)
-                    .with_context(|| format!("读取 HTML 失败：{}", path.display()))?;
-                css_prune::collect_html_usage(&html, &mut usage);
-                html_files += 1;
-            }
-        }
-    }
+/// 部署包只带 `content/`、`vendor/`、`public/` 与 `rust/client/main.js`，**不含 `rust/src`**；
+/// 动态模式如果扫描不到源码就会退回未裁剪 CSS，与静态构建的产物又不一致。把含 class/id 的
+/// 源码在编译期内嵌，保证「同一 commit 的二进制」在仓库和部署包里得到同一份使用集合。
+///
+/// 新增含 class/id 字面量的源码文件时要同步加进来，
+/// `embedded_sources_cover_class_literals` 测试会提醒。
+const EMBEDDED_SOURCES: &[&str] = &[
+    include_str!("templates.rs"),
+    include_str!("markdown.rs"),
+    include_str!("site.rs"),
+    include_str!("highlight.rs"),
+    include_str!("highlight_map.rs"),
+];
 
-    if html_files == 0 {
-        let source_dir = root.join("rust/src");
-        let mut source_files = 0usize;
-        if source_dir.is_dir() {
-            for entry in walkdir::WalkDir::new(&source_dir) {
-                let entry = entry.with_context(|| format!("遍历 {} 失败", source_dir.display()))?;
-                if !entry.file_type().is_file() {
-                    continue;
-                }
-                let path = entry.path();
-                if path.extension().is_some_and(|ext| ext == "rs") {
-                    let source = fs::read_to_string(path)
-                        .with_context(|| format!("读取源码失败：{}", path.display()))?;
-                    css_prune::collect_rust_source_usage(&source, &mut usage);
-                    source_files += 1;
-                }
-            }
-        }
-        if source_files == 0 {
-            return Ok(None);
-        }
+/// 客户端脚本兜底副本（部署包需要它，本地开发时同名文件优先）。
+const EMBEDDED_CLIENT_JS: &str = include_str!("../client/main.js");
+
+/// 收集 CSS 裁剪的使用情况：源码字面量 + 正文原生 HTML + main.js + 动态白名单。
+///
+/// 这里刻意**不读 `public/**/*.html`**：public 在 `build --out public` 时会先被清空，
+/// 部署包也可能没有 public；一旦依赖它，静态构建与动态模式就会产出两套 CSS。
+/// 渲染页面由源码 + 内容唯一决定，所以源码/内容层面的使用集合足以覆盖页面实际用类
+/// （回归测试 `source_usage_covers_rendered_pages` 会拿真实路由 HTML 交叉验证）。
+fn collect_css_usage(root: &Path) -> Result<css_prune::Usage> {
+    let mut usage = css_prune::Usage::new();
+    for source in EMBEDDED_SOURCES {
+        css_prune::collect_rust_source_usage(source, &mut usage);
     }
+    collect_content_usage(root, &mut usage)?;
 
     let js_path = root.join("rust/client/main.js");
-    let js = fs::read_to_string(&js_path)
-        .with_context(|| format!("读取客户端脚本失败：{}", js_path.display()))?;
-    css_prune::collect_js_usage(&js, &mut usage);
+    match fs::read_to_string(&js_path) {
+        Ok(js) => css_prune::collect_js_usage(&js, &mut usage),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+            css_prune::collect_js_usage(EMBEDDED_CLIENT_JS, &mut usage);
+        }
+        Err(err) => {
+            return Err(err).with_context(|| format!("读取客户端脚本失败：{}", js_path.display()));
+        }
+    }
     css_prune::Usage::add_builtin_dynamic(&mut usage);
-    Ok(Some(usage))
+    Ok(usage)
+}
+
+/// 正文里的原生 HTML（`<div class="...">`）也算使用情况。
+///
+/// Markdown 渲染器自己生成的类由 `add_builtin_dynamic` 的白名单覆盖；正文手写的
+/// class/id 只有内容层知道，静态构建与动态模式读同一份 `content/`，所以不会破坏确定性。
+/// 代码块里的示例 HTML 会被一并收进来——多留样式无害，漏删才会出问题。
+fn collect_content_usage(root: &Path, usage: &mut css_prune::Usage) -> Result<()> {
+    let content_dir = root.join("content");
+    if !content_dir.is_dir() {
+        return Ok(());
+    }
+    for entry in walkdir::WalkDir::new(&content_dir) {
+        let entry = entry.with_context(|| format!("遍历 {} 失败", content_dir.display()))?;
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let path = entry.path();
+        if path.extension().is_some_and(|ext| ext == "md") {
+            let markdown = fs::read_to_string(path)
+                .with_context(|| format!("读取 Markdown 失败：{}", path.display()))?;
+            css_prune::collect_markdown_source_usage(&markdown, usage);
+        }
+    }
+    Ok(())
 }
 
 /// 读取直译后的客户端脚本并最小化。
@@ -591,5 +623,216 @@ fn flush_js_space(out: &mut String, pending: &mut bool, next: char) {
     };
     if !last.is_whitespace() && !matches!(next, ')' | ']' | '}' | ',' | ';' | '.') {
         out.push(' ');
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static SEQ: AtomicUsize = AtomicUsize::new(0);
+
+    /// 仓库根（`rust/` 的上一级），与 `main.rs::default_root` 一致。
+    fn repo_root() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("rust/ 应有上一级目录")
+            .to_path_buf()
+    }
+
+    fn temp_dir(tag: &str) -> PathBuf {
+        let seq = SEQ.fetch_add(1, Ordering::Relaxed);
+        let dir = std::env::temp_dir().join(format!(
+            "nobelog-assets-test-{}-{tag}-{seq}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn prune_toggle_keeps_env_semantics() {
+        for off in ["0", "off", "false", "no", " OFF ", "No"] {
+            assert!(!css_prune_enabled_from(Some(off)), "{off:?} 应关闭裁剪");
+        }
+        for on in ["1", "on", "true", "yes", "", "anything"] {
+            assert!(css_prune_enabled_from(Some(on)), "{on:?} 应保持裁剪");
+        }
+        assert!(css_prune_enabled_from(None));
+    }
+
+    /// 使用集合只由源码/内容决定：`public/` 里有什么都不影响结果。
+    #[test]
+    fn css_usage_ignores_public_html() {
+        let root = temp_dir("public-only");
+        fs::create_dir_all(root.join("public")).unwrap();
+        fs::write(
+            root.join("public/index.html"),
+            r##"<div class="only-in-public" id="only-in-public-id"></div>"##,
+        )
+        .unwrap();
+
+        let usage = collect_css_usage(&root).unwrap();
+        assert!(
+            !usage.has_class("only-in-public"),
+            "public HTML 不应再被当作使用情况来源"
+        );
+        assert!(!usage.has_id("only-in-public-id"));
+        // 没有 rust/src、没有 main.js 时走编译期内嵌副本，仍然能拿到模板里的类。
+        assert!(usage.has_class("pagination"));
+        assert!(usage.has_class("preview-img"));
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    /// 静态构建（build_assets）与动态模式（build_in_memory）必须产出同一份 CSS。
+    #[test]
+    fn static_and_dynamic_build_share_css() {
+        let root = repo_root();
+        let out = temp_dir("static-out");
+
+        let dynamic = build_in_memory(&root).expect("动态模式资源应能构建");
+        let static_assets = build_assets(&root, &out).expect("静态资源应能构建");
+
+        assert_eq!(
+            dynamic.assets.css, static_assets.css,
+            "两条路径的 CSS 文件名（内容哈希）必须一致"
+        );
+        assert_eq!(dynamic.assets.js, static_assets.js);
+        let css_name = dynamic
+            .assets
+            .css
+            .strip_prefix("/assets/")
+            .expect("CSS URL 应以 /assets/ 开头");
+        assert_eq!(
+            css_name,
+            format!("main.{}.css", content_hash(&dynamic.css)),
+            "文件名必须是内容哈希"
+        );
+        let on_disk = fs::read_to_string(out.join("assets").join(css_name)).unwrap();
+        assert_eq!(on_disk, dynamic.css, "静态写盘内容应与内存产物一致");
+        let manifest = fs::read_to_string(out.join("assets-manifest.json")).unwrap();
+        assert!(manifest.contains(&dynamic.assets.css));
+        assert!(manifest.contains(&dynamic.assets.js));
+
+        let _ = fs::remove_dir_all(&out);
+    }
+
+    /// 条件渲染类必须被白名单保住，否则会随页面状态时有时无。
+    #[test]
+    fn conditional_classes_survive_pruning() {
+        let root = repo_root();
+        let usage = collect_css_usage(&root).unwrap();
+        let css = concat!(
+            ".pagination{color:red}",
+            ".page-item{color:red}",
+            ".page-link{color:red}",
+            ".row-cols-md-2>*{color:red}",
+            ".preview-img{color:red}",
+            ".totally-unused-xyz{color:red}",
+        );
+        let pruned = css_prune::prune_css(css, &usage, false).css;
+        for kept in [
+            ".pagination{",
+            ".page-item{",
+            ".page-link{",
+            ".row-cols-md-2>*{",
+            ".preview-img{",
+        ] {
+            assert!(pruned.contains(kept), "{kept} 不应被裁掉：{pruned}");
+        }
+        assert!(
+            !pruned.contains("totally-unused-xyz"),
+            "真正没用的选择器仍应被裁掉：{pruned}"
+        );
+    }
+
+    /// 源码使用集合必须覆盖真实渲染出的页面：页面里用到的选择器一条都不能被误裁。
+    ///
+    /// 这是 `collect_css_usage` 不读 public HTML 的依据——路由 HTML 完全由源码 + 内容决定。
+    #[test]
+    fn source_usage_covers_rendered_pages() {
+        let root = repo_root();
+        let site = crate::routes::Site::new(&root).expect("仓库内容应能加载");
+        let provisional = PageAssets {
+            css: "/assets/main.provisional.css".to_string(),
+            js: "/assets/main.provisional.js".to_string(),
+        };
+        let mut rendered = css_prune::Usage::new();
+        let mut pages = 0usize;
+        for route in site.all_routes(&provisional) {
+            if route.status != 200 {
+                continue;
+            }
+            if !(route.path.ends_with('/') || route.path.ends_with(".html")) {
+                continue;
+            }
+            css_prune::collect_html_usage(&route.html, &mut rendered);
+            pages += 1;
+        }
+        assert!(pages >= 2, "至少应渲染首页与文章页，实际 {pages} 个");
+        assert!(rendered.has_class("post-preview") || rendered.has_class("post"));
+
+        let source = collect_css_usage(&root).unwrap();
+        let css = load_styles(&root).unwrap();
+        let removed_by_source: HashSet<String> = css_prune::prune_css(&css, &source, true)
+            .report
+            .removed
+            .into_iter()
+            .map(|removed| removed.selector)
+            .collect();
+        let removed_by_pages: HashSet<String> = css_prune::prune_css(&css, &rendered, true)
+            .report
+            .removed
+            .into_iter()
+            .map(|removed| removed.selector)
+            .collect();
+        let mut missed: Vec<&String> = removed_by_source.difference(&removed_by_pages).collect();
+        missed.sort();
+        assert!(
+            missed.is_empty(),
+            "源码使用集合漏掉真实页面在用的选择器（会被误裁）：{missed:?}"
+        );
+    }
+
+    /// 仓库里直接扫 `rust/src/**/*.rs` 得到的源码集合。
+    fn runtime_source_usage() -> css_prune::Usage {
+        let src = repo_root().join("rust/src");
+        let mut usage = css_prune::Usage::new();
+        for entry in fs::read_dir(&src).unwrap() {
+            let entry = entry.unwrap();
+            if !entry.file_type().unwrap().is_file() {
+                continue;
+            }
+            if !entry.file_name().to_string_lossy().ends_with(".rs") {
+                continue;
+            }
+            let text = fs::read_to_string(entry.path()).unwrap();
+            css_prune::collect_rust_source_usage(&text, &mut usage);
+        }
+        usage
+    }
+
+    /// 部署包不含 `rust/src`，编译期内嵌集合必须与仓库源码集合裁出同一份 CSS。
+    ///
+    /// 断言的是裁剪结果而不是文件清单：新增源码文件里只出现在测试中的 class 字面量
+    /// 不会误报；但真正被样式引用、却没加进 EMBEDDED_SOURCES 的类会立刻暴露。
+    #[test]
+    fn embedded_sources_match_runtime_sources() {
+        let root = repo_root();
+        let mut embedded = css_prune::Usage::new();
+        for source in EMBEDDED_SOURCES {
+            css_prune::collect_rust_source_usage(source, &mut embedded);
+        }
+        let runtime = runtime_source_usage();
+        let css = load_styles(&root).unwrap();
+        let embedded_css = css_prune::prune_css(&css, &embedded, false).css;
+        let runtime_css = css_prune::prune_css(&css, &runtime, false).css;
+        assert_eq!(
+            embedded_css, runtime_css,
+            "内嵌源码集合与仓库 rust/src 的裁剪结果不一致：新增的 class 字面量需要加入 EMBEDDED_SOURCES"
+        );
     }
 }

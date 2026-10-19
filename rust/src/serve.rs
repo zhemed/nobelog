@@ -23,10 +23,12 @@ use axum::response::Response;
 use percent_encoding::percent_decode_str;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tower_http::compression::CompressionLayer;
 use tower_http::services::ServeFile;
 
@@ -45,6 +47,13 @@ const ERROR_500: &str = "<h1>500 Internal Error</h1>";
 
 /// 小于这个字节数的响应不压缩（压缩头开销不值得）。
 const MIN_COMPRESS_SIZE: u64 = 1024;
+
+/// 动态模式：content/ 指纹的缓存时长。命中 TTL 的请求不再 stat 整棵目录树；
+/// 代价是新增 / 删除 / 改写最多延迟这么久才被察觉（仍远小于人工刷新间隔）。
+const STAMP_TTL: Duration = Duration::from_millis(1000);
+
+/// 动态模式：重建失败后的退避窗口。坏内容不立刻重试，避免每个请求都重编整站。
+const RELOAD_BACKOFF: Duration = Duration::from_secs(10);
 
 /* ------------------------------------------------------------ 静态模式 */
 
@@ -73,8 +82,8 @@ struct Runtime {
     css: String,
     js: String,
     manifest: String,
-    /// 构建时 content/ 的最大 mtime，用来判断是否需要重建。
-    stamp: Option<SystemTime>,
+    /// 构建时 content/ 的指纹，用来判断是否需要重建。
+    stamp: ContentStamp,
 }
 
 #[derive(Clone)]
@@ -83,6 +92,17 @@ struct DynamicState {
     runtime: Arc<RwLock<Arc<Runtime>>>,
     /// 同一时间只允许一个重建任务，避免多个请求同时编译内容。
     reloading: Arc<AtomicBool>,
+    /// 最近一次 content/ 指纹检查（带检查时刻，TTL 内直接复用）。
+    stamp: Arc<RwLock<CheckedStamp>>,
+    /// 最近一次重建失败时的指纹与时刻：内容没变且还在退避窗口内就不再重试。
+    failure: Arc<RwLock<Option<(ContentStamp, Instant)>>>,
+}
+
+/// 带检查时刻的指纹缓存。
+#[derive(Clone, Copy)]
+struct CheckedStamp {
+    checked_at: Instant,
+    stamp: ContentStamp,
 }
 
 impl DynamicState {
@@ -92,10 +112,16 @@ impl DynamicState {
         let runtime = tokio::task::spawn_blocking(move || build_runtime(&build_root))
             .await
             .context("动态模式初始化失败")??;
+        let stamp = runtime.stamp;
         Ok(Self {
             root: Arc::new(root),
             runtime: Arc::new(RwLock::new(Arc::new(runtime))),
             reloading: Arc::new(AtomicBool::new(false)),
+            stamp: Arc::new(RwLock::new(CheckedStamp {
+                checked_at: Instant::now(),
+                stamp,
+            })),
+            failure: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -113,10 +139,64 @@ impl DynamicState {
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = runtime;
     }
 
-    /// 内容有更新就重建并原子替换；重建失败时继续用旧快照，下一次请求再试。
+    /// content/ 当前指纹。TTL 内的请求复用上次结果，避免每个请求（含 404）都同步 walkdir。
+    fn content_stamp(&self) -> ContentStamp {
+        {
+            let checked = self
+                .stamp
+                .read()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if !stamp_cache_expired(checked.checked_at, Instant::now()) {
+                return checked.stamp;
+            }
+        }
+        let stamp = content_stamp(&self.root);
+        self.remember_stamp(stamp);
+        stamp
+    }
+
+    fn remember_stamp(&self, stamp: ContentStamp) {
+        *self
+            .stamp
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = CheckedStamp {
+            checked_at: Instant::now(),
+            stamp,
+        };
+    }
+
+    /// 内容指纹没变且仍在上次失败的退避窗口内 → 这次请求不再重试。
+    fn is_backing_off(&self, stamp: ContentStamp) -> bool {
+        let failure = *self
+            .failure
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        reload_backed_off(failure, stamp, Instant::now())
+    }
+
+    fn record_failure(&self, stamp: ContentStamp) {
+        *self
+            .failure
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some((stamp, Instant::now()));
+    }
+
+    fn clear_failure(&self) {
+        *self
+            .failure
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
+    }
+
+    /// 内容有更新就重建并原子替换。重建失败时记录错误并退避一会儿，期间继续用旧快照。
     async fn current(&self) -> Arc<Runtime> {
         let snapshot = self.snapshot();
-        if !is_stale(content_stamp(&self.root), snapshot.stamp) {
+        let stamp = self.content_stamp();
+        if !is_stale(stamp, snapshot.stamp) {
+            return snapshot;
+        }
+        if self.is_backing_off(stamp) {
+            // 同一份坏内容刚失败过：不再每个请求都重编一遍，等退避窗口过去或内容变化。
             return snapshot;
         }
         if self
@@ -134,11 +214,23 @@ impl DynamicState {
 
         match rebuilt {
             Ok(Ok(runtime)) => {
+                self.clear_failure();
+                // 以快照自带的指纹刷新缓存：构建期间又改过文件时，下一次请求仍能察觉。
+                self.remember_stamp(runtime.stamp);
                 let runtime = Arc::new(runtime);
                 self.replace(Arc::clone(&runtime));
                 runtime
             }
-            _ => snapshot,
+            Ok(Err(error)) => {
+                eprintln!("动态模式重建失败，继续使用旧快照：{error:#}");
+                self.record_failure(stamp);
+                snapshot
+            }
+            Err(error) => {
+                eprintln!("动态模式重建任务异常，继续使用旧快照：{error}");
+                self.record_failure(stamp);
+                snapshot
+            }
         }
     }
 }
@@ -477,7 +569,7 @@ async fn handle_dynamic(State(state): State<DynamicState>, req: Request) -> Resp
     if let Some(file) = dynamic_asset_file(&state.root, &raw_path)
         && file.is_file()
     {
-        return match serve_file(&file, ASSET_CACHE, req).await {
+        return match serve_file(&file, dynamic_file_cache(&raw_path), req).await {
             Some(response) => response,
             None => text_response(
                 StatusCode::NOT_FOUND,
@@ -704,6 +796,18 @@ fn dynamic_asset_file(root: &Path, raw_path: &str) -> Option<PathBuf> {
     resolve_file_under(&root.join("content/images"), rest)
 }
 
+/// 动态模式磁盘文件的缓存策略。
+/// `/assets/**` 是构建期固定的 vendor 字体，沿用一年强缓存；
+/// `/images/**` 来自 content/，用户可以随时用同名文件替换，必须走可变策略
+/// （no-cache + ETag / Last-Modified 复验：内容没变仍是 304，换了文件立刻生效）。
+fn dynamic_file_cache(raw_path: &str) -> &'static str {
+    if raw_path.starts_with("/assets/") {
+        ASSET_CACHE
+    } else {
+        NO_CACHE
+    }
+}
+
 /// `/assets/<name>.woff2` → vendor/chirpy 或 vendor/fonts 下的固定文件。
 fn resolve_vendor_font(root: &Path, raw_path: &str) -> Option<PathBuf> {
     let name = raw_path.strip_prefix("/assets/")?;
@@ -880,29 +984,81 @@ fn resolve_file_under(base: &Path, url_suffix: &str) -> Option<PathBuf> {
     has_segment.then_some(path)
 }
 
-/// content/ 下所有文件的最大 mtime；目录不存在时返回 None。
-fn content_stamp(root: &Path) -> Option<SystemTime> {
-    let mut newest: Option<SystemTime> = None;
-    for entry in walkdir::WalkDir::new(root.join("content"))
+/// content/ 的指纹：所有文件的「相对路径 + 大小 + mtime」整体哈希。
+///
+/// 只取最大 mtime 会漏掉两类变化：删除文章（剩余文件的最大值不变）和用备份还原
+/// （mtime 反而更旧），结果旧快照一直对外服务、删掉的文章还在。整体哈希能把
+/// 大小 / 路径 / mtime 的任一变化都算进去，判定语义也随之简化成「不相等即过期」。
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct ContentStamp(u64);
+
+/// content/ 下每个文件的（相对路径、字节数、mtime 纳秒）；目录不存在时是空集合。
+fn content_stamp(root: &Path) -> ContentStamp {
+    let base = root.join("content");
+    let mut entries: Vec<(String, u64, i128)> = Vec::new();
+    for entry in walkdir::WalkDir::new(&base)
         .into_iter()
         .filter_map(|entry| entry.ok())
     {
-        if entry.file_type().is_file()
-            && let Ok(meta) = entry.metadata()
-            && let Ok(modified) = meta.modified()
-        {
-            newest = Some(newest.map_or(modified, |current| current.max(modified)));
+        if !entry.file_type().is_file() {
+            continue;
         }
+        let Ok(meta) = entry.metadata() else {
+            continue;
+        };
+        let Ok(modified) = meta.modified() else {
+            continue;
+        };
+        let Ok(relative) = entry.path().strip_prefix(&base) else {
+            continue;
+        };
+        // 1970 年之前的 mtime 用负数表示，避免与「拿不到 mtime」混成同一个值。
+        let mtime_ns = match modified.duration_since(UNIX_EPOCH) {
+            Ok(elapsed) => elapsed.as_nanos() as i128,
+            Err(error) => -(error.duration().as_nanos() as i128),
+        };
+        entries.push((
+            relative.to_string_lossy().into_owned(),
+            meta.len(),
+            mtime_ns,
+        ));
     }
-    newest
+    stamp_digest(entries)
 }
 
-/// 快照是否过期：content/ 的最大 mtime 比快照构建时更新。
-fn is_stale(current: Option<SystemTime>, cached: Option<SystemTime>) -> bool {
-    match current {
-        Some(current) => cached.is_none_or(|cached| current > cached),
-        None => false,
+/// 把文件清单折成指纹。先排序：walkdir 的遍历顺序依赖文件系统，不排序会得到不稳定的哈希。
+fn stamp_digest(mut entries: Vec<(String, u64, i128)>) -> ContentStamp {
+    entries.sort_unstable();
+    let mut hasher = DefaultHasher::new();
+    entries.len().hash(&mut hasher);
+    for (path, len, mtime_ns) in entries {
+        path.hash(&mut hasher);
+        len.hash(&mut hasher);
+        mtime_ns.hash(&mut hasher);
     }
+    ContentStamp(hasher.finish())
+}
+
+/// 快照是否过期：content/ 的指纹与快照构建时的指纹不同（新增 / 删除 / 改写都算）。
+fn is_stale(current: ContentStamp, cached: ContentStamp) -> bool {
+    current != cached
+}
+
+/// 指纹缓存是否已过期（距上次检查已超过 TTL）。
+fn stamp_cache_expired(checked_at: Instant, now: Instant) -> bool {
+    now.saturating_duration_since(checked_at) >= STAMP_TTL
+}
+
+/// 重建失败后的退避判断：内容指纹没变、且距上次失败还在窗口内 → 跳过重试。
+/// 内容一变（用户可能已经改好了）就立刻允许重建，不必干等窗口结束。
+fn reload_backed_off(
+    failure: Option<(ContentStamp, Instant)>,
+    stamp: ContentStamp,
+    now: Instant,
+) -> bool {
+    failure.is_some_and(|(failed_stamp, failed_at)| {
+        failed_stamp == stamp && now.saturating_duration_since(failed_at) < RELOAD_BACKOFF
+    })
 }
 
 /// 内容哈希 ETag：sha256 前 16 位十六进制，强校验（带引号）。
@@ -1138,15 +1294,140 @@ mod tests {
         assert_eq!(etag, strong_etag("<h1>hi</h1>"));
     }
 
+    /* ---------------------------- content/ 指纹（动态模式热更新） */
+
+    /// 独立的临时目录：每个测试一个，Drop 时删掉，避免互相踩。
+    struct TempDir(PathBuf);
+
+    impl TempDir {
+        fn new(name: &str) -> Self {
+            use std::sync::atomic::AtomicUsize;
+            static COUNTER: AtomicUsize = AtomicUsize::new(0);
+            let dir = std::env::temp_dir().join(format!(
+                "nobelog-serve-{name}-{}-{}",
+                std::process::id(),
+                COUNTER.fetch_add(1, Ordering::Relaxed)
+            ));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(dir.join("content")).unwrap();
+            Self(dir)
+        }
+
+        fn path(&self) -> &Path {
+            &self.0
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
     #[test]
-    fn stale_detection() {
-        let old = UNIX_EPOCH + std::time::Duration::from_secs(10);
-        let new = old + std::time::Duration::from_secs(1);
-        assert!(is_stale(Some(new), Some(old)));
-        assert!(!is_stale(Some(old), Some(new)));
-        assert!(is_stale(Some(old), None));
-        assert!(!is_stale(None, Some(old)));
-        assert!(!is_stale(None, None));
+    fn content_stamp_tracks_added_and_removed_files() {
+        let dir = TempDir::new("stamp-files");
+        let content = dir.path().join("content");
+        let post = content.join("posts").join("hello.md");
+        std::fs::create_dir_all(post.parent().unwrap()).unwrap();
+
+        let empty = content_stamp(dir.path());
+        assert!(!is_stale(empty, empty), "同一份空目录不能被判为过期");
+
+        std::fs::write(&post, "hello").unwrap();
+        let one = content_stamp(dir.path());
+        assert!(is_stale(one, empty), "新增文章必须触发重建");
+        assert_eq!(one, content_stamp(dir.path()), "内容不变时指纹必须稳定");
+
+        std::fs::write(content.join("draft.md"), "draft").unwrap();
+        let two = content_stamp(dir.path());
+        assert!(is_stale(two, one), "再新增文件必须触发重建");
+
+        // 删除文章：剩余文件的最大 mtime 不变，旧实现永远检测不到。
+        std::fs::remove_file(&post).unwrap();
+        let after_remove = content_stamp(dir.path());
+        assert!(is_stale(after_remove, two), "删除文章必须触发重建");
+        assert_ne!(after_remove, one, "文件集合不同，指纹不能相同");
+    }
+
+    #[test]
+    fn content_stamp_sees_size_change_with_same_mtime() {
+        // 不引入依赖就没法把 mtime 改回旧值，所以在「折叠成指纹」这一层验证：
+        // 路径与 mtime 完全相同、只有大小不同，指纹必须不同。
+        let at: i128 = 1_700_000_000_000_000_000;
+        let small = stamp_digest(vec![("posts/a.md".to_string(), 10, at)]);
+        let larger = stamp_digest(vec![("posts/a.md".to_string(), 11, at)]);
+        assert_ne!(small, larger, "同 mtime 下大小变化必须触发重建");
+        assert!(is_stale(larger, small));
+        assert!(!is_stale(small, small));
+    }
+
+    #[test]
+    fn stamp_digest_is_order_independent_and_path_sensitive() {
+        let entries = vec![
+            ("posts/a.md".to_string(), 10_u64, 1_i128),
+            ("posts/b.md".to_string(), 20, 2),
+        ];
+        let mut reversed = entries.clone();
+        reversed.reverse();
+        assert_eq!(
+            stamp_digest(entries.clone()),
+            stamp_digest(reversed),
+            "遍历顺序不同不能算出不同指纹"
+        );
+
+        let renamed = vec![
+            ("posts/a.md".to_string(), 10_u64, 1_i128),
+            ("posts/c.md".to_string(), 20, 2),
+        ];
+        assert_ne!(
+            stamp_digest(entries),
+            stamp_digest(renamed),
+            "改名（集合变化）必须触发重建"
+        );
+    }
+
+    #[test]
+    fn stamp_cache_expires_after_ttl() {
+        let now = Instant::now();
+        assert!(!stamp_cache_expired(now, now), "刚检查过应复用缓存");
+        assert!(!stamp_cache_expired(now - Duration::from_millis(500), now));
+        assert!(stamp_cache_expired(now - STAMP_TTL, now), "到 TTL 必须重查");
+        assert!(stamp_cache_expired(now - Duration::from_secs(30), now));
+    }
+
+    #[test]
+    fn rebuild_backoff_only_while_content_is_unchanged() {
+        let now = Instant::now();
+        let failed = ContentStamp(7);
+        let changed = ContentStamp(8);
+
+        assert!(
+            reload_backed_off(Some((failed, now - Duration::from_secs(1))), failed, now),
+            "同一份坏内容在窗口内不再重试"
+        );
+        assert!(
+            !reload_backed_off(Some((failed, now - Duration::from_secs(1))), changed, now),
+            "内容变了要立刻允许重试（用户可能已经修好）"
+        );
+        assert!(
+            !reload_backed_off(Some((failed, now - RELOAD_BACKOFF)), failed, now),
+            "退避窗口结束后必须重试"
+        );
+        assert!(!reload_backed_off(None, failed, now), "没失败过就不退避");
+    }
+
+    #[test]
+    fn dynamic_images_use_mutable_cache() {
+        // content/images/** 可以被随时替换，绝不能用一年强缓存。
+        assert_eq!(dynamic_file_cache("/images/post.svg"), NO_CACHE);
+        assert_eq!(dynamic_file_cache("/images/sub/图.png"), NO_CACHE);
+        assert_ne!(dynamic_file_cache("/images/post.svg"), ASSET_CACHE);
+        // 构建期固定的 vendor 字体保持长缓存。
+        assert_eq!(
+            dynamic_file_cache("/assets/fa-solid-900.woff2"),
+            ASSET_CACHE
+        );
     }
 
     fn headers_with(content_type: &'static str, length: Option<u64>) -> HeaderMap {

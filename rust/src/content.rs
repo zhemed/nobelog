@@ -9,19 +9,27 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::sync::OnceLock;
 
 pub fn load(root: &Path) -> Result<Content> {
     let mut posts = read_posts(root)?;
+    // draft 不写产物，占多个 slug 也不会覆盖谁：冲突只在"会写出去的"文章之间算。
     posts.retain(|p| !p.draft);
+    ensure_unique_post_slugs(&posts)?;
     for post in &mut posts {
         let (html, toc) = markdown::render_shared(&post.body);
         post.html = html;
         post.toc = toc;
         post.summary = if post.description.is_empty() {
-            slice_utf16(&first_paragraph(&post.html), 160)
+            // 摘要取自渲染后的 HTML，里面已经是 HTML 实体（`A &amp; B`）：先还原成纯文本，
+            // 模板层才会只编码一次；否则页面与 feed 会输出 `&amp;amp;` / `&amp;lt;`。
+            slice_utf16(
+                &markdown::decode_entities(&first_paragraph(&post.html)),
+                160,
+            )
         } else {
             post.description.clone()
         };
@@ -45,6 +53,23 @@ pub fn load(root: &Path) -> Result<Content> {
         categories,
         pages,
     })
+}
+
+/// 两篇文章 slug 相同会写到同一个 `/posts/<slug>/`：先渲染的赢，后一篇静默消失，
+/// sitemap 里还会出现重复 URL。这里在入口 fail-fast，并报出冲突的两个源文件。
+fn ensure_unique_post_slugs(posts: &[Post]) -> Result<()> {
+    let mut origins: HashMap<&str, &str> = HashMap::new();
+    for post in posts {
+        if let Some(previous) = origins.insert(post.slug.as_str(), post.file_path.as_str()) {
+            anyhow::bail!(
+                "重复的 slug {:?}：{} 与 {}",
+                post.slug,
+                previous,
+                post.file_path
+            );
+        }
+    }
+    Ok(())
 }
 
 fn read_posts(root: &Path) -> Result<Vec<Post>> {
@@ -75,12 +100,21 @@ fn read_posts(root: &Path) -> Result<Vec<Post>> {
 }
 
 fn parse_source(root: &Path, path: &Path) -> Result<Post> {
+    let display = display_path(root, path);
     let raw = fs::read_to_string(path).with_context(|| format!("读取 {}", path.display()))?;
     let (front, body) = split_front_matter(&raw);
     let data: serde_yaml::Value = if front.trim().is_empty() {
         serde_yaml::Value::Null
     } else {
-        serde_yaml::from_str(front).unwrap_or(serde_yaml::Value::Null)
+        // 以前这里 `unwrap_or(Value::Null)`：写坏的 YAML 会让整份 frontmatter **静默**变空，
+        // 标题/日期/标签全丢、slug 退回文件名，构建照样成功。现在带文件路径 fail-fast。
+        let parsed: serde_yaml::Value = serde_yaml::from_str(front)
+            .with_context(|| format!("解析 frontmatter 失败: {display}"))?;
+        // 合法 YAML 但不是映射（例如整块写成了字符串 / 列表）同样取不到任何字段，一并报错。
+        if !parsed.is_null() && !parsed.is_mapping() {
+            anyhow::bail!("解析 frontmatter 失败: {display}（顶层必须是 `key: value` 映射）");
+        }
+        parsed
     };
 
     let file_stem = path
@@ -91,7 +125,6 @@ fn parse_source(root: &Path, path: &Path) -> Result<Post> {
     let slug = get_str(&data, "slug").unwrap_or(file_stem);
     // slug / 标签 / 分类都会变成 URL，再由构建器还原成磁盘路径：必须在入口处就拒绝
     // 任何可能逃出输出目录的形状，并带上文件路径让构建响亮失败（而不是静默跳过）。
-    let display = display_path(root, path);
     validate_slug(&slug).with_context(|| display.clone())?;
     let title = get_str(&data, "title").unwrap_or_else(|| slug.clone());
     let date = get_str(&data, "date")
@@ -162,7 +195,7 @@ fn read_pages(root: &Path) -> Result<IndexMap<String, SitePage>> {
         .collect();
     files.sort();
     // 单页之间互相独立（各自新建 renderer），可以并行；结果按文件顺序插入。
-    let rendered: Vec<Result<(String, SitePage)>> = files
+    let rendered: Vec<Result<(String, SitePage, String)>> = files
         .par_iter()
         .map(|path| {
             let display = display_path(root, path);
@@ -180,13 +213,18 @@ fn read_pages(root: &Path) -> Result<IndexMap<String, SitePage>> {
                     .unwrap_or_default()
                     .to_string()
             });
-            validate_slug(&slug).with_context(|| format!("{display}: 单页 slug"))?;
+            validate_page_slug(&slug).with_context(|| format!("{display}: 单页 slug"))?;
             let (html, _toc) = markdown::render(body.trim());
-            Ok((slug.clone(), SitePage { slug, title, html }))
+            Ok((slug.clone(), SitePage { slug, title, html }, display))
         })
         .collect();
+    let mut origins: HashMap<String, String> = HashMap::new();
     for page in rendered {
-        let (slug, page) = page?;
+        let (slug, page, origin) = page?;
+        // 两个单页文件同 slug → 后者静默覆盖前者（IndexMap::insert），页面直接消失。
+        if let Some(previous) = origins.insert(slug.clone(), origin.clone()) {
+            anyhow::bail!("重复的单页 slug {slug:?}：{previous} 与 {origin}");
+        }
         pages.insert(slug, page);
     }
     Ok(pages)
@@ -226,6 +264,42 @@ fn validate_slug(slug: &str) -> Result<()> {
     }
     if has_traversal_segment(slug) {
         anyhow::bail!("slug 不能是 `.` / `..`（路径段含义）：{slug:?}");
+    }
+    Ok(())
+}
+
+/// 单页 `/<slug>/` 抢占的一级路径：这些名字在 `routes::Site::page` 里有固定路由
+/// （`/tags/`、`/categories/` 是分类索引，`/page/N/` 是分页，`/posts/`、`/archives/` 同理），
+/// 撞上就永远被固定路由挡住——sitemap 会收录一个拿不到单页的 URL。
+const RESERVED_PAGE_ROUTES: [&str; 5] = ["archives", "categories", "page", "posts", "tags"];
+
+/// 单页 `/<slug>/` 的目录名与构建器写在输出根的同名文件冲突
+/// （`feed.xml` / `sitemap.xml` / `404.html` / `index.html` / `assets-manifest.json`）：
+/// 写盘时必然是 `Is a directory`，入口就该拒绝。
+const RESERVED_OUTPUT_NAMES: [&str; 5] = [
+    "404.html",
+    "assets-manifest.json",
+    "feed.xml",
+    "index.html",
+    "sitemap.xml",
+];
+
+/// 单页 slug 是否与站内固定产物（固定路由或输出根文件）抢名字
+/// （`routes` 层据此让固定路由优先，`read_pages` 据此 fail-fast）。
+pub fn is_reserved_page_slug(slug: &str) -> bool {
+    RESERVED_PAGE_ROUTES.contains(&slug) || RESERVED_OUTPUT_NAMES.contains(&slug)
+}
+
+/// 单页 slug：在通用校验之上再拒绝保留名（fail-fast，而不是静默产出 404 / 写盘失败）。
+fn validate_page_slug(slug: &str) -> Result<()> {
+    validate_slug(slug)?;
+    if RESERVED_PAGE_ROUTES.contains(&slug) {
+        anyhow::bail!("单页 slug 不能是保留路由名 {slug:?}（/{slug}/ 会被固定路由遮挡）");
+    }
+    if RESERVED_OUTPUT_NAMES.contains(&slug) {
+        anyhow::bail!(
+            "单页 slug 不能与输出根的文件同名 {slug:?}（/{slug}/ 目录会与 {slug} 文件冲突）"
+        );
     }
     Ok(())
 }
@@ -743,5 +817,195 @@ mod tests {
             );
             let _ = fs::remove_dir_all(&root);
         }
+    }
+
+    #[test]
+    fn load_rejects_invalid_yaml_with_file_path() {
+        // 以前 `unwrap_or(Value::Null)`：写坏的 frontmatter 静默变空，标题/日期/标签全丢、
+        // slug 退回文件名，构建照样"成功"。现在必须带文件路径 fail-fast。
+        let root = temp_root("bad-yaml");
+        write_file(
+            &root,
+            "content/posts/broken.md",
+            "---\ntitle: \"未闭合的引号\nslug: broken\n---\n\n正文\n",
+        );
+        let err = load(&root).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("content/posts/broken.md"),
+            "错误需带文件路径：{msg}"
+        );
+        assert!(
+            msg.contains("解析 frontmatter 失败"),
+            "错误需说明是 frontmatter 解析失败：{msg}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn load_rejects_non_mapping_frontmatter() {
+        // 合法 YAML 但不是映射：同样取不到字段，不能静默当空。
+        let root = temp_root("scalar-yaml");
+        write_file(
+            &root,
+            "content/posts/scalar.md",
+            "---\n只是随手写的一行字\n---\n\n正文\n",
+        );
+        let err = load(&root).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("content/posts/scalar.md") && msg.contains("解析 frontmatter 失败"),
+            "错误需带文件路径并指向 frontmatter：{msg}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn load_rejects_duplicate_post_slug_with_both_paths() {
+        // 两篇文章同 slug → 只有一篇能写进 /posts/<slug>/，另一篇静默消失，sitemap 还会重复。
+        let root = temp_root("dup-post");
+        write_file(
+            &root,
+            "content/posts/first.md",
+            "---\ntitle: 第一篇\nslug: same-slug\n---\n\n第一篇正文\n",
+        );
+        write_file(
+            &root,
+            "content/posts/second.md",
+            "---\ntitle: 第二篇\nslug: same-slug\n---\n\n第二篇正文\n",
+        );
+        let err = load(&root).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(msg.contains("重复的 slug"), "错误需说明是重复 slug：{msg}");
+        assert!(
+            msg.contains("content/posts/first.md") && msg.contains("content/posts/second.md"),
+            "错误需报出冲突的两个文件路径：{msg}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn load_rejects_duplicate_page_slug_with_both_paths() {
+        let root = temp_root("dup-page");
+        write_file(
+            &root,
+            "content/pages/one.md",
+            "---\ntitle: 甲\nslug: same\n---\n\n甲\n",
+        );
+        write_file(
+            &root,
+            "content/pages/two.md",
+            "---\ntitle: 乙\nslug: same\n---\n\n乙\n",
+        );
+        let err = load(&root).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("重复的单页 slug"),
+            "错误需说明是重复单页 slug：{msg}"
+        );
+        assert!(
+            msg.contains("content/pages/one.md") && msg.contains("content/pages/two.md"),
+            "错误需报出冲突的两个文件路径：{msg}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn load_rejects_page_slug_that_shadows_reserved_route() {
+        // `/tags/` 是标签索引：单页 slug 叫 tags 会永远被固定路由遮挡，sitemap 收录死链。
+        for reserved in RESERVED_PAGE_ROUTES {
+            let root = temp_root("reserved-page");
+            write_file(
+                &root,
+                "content/pages/shadow.md",
+                &format!("---\ntitle: 冒充\nslug: {reserved}\n---\n\n正文\n"),
+            );
+            let err = load(&root).unwrap_err();
+            let msg = format!("{err:#}");
+            assert!(
+                msg.contains("content/pages/shadow.md") && msg.contains("保留路由名"),
+                "单页 slug {reserved:?} 应被拒绝：{msg}"
+            );
+            let _ = fs::remove_dir_all(&root);
+        }
+        assert!(is_reserved_page_slug("tags"));
+        assert!(!is_reserved_page_slug("about"));
+        assert!(!is_reserved_page_slug("关于我"));
+    }
+
+    #[test]
+    fn load_rejects_page_slug_that_collides_with_output_file() {
+        // `/feed.xml/` 的目录名会与输出根的 feed.xml 文件同名：写盘时必然 `Is a directory`。
+        for reserved in RESERVED_OUTPUT_NAMES {
+            let root = temp_root("output-name");
+            write_file(
+                &root,
+                "content/pages/feed.md",
+                &format!("---\ntitle: 冒充\nslug: {reserved}\n---\n\n正文\n"),
+            );
+            let err = load(&root).unwrap_err();
+            let msg = format!("{err:#}");
+            assert!(
+                msg.contains("content/pages/feed.md")
+                    && msg.contains("单页 slug 不能与输出根的文件同名"),
+                "单页 slug {reserved:?} 应被拒绝：{msg}"
+            );
+            let _ = fs::remove_dir_all(&root);
+        }
+    }
+
+    #[test]
+    fn summary_decodes_html_entities_before_templates_escape() {
+        // 无 description 的摘要从渲染后的 HTML 里抽：`A & B` 在那里是 `A &amp; B`。
+        // 若原样交给模板（模板还会 escape 一次），页面上就会出现 `&amp;amp;`。
+        let root = temp_root("summary");
+        write_file(
+            &root,
+            "content/posts/amp.md",
+            "---\ntitle: 摘要转义\ntags: [运维]\n---\n\nA & B 与 C < D 的一段话。\n",
+        );
+        let content = load(&root).unwrap();
+        let summary = &content.posts[0].summary;
+        assert!(
+            summary.contains("A & B") && summary.contains("C < D"),
+            "摘要应是纯文本（实体已解码）：{summary:?}"
+        );
+        assert!(
+            !summary.contains("&amp;") && !summary.contains("&lt;"),
+            "摘要里不该残留 HTML 实体：{summary:?}"
+        );
+
+        // 模板层只编码一次：& → &amp;、< → &lt;（不能是 &amp;amp; / &amp;lt;）。
+        let refs: Vec<&Post> = content.posts.iter().collect();
+        let xml = crate::templates::feed_xml(&refs, "https://example.com", "站点描述");
+        assert!(
+            xml.contains("A &amp; B") && xml.contains("C &lt; D"),
+            "feed 摘要应只编码一次：{xml}"
+        );
+        assert!(
+            !xml.contains("&amp;amp;") && !xml.contains("&amp;lt;"),
+            "feed 摘要出现双重转义：{xml}"
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn draft_does_not_participate_in_duplicate_slug_check() {
+        // draft 不写产物，也不该因为撞了已发布文章的 slug 就让构建失败。
+        let root = temp_root("draft-dup");
+        write_file(
+            &root,
+            "content/posts/live.md",
+            "---\ntitle: 已发布\nslug: same-slug\n---\n\n正文\n",
+        );
+        write_file(
+            &root,
+            "content/posts/wip.md",
+            "---\ntitle: 草稿\nslug: same-slug\ndraft: true\n---\n\n草稿正文\n",
+        );
+        let content = load(&root).unwrap();
+        assert_eq!(content.posts.len(), 1, "草稿不应出现在已发布列表里");
+        assert_eq!(content.posts[0].slug, "same-slug");
+        let _ = fs::remove_dir_all(&root);
     }
 }

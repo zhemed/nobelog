@@ -171,3 +171,35 @@ spec 时区约定改为 UTC+8 挂钟存储/RSS 输出真实 UTC；提交并推�
 ### Next Steps
 
 - 剩余 P2：CSS 裁剪依赖 public/、热更新删除检测、SITE_URL、panic=unwind
+
+
+## Session 6: 修复 P2：CSS 确定性、热更新可靠性、内容一致性
+<!-- trellis-session: v=2 fp=ccc8f24ec59bfa5d -->
+
+**Date**: 2026-10-19
+**Task**: 修复 P2：CSS 确定性、热更新可靠性、内容一致性
+**Branch**: `main`
+
+### Summary
+
+CSS 裁剪与 public 解耦（静态/动态同哈希 1f82b0f7）、动态热更新指纹/TTL/退避/图片 no-cache、非法 YAML/重复 slug/摘要双转义/提示块围栏/page slug 一致性；80 测试全绿，两路复核均接受，未提交未部署
+
+### Main Changes
+
+- rust/src/{assets,build,content,markdown,routes,serve}.rs、rust/tools/css_prune.rs
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] cargo fmt/clippy/test 全绿；有/无 public 构建同 CSS；fixture 前后对比；reviewer-security 与 reviewer-render 均接受
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 用户决定提交与部署；P3（符号链接、.mdx 扫描、保留名大小写）待排期

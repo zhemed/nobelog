@@ -99,7 +99,10 @@ fn slugify(text: &str, counts: &mut HashMap<String, usize>) -> String {
     }
 }
 
-fn decode_entities(input: &str) -> String {
+/// 把 HTML 文本节点还原成纯文本（`&amp;` → `&`、`&#39;` → `'` ……）。
+/// 渲染层只做编码、不做解码，所以从 HTML 里抽出来的文本（例如摘要）必须先过这里，
+/// 否则模板再 `escape_html` 一次就会变成 `&amp;amp;`。
+pub(crate) fn decode_entities(input: &str) -> String {
     static DEC: OnceLock<Regex> = OnceLock::new();
     static HEX: OnceLock<Regex> = OnceLock::new();
     let dec = DEC.get_or_init(|| Regex::new(r"&#(\d+);").unwrap());
@@ -892,30 +895,52 @@ fn split_prompts(source: &str) -> Vec<Segment> {
     let lines: Vec<&str> = source.split('\n').collect();
     let mut segments: Vec<Segment> = Vec::new();
     let mut markdown: Vec<&str> = Vec::new();
-    let mut in_fence = false;
+    let mut fence: Option<Fence> = None;
     let mut i = 0usize;
     while i < lines.len() {
         let line = lines[i];
-        let trimmed = line.trim_start();
-        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
-            in_fence = !in_fence;
+        // 代码围栏内的行一律是代码内容：围栏行本身与 `:::` 都不再是结构标记。
+        if let Some(open) = fence {
+            if fence_closes(open, line) {
+                fence = None;
+            }
+            markdown.push(line);
+            i += 1;
+            continue;
+        }
+        if let Some(open) = fence_open(line) {
+            fence = Some(open);
             markdown.push(line);
             i += 1;
             continue;
         }
         let at_block_start = i == 0 || lines[i - 1].trim().is_empty();
-        let parsed = if in_fence || !at_block_start {
-            None
-        } else {
+        let parsed = if at_block_start {
             parse_prompt_open(line)
+        } else {
+            None
         };
         let Some((kind, title)) = parsed else {
             markdown.push(line);
             i += 1;
             continue;
         };
+        // 找闭合：提示块体内的代码围栏要一起跳过——围栏里的 `:::` 是代码内容，不是闭合标记。
+        // 以前不看围栏，扫到第一个 `:::` 就闭合：提示块被拦腰截断，后半段（含未闭合的围栏）
+        // 变成正文里的一个代码块，把后面的文字整段吞进去。
         let mut body_end = i + 1;
-        while body_end < lines.len() && !is_prompt_close(lines[body_end]) {
+        let mut inner_fence: Option<Fence> = None;
+        while body_end < lines.len() {
+            let candidate = lines[body_end];
+            if let Some(open) = inner_fence {
+                if fence_closes(open, candidate) {
+                    inner_fence = None;
+                }
+            } else if let Some(open) = fence_open(candidate) {
+                inner_fence = Some(open);
+            } else if is_prompt_close(candidate) {
+                break;
+            }
             body_end += 1;
         }
         if body_end >= lines.len() {
@@ -938,6 +963,32 @@ fn split_prompts(source: &str) -> Vec<Segment> {
         segments.push(Segment::Markdown(markdown.join("\n")));
     }
     segments
+}
+
+/// 代码围栏状态：`ch` 是围栏字符（`` ` `` / `~`），`len` 是开启行的长度。
+#[derive(Clone, Copy)]
+struct Fence {
+    ch: char,
+    len: usize,
+}
+
+/// 该行是否开启一个代码围栏（至少 3 个 `` ` `` / `~`，允许缩进与信息串）。
+fn fence_open(line: &str) -> Option<Fence> {
+    let trimmed = line.trim_start();
+    let ch = trimmed.chars().next()?;
+    if ch != '`' && ch != '~' {
+        return None;
+    }
+    let len = trimmed.chars().take_while(|c| *c == ch).count();
+    (len >= 3).then_some(Fence { ch, len })
+}
+
+/// 该行是否闭合 `open` 打开的围栏：同字符、不短于开启行、其后只有空白。
+/// 长度不足的行（例如 4 个反引号的围栏里出现 3 个反引号）属于围栏内容，不是闭合。
+fn fence_closes(open: Fence, line: &str) -> bool {
+    let trimmed = line.trim_start();
+    let len = trimmed.chars().take_while(|c| *c == open.ch).count();
+    len >= open.len && trimmed[len..].trim().is_empty()
 }
 
 fn parse_prompt_open(line: &str) -> Option<(String, String)> {
@@ -1031,4 +1082,84 @@ pub fn reset_shared() {
     *SHARED_SLUG_COUNTS
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(HashMap::new());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 截出第一个提示块的内部 HTML（blockquote 开始到结束）。
+    fn prompt_inner(html: &str) -> &str {
+        let open = html.find("<blockquote").expect("应有提示块");
+        let close = html[open..]
+            .find("</blockquote>")
+            .map(|i| open + i)
+            .expect("提示块应闭合");
+        &html[open..close]
+    }
+
+    #[test]
+    fn prompt_block_ignores_close_marker_inside_code_fence() {
+        // 提示块体内的代码块里有一个 `:::`：它是代码内容，不是闭合标记。
+        // 修复前 split_prompts 扫到它就把提示块关掉，剩下的围栏变成正文里未闭合的代码块，
+        // 把「提示块内的尾巴」整段吞进 <pre>。
+        let source =
+            "::: tip 提示标题\n\n```text\n:::\n```\n\n提示块内的尾巴\n\n:::\n\n外侧正文段落\n";
+        let (html, _) = render(source);
+        let inner = prompt_inner(&html);
+        assert!(
+            inner.contains("提示块内的尾巴"),
+            "竖线：围栏内的 ::: 提前闭合了提示块：{html}"
+        );
+        assert!(inner.contains("<pre"), "提示块内的代码块应正常渲染：{html}");
+        assert!(
+            inner.contains(":::"),
+            "围栏内的 ::: 应作为代码内容保留：{html}"
+        );
+        let after = &html[html.find("</blockquote>").unwrap()..];
+        assert!(
+            after.contains("外侧正文段落"),
+            "提示块之后的正文应留在外面：{html}"
+        );
+        assert_eq!(
+            html.matches("<blockquote").count(),
+            1,
+            "只应有一个提示块：{html}"
+        );
+    }
+
+    #[test]
+    fn prompt_block_still_closes_on_top_level_marker() {
+        let source = "::: warning 注意\n\n提示正文\n\n:::\n\n外侧正文\n";
+        let (html, _) = render(source);
+        let inner = prompt_inner(&html);
+        assert!(inner.contains("提示正文"), "{html}");
+        assert!(!inner.contains("外侧正文"), "提示块应在此处闭合：{html}");
+        assert!(html.contains("外侧正文"), "{html}");
+    }
+
+    #[test]
+    fn fence_length_must_be_at_least_the_opening_fence() {
+        // 4 个反引号的围栏里出现 3 个反引号不是闭合；里面的 `:::` 也不能闭合提示块。
+        let source = "::: info 标题\n\n````text\n```\n:::\n````\n\n尾巴在提示块内\n\n:::\n\n外侧\n";
+        let (html, _) = render(source);
+        let inner = prompt_inner(&html);
+        assert!(
+            inner.contains("尾巴在提示块内"),
+            "短围栏把 4 反引号围栏提前关掉了：{html}"
+        );
+        assert!(html.contains("外侧"), "{html}");
+    }
+
+    #[test]
+    fn prompt_open_inside_code_fence_stays_literal() {
+        // 围栏内的 `::: tip` 不是提示块开始标记。
+        let source = "```text\n::: tip 不该生效\n```\n\n外侧正文\n";
+        let (html, _) = render(source);
+        assert!(
+            !html.contains("<blockquote"),
+            "围栏里的 ::: 被误当成提示块：{html}"
+        );
+        assert!(html.contains("::: tip 不该生效"), "{html}");
+    }
 }

@@ -3,8 +3,10 @@
 // CSS 选择器裁剪（assets 构建与离线报告工具共用，纯 std，无外部依赖）。
 //
 // 保守策略（宁可多留，不可误删）：
-//   1. 从 public/**/*.html 收集实际出现的 class / id / tag；
-//      再叠加 rust/client/main.js 动态使用的 class/属性白名单。
+//   1. 从源码字面量（模板/渲染器）、正文原生 HTML、main.js 收集实际出现的 class / id / tag；
+//      再叠加渲染器运行时才会生成、且只在特定页面状态出现的类/属性白名单。
+//      刻意不依赖 `public/**/*.html`：静态构建会先清空 public，部署包也可能没有 public，
+//      依赖它会让同一 commit 的静态构建与动态模式产出两套 CSS。
 //   2. 选择器里只要有一个 class/id/tag 出现在收集结果中 → 保留整条选择器；
 //      全部没出现 → 删除（任务要求"class/id 都未出现 → 删除"）。
 //   3. 没有 class/id/tag token 的选择器（:root、*、::selection、[hidden] 等）→ 保留。
@@ -169,11 +171,32 @@ impl Usage {
             "class_",
             "function_",
             "inherited__",
+            // Markdown 渲染器按内容特性生成的类（任务列表 / 脚注 / 代码块 / 图片）：
+            // 这些只在正文用到对应语法时出现，源码里没有字面量。
+            "markdown-body",
+            "task-list-item",
+            "task-list-item-checkbox",
+            "contains-task-list",
+            "footnote-reference",
+            "footnote-definition",
+            "table-wrapper",
+            "highlight",
+            "code-block",
+            "copy-button",
+            "img-link",
+            "popup",
+            "anchor",
+            "octicon",
+            "octicon-link",
+            "octicon-copy",
+            "octicon-check",
+            "me-2",
         ] {
             self.add_class(class);
         }
-        // 渲染器成批生成的类：hljs token、rouge 代码表、prompt 变体、language-xxx
-        for prefix in ["hljs", "rouge", "prompt", "language"] {
+        // 渲染器成批生成的类：hljs token、rouge 代码表、prompt 变体、language-xxx，
+        // 以及 TOC 的 node-name--H{level}（模板里是 format 占位符，字面量扫不到）。
+        for prefix in ["hljs", "rouge", "prompt", "language", "node-name--"] {
             self.add_class_prefix(prefix);
         }
         // 正文由 markdown 渲染，标签集合不能只看当前内容：常见 markdown/HTML 标签全部放行。
@@ -261,6 +284,13 @@ impl Usage {
             "chirpy-prompt",
             "col",
             "colgroup",
+            // 正文原生 HTML / 渲染器输出里常见、但模板源码没有字面量的标签：
+            "input",
+            "label",
+            "select",
+            "option",
+            "form",
+            "iframe",
         ] {
             self.add_tag(tag);
         }
@@ -280,12 +310,17 @@ impl Usage {
 }
 
 /// 从 HTML 文本收集 class/id/tag。实现是宽松的（多收无妨，少收会误删）。
+///
+/// 正式构建不再读 `public/**/*.html`（见模块头），这个入口只留给离线报告工具
+/// `rust/tools/css_report.rs` 和 `assets.rs` 的“源码使用集合覆盖真实页面”回归测试。
+#[allow(dead_code)]
 pub fn collect_html_usage(html: &str, usage: &mut Usage) {
     collect_html_tags(html, usage);
     collect_html_attr(html, "class", usage, true);
     collect_html_attr(html, "id", usage, false);
 }
 
+#[allow(dead_code)] // 仅被 collect_html_usage 使用（离线报告 / 回归测试）
 fn collect_html_tags(html: &str, usage: &mut Usage) {
     let bytes = html.as_bytes();
     let mut i = 0usize;
@@ -315,6 +350,7 @@ fn collect_html_tags(html: &str, usage: &mut Usage) {
     }
 }
 
+#[allow(dead_code)] // 仅被 collect_html_usage 使用（离线报告 / 回归测试）
 fn collect_html_attr(html: &str, name: &str, usage: &mut Usage, is_class: bool) {
     let lower = html.to_ascii_lowercase();
     let hay = lower.as_bytes();
@@ -425,7 +461,7 @@ pub fn collect_js_usage(js: &str, usage: &mut Usage) {
     }
 }
 
-/// 无 public HTML 时的源码兜底：扫描 templates.rs / markdown.rs / site.rs 等 Rust 源码。
+/// 扫描 Rust 源码里的 class/id 字面量（模板、Markdown 渲染器、站点配置里的图标类）。
 ///
 /// 保守做法：
 /// - `class="..."` 与 `class=\"...\"` 属性值（剥离 `{format}` 占位符）；
@@ -433,10 +469,22 @@ pub fn collect_js_usage(js: &str, usage: &mut Usage) {
 /// - 普通字符串字面量里的 Font Awesome 类（`icon("fas fa-home")` 这类函数参数）。
 ///
 /// 标签由 `add_builtin_dynamic` 的 markdown/HTML 标签白名单覆盖。
+///
+/// 该集合是静态构建与动态模式共用的**唯一**源码来源（源码在 assets.rs 里编译期内嵌），
+/// 不再区分「有没有 public HTML」。
 pub fn collect_rust_source_usage(source: &str, usage: &mut Usage) {
     collect_rust_attr(source, "class", true, usage);
     collect_rust_attr(source, "id", false, usage);
     collect_fa_icon_tokens(source, usage);
+}
+
+/// 扫描 Markdown 正文里直接写的原生 HTML 的 class/id 属性。
+///
+/// 正文由 `content/**/*.md` 决定，静态构建与动态模式读同一份内容；代码块里的示例 HTML
+/// 会被一并收进来——多留样式无害，漏删才会出问题。
+pub fn collect_markdown_source_usage(markdown: &str, usage: &mut Usage) {
+    collect_rust_attr(markdown, "class", true, usage);
+    collect_rust_attr(markdown, "id", false, usage);
 }
 
 fn collect_rust_attr(source: &str, name: &str, is_class: bool, usage: &mut Usage) {
@@ -1007,7 +1055,7 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
     }
     if classes
         .iter()
-        .any(|name| usage.has_class(name) || is_layout_class(name))
+        .any(|name| usage.has_class(name) || is_always_kept_class(name))
         || ids.iter().any(|name| usage.has_id(name))
         || tags.iter().any(|name| usage.has_tag(name))
     {
@@ -1021,20 +1069,36 @@ fn selector_kept(selector: &str, usage: &Usage) -> (bool, String) {
     (false, format!("unused({})", missing.join(",")))
 }
 
-/// 栅格/布局类永远保留：模板里有些类是运行时拼出来的（如 `{main_col}`），
-/// 使用情况收集可能漏掉；漏掉这些类会让整页栅格塌掉，代价远大于多几 KB CSS。
+/// 按选择器整体丢弃的已删除组件。
 fn is_removed_class(name: &str) -> bool {
     name == "post-navigation"
 }
 
+/// 无条件保留的类：
+///
+/// - 栅格/布局类：模板里有些类是运行时拼出来的（如 `{main_col}`），使用情况收集可能漏掉；
+///   漏掉这些类会让整页栅格塌掉，代价远大于多几 KB CSS。
+/// - 条件渲染类：只在特定页面状态出现（翻页控件只在多页时渲染、`row-cols-*` 只在列表页、
+///   `preview-img` 只在带封面的卡片），按“本次渲染的页面”去扫会时有时无，必须白名单化，
+///   否则同一份 CSS 会随内容页数/封面增减而抖动。
+pub fn is_always_kept_class(name: &str) -> bool {
+    name == "row" || name == "container" || is_layout_class(name) || is_conditional_class(name)
+}
+
 fn is_layout_class(name: &str) -> bool {
-    name == "row"
-        || name == "container"
-        || name.starts_with("lightbox")
+    name.starts_with("lightbox")
         || name.starts_with("col-")
         || name.starts_with("g-")
         || name.starts_with("offset-")
         || name.starts_with("order-")
+}
+
+/// 条件渲染类白名单（宁可多留）：分页、列表栅格、封面图。
+fn is_conditional_class(name: &str) -> bool {
+    matches!(name, "pagination" | "preview-img" | "post-preview")
+        || name.starts_with("page-")
+        || name.starts_with("row-cols-")
+        || name.starts_with("preview-")
 }
 
 fn find_block_end(src: &str, open: usize) -> usize {
@@ -1115,6 +1179,48 @@ mod tests {
         ] {
             assert!(selector_kept(sel, &u).0, "{sel} 应保留");
         }
+    }
+
+    #[test]
+    fn keeps_conditional_render_classes() {
+        // 这些类只在特定页面状态出现（多页才有 pagination、列表页才有 row-cols-*、
+        // 带封面才有 preview-img），不能按“本次渲染的页面”决定去留。
+        let u = Usage::default();
+        for sel in [
+            ".pagination",
+            ".pagination .page-item.active .page-link",
+            ".page-item:first-child .page-link",
+            ".page-index",
+            ".row-cols-1",
+            ".row-cols-md-2>*",
+            ".row-cols-xl-3",
+            ".preview-img img",
+            ".preview-img:not(.no-bg) img.lazyloaded",
+            ".post-preview",
+        ] {
+            assert!(selector_kept(sel, &u).0, "{sel} 应保留");
+        }
+        // 白名单之外、又确实没出现过的类仍然照常裁剪。
+        assert!(!selector_kept(".totally-unused-widget", &u).0);
+    }
+
+    #[test]
+    fn markdown_source_scan_collects_raw_html_attrs() {
+        let mut u = Usage::new();
+        let md = r#"正文
+<div class="alert alert-note" id="custom-anchor">提示</div>
+<span class='badge hot'>热</span>
+```html
+<pre class="code-sample">示例</pre>
+```
+"#;
+        collect_markdown_source_usage(md, &mut u);
+        for class in ["alert", "alert-note", "badge", "hot", "code-sample"] {
+            assert!(u.has_class(class), "missing class {class}");
+        }
+        assert!(u.has_id("custom-anchor"));
+        // 普通正文里的英文单词不会被误当成标签（只收 class/id 属性）。
+        assert!(!u.has_tag("body"));
     }
 
     #[test]

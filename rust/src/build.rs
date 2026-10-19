@@ -23,6 +23,10 @@ pub fn build(root: &Path, out: &Path, self_assets: bool) -> Result<()> {
     fs::create_dir_all(out.join("assets"))?;
 
     // 阶段一默认沿用 Node 构建好的资源与 manifest；`--self-assets` 切到 Rust 自建（阶段二）。
+    //
+    // 注意：自建资源的 CSS 裁剪使用集合只读 vendor 样式、`content/` 与编译期内嵌源码，
+    // **不读 out（可能等于 public 且刚被清空）也不读 public HTML**，所以这里的清空顺序
+    // 不会影响 CSS 哈希；改动 assets.rs 时请保持这个性质。
     let assets = if self_assets {
         crate::assets::build_assets(root, out)?
     } else {
