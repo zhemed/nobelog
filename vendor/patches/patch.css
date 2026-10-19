@@ -1197,3 +1197,15 @@ body.lightbox-open {
   line-height: 1;
   margin: 0 !important;
 }
+
+/* 顶部一行：上下留白与标签间隙 */
+.post-meta-line {
+  gap: 0.75rem;
+  margin: 0.75rem 0 1.5rem;
+}
+.post-meta-line .post-tags .post-tag {
+  margin: 0 0.6rem 0 0;
+}
+.post-meta-line .post-tags .post-tag:last-child {
+  margin-right: 0;
+}
