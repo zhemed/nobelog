@@ -237,3 +237,37 @@ P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且
 ### Next Steps
 
 - SITE_URL 待域名；可选图片哈希化；P3 剩余（broken link 语义、date fail-fast）需产品决策
+
+
+## Session 8: 发布 v0.0.22
+<!-- trellis-session: v=2 fp=901c8bf08e4ab456 -->
+
+**Date**: 2026-10-20
+**Task**: 发布 v0.0.22
+**Branch**: `main`
+
+### Summary
+
+版本三源同步 0.0.22；cargo build --release --locked 通过；package.sh 产出 dist/nobelog-0.0.22-linux-x86_64.tar.gz（3960053B，sha256 e2320054…），包内容与 VERSION/--version 校验通过；annotated tag v0.0.22 已推送
+
+### Main Changes
+
+- rust/Cargo.toml、package.json、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `adc05c3` | chore: 发布 v0.0.22（版本号同步） [task:10-20-release] |
+
+### Testing
+
+- [OK] cargo test 87；sha256sum -c OK；包内 --version=0.0.22；远程 tag 存在
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 可选：重启服务使版本号生效；SITE_URL 待域名
