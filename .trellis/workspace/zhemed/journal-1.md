@@ -601,3 +601,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 决定修复方式：代码默认忽略 XFH 或本机设置 SITE_URL
+
+
+## Session 19: 发布 v0.0.24 并上线本机
+<!-- trellis-session: v=2 fp=f5967b10a7440d28 -->
+
+**Date**: 2026-10-20
+**Task**: 发布 v0.0.24 并上线本机
+**Branch**: `main`
+
+### Summary
+
+安全补丁版 v0.0.24：默认不信任 X-Forwarded-*（SITE_URL 优先/NOBELOG_TRUST_FORWARDED 开关）；版本三源 0.0.24、包 sha256 c6cff2bc…、tag 与 GitHub Release 已推送；本机重启（PID 213193→216337，exe sha 6bd9317b…），XFH 矩阵与回归全 PASS
+
+### Main Changes
+
+- rust/Cargo.toml、package.json、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d4215a6` | chore: 发布 v0.0.24（版本号同步） [task:10-20-release-24] |
+
+### Testing
+
+- [OK] cargo test 92；包 sha256sum -c；本机 XFH 矩阵 canonical 不被污染；9 路由 + 缓存回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程部署由用户负责；反代场景需设 SITE_URL 或 NOBELOG_TRUST_FORWARDED=1
