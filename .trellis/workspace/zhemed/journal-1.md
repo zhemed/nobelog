@@ -669,3 +669,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程部署由用户负责；512 透明版未被引用可清理
+
+
+## Session 21: 回退站点图标（含源图与脚本）
+<!-- trellis-session: v=2 fp=24253400a13f72d0 -->
+
+**Date**: 2026-10-20
+**Task**: 回退站点图标（含源图与脚本）
+**Branch**: `main`
+
+### Summary
+
+按用户决定完全回退图标：revert 1d8e38d（模板 head、6 个 png、make-icons.py、源图、spec 说明）；重建 release 后二进制 sha 与图标上线前一致（6bd9317b…），本机重启（PID 430595→434553）后 head 无图标标签、6 个图标路径全 404，回归全绿
+
+### Main Changes
+
+- rust/src/templates.rs、content/images/、tools/（回退）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5cbad23` | revert: 回退站点图标（含源图与生成脚本） [task:10-20-revert-icon] |
+
+### Testing
+
+- [OK] cargo test 92；二进制 sha 逐字节还原；head 断言 0；图标 404；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 图标方案待用户再定；如再做建议先不提交、先看预览
