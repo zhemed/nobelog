@@ -403,3 +403,37 @@ P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且
 ### Next Steps
 
 - 随下次发版部署；远程改 nginx 需授权
+
+
+## Session 13: 发布 v0.0.23
+<!-- trellis-session: v=2 fp=a47a28ae53034d18 -->
+
+**Date**: 2026-10-20
+**Task**: 发布 v0.0.23
+**Branch**: `main`
+
+### Summary
+
+版本三源 0.0.23；SITE_URL=https://z.miio.cc 打包（robots.txt 含正确 Sitemap）；tag v0.0.23 已推送；GitHub Release 已创建（2 附件，Latest）
+
+### Main Changes
+
+- rust/Cargo.toml、package.json、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `95768e6` | chore: 发布 v0.0.23（版本号同步） [task:10-20-release-23] |
+
+### Testing
+
+- [OK] cargo test 90；包 sha256 084cd534…；gh release view 核对 assets=2
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程部署新 public/ 后 robots.txt 生效（仅只读授权，需用户安排）
