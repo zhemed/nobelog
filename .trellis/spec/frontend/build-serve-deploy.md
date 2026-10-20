@@ -4,12 +4,13 @@
 
 ```bash
 # 本地动态模式（改 md 刷新即生效）
-pnpm serve                 # = cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port 10086 --dynamic
+pnpm serve                 # = cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port <port> --dynamic
 pnpm serve:static          # 同端口，静态模式
 pnpm build                 # = ... build --self-assets --out public
 ```
 
-等价的 cargo 命令见 README。`rust/rust-toolchain.toml` 固定 `1.99.1` + `rustfmt` + `clippy`。
+等价的 cargo 命令见 README。端口不在本规范里写死：文档统一用占位符 `<port>`，实际默认值见 `package.json` 的 scripts 与 CLI。
+`rust/rust-toolchain.toml` 固定 `1.99.1` + `rustfmt` + `clippy`。
 
 三个子命令（`rust/src/main.rs`）：
 
@@ -62,13 +63,13 @@ pnpm build                 # = ... build --self-assets --out public
 
 ## 部署
 
-- **必须设置 `SITE_URL`**（如 `SITE_URL=https://example.com`）：canonical / RSS / sitemap / 页脚 / 分享链接都用它；
+- **必须设置 `SITE_URL`**（如 `SITE_URL=https://<domain>`）：canonical / RSS / sitemap / 页脚 / 分享链接都用它；
   未设置时动态模式按 `Host` + `X-Forwarded-Proto` 推断（两个头都经白名单校验，非法值整条丢弃），
-  静态构建回退到 `SITE.url`（`http://127.0.0.1:10086`），`serve` 启动时会打一行告警。
+  静态构建回退到 `SITE.url` 的内置默认地址（见 `rust/src/site.rs`；不要依赖它），`serve` 启动时会打一行告警。
   即便有白名单，未设 `SITE_URL` 时**字符合法**的 `X-Forwarded-Host` 仍能改写 canonical（无注入，但可被缓存污染），
   生产环境必须显式设置。
 - 本机当前以 systemd 单元 `nobelog-local.service` 托管 release 二进制：
-  `nobelog serve --host 0.0.0.0 --port 10086 --root <仓库根> --dynamic`。
+  `nobelog serve --host 0.0.0.0 --port <port> --root <仓库根> --dynamic`（端口默认值见 CLI）。
   排查"线上页面不对"时先 `systemctl status nobelog-local`，再确认它跑的是 `rust/target/release/nobelog`
   （改完代码要重新 `cargo build --release` 才会生效）。
 - 发布包：`tools/package.sh`（`VERSION` 可覆盖，默认 `git describe`），内部执行
@@ -77,23 +78,78 @@ pnpm build                 # = ... build --self-assets --out public
   `rust/client/main.js`、README、LICENSE、VERSION。
 - 动态模式的内存开销来自"整站内容 + CSS/JS 常驻"；内容规模变大时先量内存再谈优化，不要随意改缓存策略。
 
-## 静态部署（nginx 反代）注意
+## 部署拓扑
 
-远程 `https://z.miio.cc` 的形态是 **nginx 反代 + nobelog 静态模式**（origin 输出 `weak_etag()`、`cache_for()` 的
-`PAGE_CACHE`，nginx 只做反代/压缩）。由此有两条部署侧约定：
+构建产物（`public/`）可以落在三种拓扑下，**缓存头该改在哪一层取决于拓扑**。先判断自己属于哪种：
 
-1. **`/images/**` 在静态部署下没有 no-cache**：`assets/**` 带内容哈希可以长缓存，而 `content/images/` 的文件名不含哈希，
-   默认会落到 `PAGE_CACHE`（`s-maxage=3600` + SWR 86400）→ 换同名图片后最长约 1 小时（SWR 可到 1 天）仍可能返回旧图。
-   若要求"换图即生效"，在 nginx 里给该前缀单独设头（**改远端配置需用户授权，由运维执行**）：
-   ```nginx
-   location ^~ /images/ {
-       add_header Cache-Control "no-cache" always;
-       try_files $uri =404;
-   }
-   ```
-   替代方案：图片文件名带内容哈希，或改用 `--dynamic`（`serve.rs::dynamic_file_cache` 已对 `/images/**` 返回 no-cache）。
-2. **`robots.txt` 由构建产出**：`build` 会写 `User-agent: * / Allow: / / Sitemap: <base_url>/sitemap.xml`；
-   若 out 目录里已有手写 `robots.txt`（`PRESERVE_IN_PUBLIC` 保留）则不覆盖。远程若仍是 404，说明部署的还是旧产物。
+- **(a) nginx 反代 → 应用**：有独立应用进程（`nobelog serve` 静态模式）托管 `public/`，`nginx -T` 里该站点是 `proxy_pass`。
+  响应中能看到应用下发的 `PAGE_CACHE` / `ASSET_CACHE` 原值，ETag 是 `weak_etag()` 形态
+  （`W/"<size 十六进制>-<mtime_ms 十六进制>"`）。
+- **(b) nginx root/alias 纯静态**：`nginx -T` 里该站点用 `root` / `alias` 直接指向构建产物目录，没有应用进程参与；
+  静态文件、压缩、缓存头、错误页全归 nginx。
+- **(c) 动态模式直连**：直接访问应用端口，或前置层只做 TLS 透传、不改写缓存头。
+
+| 拓扑 | TLS 终止 | 静态文件托管 | 压缩 | 缓存头由谁下发 | 改 `/images/**` 缓存头落在哪层 |
+| --- | --- | --- | --- | --- | --- |
+| (a) nginx 反代 → 应用 | nginx | 应用（`nobelog serve` 读 `public/`） | 应用（`serve.rs`，≥1024 字节才压；nginx 可再压） | 应用（`ASSET_CACHE` / `PAGE_CACHE`） | nginx：`proxy_hide_header` 丢掉应用的，再 `add_header ... always` 覆盖 |
+| (b) nginx root/alias | nginx | nginx | nginx | nginx | nginx：直接 `add_header ... always` |
+| (c) 动态模式直连 | 应用 / 前置透传 | 应用（内存资源 + 运行时渲染） | 应用 | 应用（`NO_CACHE` / `IMMUTABLE_CACHE`） | 代码层已对 `/images/**` 返回 `no-cache`（`dynamic_file_cache`），一般无需改 nginx |
+
+> 本节 nginx 片段都是**示例**：`<domain>` / `<port>` / `<app_port>` / `<app_upstream>` / `<cert_path>` / `<static_root>` 为占位符；
+> `<app_upstream>` 是反代目标（socket 或 `<host>:<app_port>`），`<static_root>` 是构建产物（`public/` 内容）在 nginx 主机上的目录，
+> TLS 证书在 `<cert_path>`，产物目录布局、压缩与 CDN 策略
+> 都由实际部署决定，本仓库不预设。**改远端配置需用户/运维授权，由运维执行。**
+> 本机未安装 nginx，片段未通过 `nginx -t` 校验（属未验证项）。
+
+### 覆盖 `/images/**` 的缓存头
+
+为什么需要覆盖：`assets/**` 的文件名带内容哈希，可以长缓存；而 `content/images/` 的文件名不含哈希，
+默认落到 `PAGE_CACHE`（`s-maxage=3600` + SWR 86400）→ 换同名图片后最长约 1 小时（SWR 可到 1 天）仍可能返回旧图。
+若要「换图即生效」，按拓扑二选一：
+
+#### (a) 反代拓扑：应用托管文件
+
+```nginx
+# (a) nginx 反代 → 应用。文件在应用侧，nginx 的 root 下没有这些文件。
+location ^~ /images/ {
+    proxy_pass http://<app_upstream>;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_hide_header Cache-Control;              # 丢弃应用下发的 PAGE_CACHE
+    add_header Cache-Control "no-cache" always;   # 由 nginx 覆盖
+}
+```
+
+#### (b) 静态 root 拓扑：nginx 直接托管文件
+
+```nginx
+# (b) nginx root/alias 纯静态。文件在磁盘上，才能用 try_files。
+location ^~ /images/ {
+    root <static_root>;              # 目录布局由运维决定，不要照抄
+    try_files $uri =404;
+    add_header Cache-Control "no-cache" always;
+}
+```
+
+**改前必看的三点**：
+
+1. **`try_files` 只适用于 (b)**：(a) 下 nginx 本地没有这些文件，写 `try_files $uri =404;` 会让所有图片直接 404；
+   (a) 只做 `proxy_pass`，文件是否存在由应用判断。
+2. **`add_header` 的继承规则**：只要当前 `location` 里出现任意一条 `add_header`，父级（`http` / `server`）的
+   `add_header` 就不再继承。给 `/images/` 加缓存头后，父级配的安全头（如 `Strict-Transport-Security`、
+   `X-Content-Type-Options`）不会自动带下来 —— 要么在该 `location` 里重复声明，要么用 `map` 统一生成，
+   或 `more_set_headers`（第三方模块，需运维评估）。
+3. **CDN 只保证回源验证**：`no-cache` 只保证缓存层回源校验；若该前缀前面还有 CDN，CDN 仍可能按自己的 TTL
+   返回缓存，需要在 CDN 侧配置不缓存该前缀或加版本查询串 —— 控制权在 CDN 配置，不在本仓库。
+
+不改 nginx 的替代方案：图片文件名带内容哈希，或改用 `--dynamic`
+（`serve.rs::dynamic_file_cache` 已对 `/images/**` 返回 `no-cache`）。
+
+### 静态产物注意
+
+- **`robots.txt` 由构建产出**：`build` 会写 `User-agent: * / Allow: / / Sitemap: <base_url>/sitemap.xml`；
+  若 out 目录里已有手写 `robots.txt`（`PRESERVE_IN_PUBLIC` 保留）则不覆盖。远程若仍是 404，说明部署的还是旧产物。
 
 
 ## 验证清单（改完必做）

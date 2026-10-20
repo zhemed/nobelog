@@ -25,13 +25,14 @@ description: 一句话摘要
 
 ```bash
 # 动态模式：改 md 后刷新即生效
-cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port 10086 --dynamic
+cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port <port> --dynamic
 
 # 生成静态产物到 public/
 cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out public
 ```
 
 也可以用仓库根的 pnpm 别名：`pnpm serve` / `pnpm serve:static` / `pnpm build`。
+端口统一用占位符 `<port>`，实际默认值见 `package.json` 的 scripts 与 CLI。
 
 ## 目录
 
@@ -46,7 +47,7 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 
 ## 部署提示
 
-对外部署时设置 `SITE_URL`（例如 `SITE_URL=https://你的域名`），sitemap、RSS、canonical、页脚与分享链接都会使用它。
+对外部署时设置 `SITE_URL`（例如 `SITE_URL=https://<domain>`），sitemap、RSS、canonical、页脚与分享链接都会使用它。
 未设置时，动态模式会按请求的 `Host` / `X-Forwarded-Proto` 自动推断；静态构建则回退到默认地址。
 
 ## 数据
