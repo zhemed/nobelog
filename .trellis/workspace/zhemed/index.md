@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 16
+- **Total Sessions**: 17
 - **Last Active**: 2026-10-20
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~539 | Active |
+| `journal-1.md` | ~571 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 17 | 2026-10-20 | 核对残留任务 | - | `main` |
 | 16 | 2026-10-20 | 安装 nginx 并实测双拓扑片段 | `02b5dbc` | `main` |
 | 15 | 2026-10-20 | 部署文档 nginx 双拓扑化 | - | `main` |
 | 14 | 2026-10-20 | 本机部署 v0.0.23 并重启 | `173360b` | `main` |
