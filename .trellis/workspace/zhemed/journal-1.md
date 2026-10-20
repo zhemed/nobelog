@@ -537,3 +537,35 @@ build-serve-deploy 新增部署拓扑章节（a反代/b静态root/c动态直连�
 ### Next Steps
 
 - 运维侧按占位符落地；nginx 保留安装但未自启
+
+
+## Session 17: 核对残留任务
+<!-- trellis-session: v=2 fp=cff0c6621021dc98 -->
+
+**Date**: 2026-10-20
+**Task**: 核对残留任务
+**Branch**: `main`
+
+### Summary
+
+核对：Trellis 无其它活动任务；团队任务板 27 项全部 completed；teammate 全部 inactive；git 工作区干净且与 origin 同步
+
+### Main Changes
+
+- 无
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] task.py list / team_task_list / list_agents / git status
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 无
