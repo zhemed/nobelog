@@ -635,3 +635,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程部署由用户负责；反代场景需设 SITE_URL 或 NOBELOG_TRUST_FORWARDED=1
+
+
+## Session 20: 粉笔涂鸦站点图标（生成/接入/上线本机）
+<!-- trellis-session: v=2 fp=2acf600d1c6da375 -->
+
+**Date**: 2026-10-20
+**Task**: 粉笔涂鸦站点图标（生成/接入/上线本机）
+**Branch**: `main`
+
+### Summary
+
+用用户附件生成图标：favicon 32/192 透明版、apple-touch 180、og:image 512；脚本入库 tools/make-icons.py、源图移 tools/assets；模板 head 接入并测试；本机重启上线（PID 216337→430595，exe sha 2dee64d2…），图标端点与回归全 PASS
+
+### Main Changes
+
+- content/images/site-icon-*.png、tools/make-icons.py、tools/assets/site-icon-source.png、rust/src/templates.rs、.trellis/spec/frontend/directory-structure.md
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1d8e38d` | feat: 粉笔涂鸦站点图标（favicon 透明版 + apple-touch/og） [task:10-20-site-icon] |
+
+### Testing
+
+- [OK] cargo test 92；静态构建 public/images 只含 5 图标且无源图；本机 10086 图标 200 image/png、head 链接正确、回归通过
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程部署由用户负责；512 透明版未被引用可清理
