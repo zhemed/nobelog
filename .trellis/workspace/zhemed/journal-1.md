@@ -569,3 +569,35 @@ build-serve-deploy 新增部署拓扑章节（a反代/b静态root/c动态直连�
 ### Next Steps
 
 - 无
+
+
+## Session 18: 本地全面测试验收 v0.0.23
+<!-- trellis-session: v=2 fp=f5bb1b2861cb1e67 -->
+
+**Date**: 2026-10-20
+**Task**: 本地全面测试验收 v0.0.23
+**Branch**: `main`
+
+### Summary
+
+A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/穿越、包校验）；D 热更新 PASS；安全发现 1 项 FAIL：SITE_URL 未设置时合法 XFH 仍可改写 canonical/feed（本机 10086 与临时实例复现）
+
+### Main Changes
+
+- 无（纯测试）
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] PASS/FAIL 表与 curl 证据在 .run/review/local-{ops,security}/
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 决定修复方式：代码默认忽略 XFH 或本机设置 SITE_URL
