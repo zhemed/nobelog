@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 9
+- **Total Sessions**: 10
 - **Last Active**: 2026-10-20
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~307 | Active |
+| `journal-1.md` | ~341 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 10 | 2026-10-20 | 默认维护 GitHub Releases + 补 v0.0.22 发布单 | `adc05c3` | `main` |
 | 9 | 2026-10-20 | 上线 v0.0.22 | `24fc8d4` | `main` |
 | 8 | 2026-10-20 | 发布 v0.0.22 | `adc05c3` | `main` |
 | 7 | 2026-10-19 | 修复 P3 并部署 P2+P3 | `e12cfd0` | `main` |

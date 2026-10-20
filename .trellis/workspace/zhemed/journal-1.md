@@ -305,3 +305,37 @@ P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且
 ### Next Steps
 
 - SITE_URL 待域名
+
+
+## Session 10: 默认维护 GitHub Releases + 补 v0.0.22 发布单
+<!-- trellis-session: v=2 fp=84a6dcd41d98ef07 -->
+
+**Date**: 2026-10-20
+**Task**: 默认维护 GitHub Releases + 补 v0.0.22 发布单
+**Branch**: `main`
+
+### Summary
+
+用户长期授权 Releases 默认更新；补建 GitHub Release v0.0.22（2 附件、Latest、标题对齐历史风格）；把发版流程（含 gh release 默认步骤）写入 spec
+
+### Main Changes
+
+- .trellis/spec/frontend/build-serve-deploy.md
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `adc05c3` | chore: 发布 v0.0.22（版本号同步） [task:10-20-release] |
+
+### Testing
+
+- [OK] gh release view 核对 tagName/assets/url；资产 digest 与本地 sha256 一致；gh release list Latest
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 下一版按新流程执行；SITE_URL 待域名

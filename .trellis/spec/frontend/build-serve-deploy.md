@@ -88,3 +88,33 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 - 改了 `markdown.rs` / `templates.rs`：`diff` 是最关键的一步，它直接给出首个差异行。
 - 改了 `serve.rs`：必须跑 `cargo test`（含路径穿越、目录 index、百分号解码用例）。
 - 改了资源构建：对比 `assets-manifest.json` 与构建日志（`NOBELOG_CSS_REPORT=1` 可看裁剪统计）。
+
+## 发版流程（默认包含 GitHub Release）
+
+> 用户 2026-10-20 授权：**以后每次发版默认更新 GitHub Release**，无需再逐次询问。
+
+固定动作：
+
+1. **版本同步**：`rust/Cargo.toml`、`package.json`、`rust/Cargo.lock`（`name = "nobelog"` 那一项）三处一起改成新版本号。
+2. **门禁**：`cd rust && cargo fmt --check && cargo clippy --all-targets && cargo test`。
+3. **打包**：仓库根 `VERSION=<x.y.z> tools/package.sh` → `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`；
+   `(cd dist && sha256sum -c SHA256SUMS)`，并解包确认 `./nobelog --version` 为新版本。
+4. **提交与 tag**：提交消息带任务锚点；打 annotated tag `v<x.y.z>`，message 用 `<x.y.z>：<一句话主题>`；
+   `git push origin main && git push origin v<x.y.z>`。
+5. **GitHub Release（默认动作）**：用 `gh` 建 release 并附二进制与校验文件：
+   ```bash
+   gh release create v<x.y.z> --title "v<x.y.z>" --notes-file <notes 文件> \
+     dist/nobelog-<x.y.z>-linux-x86_64.tar.gz dist/SHA256SUMS
+   gh release view v<x.y.z> --json tagName,name,isDraft,isPrerelease,url,assets
+   ```
+   notes 写：本版安全/正确性/构建变更要点 + 包 sha256 + Full Changelog 链接。
+   若 release 已存在，用 `gh release upload --clobber` + `gh release edit --notes-file` 更新，不要删了重建。
+6. **上线**：`cargo build --release --locked` 后 `systemctl restart nobelog-local`（需用户当轮授权）；
+   冒烟 9 条路由 + 404、CSS 哈希、feed pubDate 与 XFH 回退。
+7. **留痕**：Trellis journal + 任务归档。
+
+注意事项：
+
+- `dist/` 里旧版本包会被保留，但 `SHA256SUMS` 每次打包被覆盖（只含最新包）；历史校验值以 GitHub Release 附件为准。
+- 版本字段与 tag 必须一致，否则 `nobelog --version` 与 release 名对不上。
+
