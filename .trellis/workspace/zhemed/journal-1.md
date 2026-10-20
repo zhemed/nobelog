@@ -339,3 +339,67 @@ P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且
 ### Next Steps
 
 - 下一版按新流程执行；SITE_URL 待域名
+
+
+## Session 11: 核对远程 z.miio.cc 修复状态
+<!-- trellis-session: v=2 fp=e834060d2cca8e92 -->
+
+**Date**: 2026-10-20
+**Task**: 核对远程 z.miio.cc 修复状态
+**Branch**: `main`
+
+### Summary
+
+只读核对远程：feed pubDate 时区、确定性 CSS 1f82b0f7、canonical/sitemap 指向 z.miio.cc、XFH 不污染、404 正常；本地同 SITE_URL 重建产物与远程逐字节一致，确认为 v0.0.22。静态部署下 /images 走 PAGE_CACHE（非 dynamic 的 no-cache）
+
+### Main Changes
+
+- 无（只读核对）
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] curl GET/HEAD 证据；cmp index/feed/sitemap/404/CSS IDENTICAL
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 可选：nginx 对 /images 加 no-cache；补 robots.txt
+
+
+## Session 12: 备好 robots.txt 与 nginx 建议
+<!-- trellis-session: v=2 fp=d4bb7f8c0c43b0a6 -->
+
+**Date**: 2026-10-20
+**Task**: 备好 robots.txt 与 nginx 建议
+**Branch**: `main`
+
+### Summary
+
+构建生成 robots.txt（含来源标记，SITE_URL 变化会覆盖自动产物、手写文件保留）；spec 增加静态部署 nginx /images 缓存建议；90 测试全绿。未部署远程
+
+### Main Changes
+
+- rust/src/build.rs、.trellis/spec/frontend/build-serve-deploy.md
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] cargo fmt/clippy/test 90；同 out 两次构建 A→B 覆盖；手写保留；diff 仅多 robots.txt
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 随下次发版部署；远程改 nginx 需授权

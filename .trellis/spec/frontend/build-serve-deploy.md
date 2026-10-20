@@ -77,6 +77,25 @@ pnpm build                 # = ... build --self-assets --out public
   `rust/client/main.js`、README、LICENSE、VERSION。
 - 动态模式的内存开销来自"整站内容 + CSS/JS 常驻"；内容规模变大时先量内存再谈优化，不要随意改缓存策略。
 
+## 静态部署（nginx 反代）注意
+
+远程 `https://z.miio.cc` 的形态是 **nginx 反代 + nobelog 静态模式**（origin 输出 `weak_etag()`、`cache_for()` 的
+`PAGE_CACHE`，nginx 只做反代/压缩）。由此有两条部署侧约定：
+
+1. **`/images/**` 在静态部署下没有 no-cache**：`assets/**` 带内容哈希可以长缓存，而 `content/images/` 的文件名不含哈希，
+   默认会落到 `PAGE_CACHE`（`s-maxage=3600` + SWR 86400）→ 换同名图片后最长约 1 小时（SWR 可到 1 天）仍可能返回旧图。
+   若要求"换图即生效"，在 nginx 里给该前缀单独设头（**改远端配置需用户授权，由运维执行**）：
+   ```nginx
+   location ^~ /images/ {
+       add_header Cache-Control "no-cache" always;
+       try_files $uri =404;
+   }
+   ```
+   替代方案：图片文件名带内容哈希，或改用 `--dynamic`（`serve.rs::dynamic_file_cache` 已对 `/images/**` 返回 no-cache）。
+2. **`robots.txt` 由构建产出**：`build` 会写 `User-agent: * / Allow: / / Sitemap: <base_url>/sitemap.xml`；
+   若 out 目录里已有手写 `robots.txt`（`PRESERVE_IN_PUBLIC` 保留）则不覆盖。远程若仍是 404，说明部署的还是旧产物。
+
+
 ## 验证清单（改完必做）
 
 ```bash

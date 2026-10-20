@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 10
+- **Total Sessions**: 12
 - **Last Active**: 2026-10-20
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~341 | Active |
+| `journal-1.md` | ~405 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,8 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 12 | 2026-10-20 | 备好 robots.txt 与 nginx 建议 | - | `main` |
+| 11 | 2026-10-20 | 核对远程 z.miio.cc 修复状态 | - | `main` |
 | 10 | 2026-10-20 | 默认维护 GitHub Releases + 补 v0.0.22 发布单 | `adc05c3` | `main` |
 | 9 | 2026-10-20 | 上线 v0.0.22 | `24fc8d4` | `main` |
 | 8 | 2026-10-20 | 发布 v0.0.22 | `adc05c3` | `main` |
