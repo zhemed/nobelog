@@ -437,3 +437,37 @@ P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且
 ### Next Steps
 
 - 远程部署新 public/ 后 robots.txt 生效（仅只读授权，需用户安排）
+
+
+## Session 14: 本机部署 v0.0.23 并重启
+<!-- trellis-session: v=2 fp=32b6638c7cab665c -->
+
+**Date**: 2026-10-20
+**Task**: 本机部署 v0.0.23 并重启
+**Branch**: `main`
+
+### Summary
+
+本机 nobelog-local 从 v0.0.22 切到 v0.0.23：重启一次（PID 185210→197053，/proc/exe sha256 a7e257c2…）；冒烟 9 路由+404、feed pubDate 14:40/04:15、CSS 1f82b0f7、/images no-cache、XFH 回退均正常
+
+### Main Changes
+
+- 无（仅服务重启）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `173360b` | chore: 归档 v0.0.23 发布任务并记录 journal [task:10-20-release-23] |
+
+### Testing
+
+- [OK] systemctl active、exe sha、bw/curl 冒烟、条件请求 304
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程部署仍由用户执行；可选让动态模式也提供 /robots.txt
