@@ -310,33 +310,65 @@ pub async fn run(root: &Path, host: &str, port: u16, dynamic: bool) -> Result<()
     Ok(())
 }
 
-/// 动态模式下根据请求推断站点绝对地址：SITE_URL 优先，否则用 Host + X-Forwarded-Proto。
+/// 动态模式下根据请求推断站点绝对地址：SITE_URL 优先；未设置时默认只信 `Host`，
+/// 只有显式设置 `NOBELOG_TRUST_FORWARDED=1` 才接受 `X-Forwarded-Host` / `X-Forwarded-Proto`。
 fn request_base_url(headers: &HeaderMap, fallback: &str) -> String {
     if let Some(url) = crate::site::env_url() {
         return url;
     }
-    base_url_from_headers(headers, fallback)
+    base_url_from_headers(headers, fallback, trust_forwarded_headers())
 }
 
-/// 从请求头推断 base_url。Host / X-Forwarded-Host / X-Forwarded-Proto 全部按白名单校验，
-/// 不合法的那一条整条丢弃（回退到下一个来源），绝不把原始值拼进结果：
-/// 它们会进入 canonical、og:url、页脚链接与 feed，是典型的头注入落点。
-fn base_url_from_headers(headers: &HeaderMap, fallback: &str) -> String {
-    let host = headers
-        .get("x-forwarded-host")
-        .and_then(validated_host)
-        .or_else(|| headers.get(header::HOST).and_then(validated_host));
+/// 读 `NOBELOG_TRUST_FORWARDED`：1 / true / yes / on（不区分大小写）才信任转发头。
+fn trust_forwarded_headers() -> bool {
+    parse_trust_forwarded(std::env::var("NOBELOG_TRUST_FORWARDED").ok().as_deref())
+}
+
+/// `NOBELOG_TRUST_FORWARDED` 取值解析（纯函数，方便单测）：只有 1 / true / yes / on 为真。
+fn parse_trust_forwarded(value: Option<&str>) -> bool {
+    value.is_some_and(|value| {
+        matches!(
+            value.trim().to_ascii_lowercase().as_str(),
+            "1" | "true" | "yes" | "on"
+        )
+    })
+}
+
+/// 从请求头推断 base_url（纯函数，`trust_forwarded` 由调用方注入，测试不依赖环境变量）。
+///
+/// - `trust_forwarded = false`（默认）：只读 `Host`，scheme 固定 `http`。
+///   `X-Forwarded-*` 由客户端直接伪造，默认忽略——否则随便一个 `X-Forwarded-Host: evil.example.com`
+///   就能改写 canonical / og:url / 页脚链接 / feed / sitemap 里的绝对地址。
+/// - `trust_forwarded = true`：部署在可信反向代理后面的旧行为，`X-Forwarded-Host` 优先、
+///   `X-Forwarded-Proto` 生效（只认精确的 http / https）。
+///
+/// 两种模式都走同一个 host 字符白名单；任何不合法取值整条丢弃并回退，绝不拼进结果。
+fn base_url_from_headers(headers: &HeaderMap, fallback: &str, trust_forwarded: bool) -> String {
+    let host = if trust_forwarded {
+        headers
+            .get("x-forwarded-host")
+            .and_then(validated_host)
+            .or_else(|| headers.get(header::HOST).and_then(validated_host))
+    } else {
+        headers.get(header::HOST).and_then(validated_host)
+    };
     let Some(host) = host else {
         return fallback.to_string();
     };
-    // X-Forwarded-Proto 只认精确的 http / https；file、javascript 等一律当没写。
-    let proto = headers
-        .get("x-forwarded-proto")
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.split(',').next())
-        .map(str::trim)
-        .filter(|value| *value == "http" || *value == "https")
-        .unwrap_or("http");
+    let proto = if trust_forwarded {
+        // 反代链上只认精确的 http / https；file、javascript 等一律当没写。
+        headers
+            .get("x-forwarded-proto")
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.split(',').next())
+            .map(str::trim)
+            .filter(|value| *value == "http" || *value == "https")
+            .unwrap_or("http")
+    } else {
+        // 默认路径不采信任何转发头，也就没有可信的 TLS 终止信息：scheme 固定 http，
+        // 对外域名与协议请用 SITE_URL 显式声明。
+        "http"
+    };
     format!("{proto}://{host}")
 }
 
@@ -1687,31 +1719,93 @@ mod tests {
     }
 
     #[test]
-    fn base_url_uses_host_and_forwarded_proto() {
-        // 正常反代：X-Forwarded-Proto: https + 带端口的 host。
+    fn forwarded_headers_used_only_when_trusted() {
+        // 信任模式（反代后）：X-Forwarded-Proto: https + 带端口的 host。
         let headers =
             request_headers(&[("host", "example.com:8080"), ("x-forwarded-proto", "https")]);
         assert_eq!(
-            base_url_from_headers(&headers, FALLBACK_URL),
+            base_url_from_headers(&headers, FALLBACK_URL, true),
             "https://example.com:8080"
         );
 
-        // 没有 XFP 时按 http；X-Forwarded-Host 优先于 Host；逗号列表只取第一个。
+        // 信任模式：没有 XFP 时按 http；X-Forwarded-Host 优先于 Host；逗号列表只取第一个。
         let headers = request_headers(&[
             ("host", "origin.example"),
             ("x-forwarded-host", "example.com:8080, proxy.internal"),
         ]);
         assert_eq!(
-            base_url_from_headers(&headers, FALLBACK_URL),
+            base_url_from_headers(&headers, FALLBACK_URL, true),
             "http://example.com:8080"
         );
 
-        // IPv6 方括号主机 + 端口。
-        let headers = request_headers(&[("host", "[::1]:10086")]);
+        // 默认模式（不信任转发头）：同一个请求只用 Host，scheme 固定 http。
+        let headers = request_headers(&[
+            ("host", "origin.example"),
+            ("x-forwarded-host", "example.com:8080"),
+            ("x-forwarded-proto", "https"),
+        ]);
         assert_eq!(
-            base_url_from_headers(&headers, FALLBACK_URL),
-            "http://[::1]:10086"
+            base_url_from_headers(&headers, FALLBACK_URL, false),
+            "http://origin.example"
         );
+
+        // IPv6 方括号主机 + 端口（两种模式都接受）。
+        let headers = request_headers(&[("host", "[::1]:10086")]);
+        for trust in [false, true] {
+            assert_eq!(
+                base_url_from_headers(&headers, FALLBACK_URL, trust),
+                "http://[::1]:10086"
+            );
+        }
+    }
+
+    #[test]
+    fn default_mode_ignores_forged_forwarded_host() {
+        // 本地验收的原始问题：默认配置下 `X-Forwarded-Host: evil.example.com` 不得改写 canonical。
+        let headers = request_headers(&[
+            ("host", "good.example"),
+            ("x-forwarded-host", "evil.example.com"),
+        ]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL, false),
+            "http://good.example"
+        );
+        // 同一个请求，显式信任后才轮到 XFH 生效。
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL, true),
+            "http://evil.example.com"
+        );
+
+        // X-Forwarded-Proto 也一样：默认不采信，信任模式下才生效。
+        let headers = request_headers(&[("host", "good.example"), ("x-forwarded-proto", "https")]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL, false),
+            "http://good.example"
+        );
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL, true),
+            "https://good.example"
+        );
+
+        // 只有 XFH、没有 Host：默认模式拿不到任何可信 host → fallback。
+        let headers = request_headers(&[("x-forwarded-host", "evil.example.com")]);
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL, false),
+            FALLBACK_URL
+        );
+        // 信任模式才用它。
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL, true),
+            "http://evil.example.com"
+        );
+
+        // 完全没有 Host / XFH → fallback（两种模式一致）。
+        for trust in [false, true] {
+            assert_eq!(
+                base_url_from_headers(&HeaderMap::new(), FALLBACK_URL, trust),
+                FALLBACK_URL
+            );
+        }
     }
 
     #[test]
@@ -1730,26 +1824,40 @@ mod tests {
             "evil.com;x",
             "evil.com(x)",
         ] {
-            // X-Forwarded-Host 非法且没有 Host：整条丢弃，回退 fallback。
-            let headers = request_headers(&[("x-forwarded-host", evil)]);
-            let base = base_url_from_headers(&headers, FALLBACK_URL);
-            assert_eq!(base, FALLBACK_URL, "恶意 XFH 未回退：{evil:?} → {base}");
-            assert!(!base.contains(evil), "恶意值进入了 base_url：{evil:?}");
+            // Host 非法：两种模式都必须整条丢弃、回退 fallback。
+            for trust in [false, true] {
+                let headers = request_headers(&[("host", evil)]);
+                let base = base_url_from_headers(&headers, FALLBACK_URL, trust);
+                assert_eq!(
+                    base, FALLBACK_URL,
+                    "恶意 Host 未回退（trust={trust}）：{evil:?} → {base}"
+                );
+                assert!(!base.contains(evil), "恶意值进入了 base_url：{evil:?}");
+            }
 
-            // Host 头同样要校验。
-            let headers = request_headers(&[("host", evil)]);
-            let base = base_url_from_headers(&headers, FALLBACK_URL);
-            assert_eq!(base, FALLBACK_URL, "恶意 Host 未回退：{evil:?} → {base}");
-            assert!(!base.contains(evil), "恶意值进入了 base_url：{evil:?}");
+            // X-Forwarded-Host 非法：信任模式下整条丢弃；默认模式本来就忽略它。
+            for trust in [false, true] {
+                let headers = request_headers(&[("x-forwarded-host", evil)]);
+                let base = base_url_from_headers(&headers, FALLBACK_URL, trust);
+                assert_eq!(
+                    base, FALLBACK_URL,
+                    "恶意 XFH 未回退（trust={trust}）：{evil:?} → {base}"
+                );
+                assert!(!base.contains(evil), "恶意值进入了 base_url：{evil:?}");
+            }
         }
 
-        // Host 是合法值时，非法的 X-Forwarded-Host 只是被丢弃，回退到 Host。
+        // Host 合法时，非法的 X-Forwarded-Host 只是被丢弃，信任模式回退到 Host。
         let headers = request_headers(&[
             ("x-forwarded-host", "good.com:80@evil.com"),
             ("host", "example.com"),
         ]);
         assert_eq!(
-            base_url_from_headers(&headers, FALLBACK_URL),
+            base_url_from_headers(&headers, FALLBACK_URL, true),
+            "http://example.com"
+        );
+        assert_eq!(
+            base_url_from_headers(&headers, FALLBACK_URL, false),
             "http://example.com"
         );
 
@@ -1763,16 +1871,16 @@ mod tests {
 
     #[test]
     fn base_url_ignores_unknown_forwarded_proto() {
-        // XFP 只认精确的 http / https；file 之类当没写。
+        // 信任模式下 XFP 只认精确的 http / https；file 之类当没写。
         let headers = request_headers(&[("host", "example.com"), ("x-forwarded-proto", "file")]);
         assert_eq!(
-            base_url_from_headers(&headers, FALLBACK_URL),
+            base_url_from_headers(&headers, FALLBACK_URL, true),
             "http://example.com"
         );
 
         let headers = request_headers(&[("host", "example.com"), ("x-forwarded-proto", "HTTPS")]);
         assert_eq!(
-            base_url_from_headers(&headers, FALLBACK_URL),
+            base_url_from_headers(&headers, FALLBACK_URL, true),
             "http://example.com"
         );
 
@@ -1781,8 +1889,25 @@ mod tests {
             ("x-forwarded-proto", "https, http"),
         ]);
         assert_eq!(
-            base_url_from_headers(&headers, FALLBACK_URL),
+            base_url_from_headers(&headers, FALLBACK_URL, true),
             "https://example.com"
         );
+    }
+
+    #[test]
+    fn trust_switch_accepts_only_explicit_truthy_values() {
+        for value in ["1", "true", "TRUE", "yes", "on", " On ", "True"] {
+            assert!(
+                parse_trust_forwarded(Some(value)),
+                "{value:?} 应视为开启信任"
+            );
+        }
+        for value in ["", "0", "false", "no", "off", "2", "tru", "yes!", "file"] {
+            assert!(
+                !parse_trust_forwarded(Some(value)),
+                "{value:?} 不应视为开启信任"
+            );
+        }
+        assert!(!parse_trust_forwarded(None));
     }
 }

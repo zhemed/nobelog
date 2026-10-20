@@ -64,10 +64,12 @@ pnpm build                 # = ... build --self-assets --out public
 ## 部署
 
 - **必须设置 `SITE_URL`**（如 `SITE_URL=https://<domain>`）：canonical / RSS / sitemap / 页脚 / 分享链接都用它；
-  未设置时动态模式按 `Host` + `X-Forwarded-Proto` 推断（两个头都经白名单校验，非法值整条丢弃），
-  静态构建回退到 `SITE.url` 的内置默认地址（见 `rust/src/site.rs`；不要依赖它），`serve` 启动时会打一行告警。
-  即便有白名单，未设 `SITE_URL` 时**字符合法**的 `X-Forwarded-Host` 仍能改写 canonical（无注入，但可被缓存污染），
-  生产环境必须显式设置。
+  未设置时动态模式**默认只信 `Host`、scheme 固定 `http`，并忽略 `X-Forwarded-*`**（避免任意客户端伪造
+  `X-Forwarded-Host` 改写 canonical）；静态构建回退到 `SITE.url` 的内置默认地址（见 `rust/src/site.rs`；不要依赖它），
+  `serve` 启动时会打一行告警。
+  如果应用确实部署在**可信反向代理**后面，需要转发头生效，必须二选一：设置 `SITE_URL`（推荐），
+  或显式设 `NOBELOG_TRUST_FORWARDED=1`（接受 `1/true/yes/on`）才信任 `X-Forwarded-Host` / `X-Forwarded-Proto`。
+  注意：在 TLS 反代后运行又没设 `SITE_URL` 时，canonical 会退化成 `http://<host>`。
 - 本机当前以 systemd 单元 `nobelog-local.service` 托管 release 二进制：
   `nobelog serve --host 0.0.0.0 --port <port> --root <仓库根> --dynamic`（端口默认值见 CLI）。
   排查"线上页面不对"时先 `systemctl status nobelog-local`，再确认它跑的是 `rust/target/release/nobelog`
@@ -85,6 +87,8 @@ pnpm build                 # = ... build --self-assets --out public
 - **(a) nginx 反代 → 应用**：有独立应用进程（`nobelog serve` 静态模式）托管 `public/`，`nginx -T` 里该站点是 `proxy_pass`。
   响应中能看到应用下发的 `PAGE_CACHE` / `ASSET_CACHE` 原值，ETag 是 `weak_etag()` 形态
   （`W/"<size 十六进制>-<mtime_ms 十六进制>"`）。
+  > 应用在反代后若需要 `X-Forwarded-*`（例如 canonical 用外网域名），必须设 `SITE_URL` 或 `NOBELOG_TRUST_FORWARDED=1`；
+  > 默认只信 `Host`、scheme 固定 `http`。
 - **(b) nginx root/alias 纯静态**：`nginx -T` 里该站点用 `root` / `alias` 直接指向构建产物目录，没有应用进程参与；
   静态文件、压缩、缓存头、错误页全归 nginx。
 - **(c) 动态模式直连**：直接访问应用端口，或前置层只做 TLS 透传、不改写缓存头。
