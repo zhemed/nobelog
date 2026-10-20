@@ -271,3 +271,37 @@ P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且
 ### Next Steps
 
 - 可选：重启服务使版本号生效；SITE_URL 待域名
+
+
+## Session 9: 上线 v0.0.22
+<!-- trellis-session: v=2 fp=ca14e2e80bc16334 -->
+
+**Date**: 2026-10-20
+**Task**: 上线 v0.0.22
+**Branch**: `main`
+
+### Summary
+
+重启 nobelog-local 上线 v0.0.22：MainPID 97813→185210，运行二进制 sha256 5467c921…（与包内一致，--version 0.0.22）；9 路由与 feed/CSS 冒烟全绿
+
+### Main Changes
+
+- 无（仅服务重启）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `24fc8d4` | chore: 归档 v0.0.22 发布任务并记录 journal [task:10-20-release] |
+
+### Testing
+
+- [OK] is-active、/proc/<pid>/exe sha256、CSS main.1f82b0f7.css、pubDate 14:40/04:15 GMT
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- SITE_URL 待域名
