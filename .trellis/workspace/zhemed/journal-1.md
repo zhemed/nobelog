@@ -503,3 +503,37 @@ build-serve-deploy 新增部署拓扑章节（a反代/b静态root/c动态直连�
 ### Next Steps
 
 - 如需 nginx -t 实测，需授权 docker pull nginx 或安装 nginx
+
+
+## Session 16: 安装 nginx 并实测双拓扑片段
+<!-- trellis-session: v=2 fp=5f1c859cc2aa5ae9 -->
+
+**Date**: 2026-10-20
+**Task**: 安装 nginx 并实测双拓扑片段
+**Branch**: `main`
+
+### Summary
+
+用户授权本机装依赖：安装 nginx 1.18（避免占 80，已 stop+disable）；(a)反代与(b)静态root 两段配置均 nginx -t 通过；起临时实例实测 /images 单条 no-cache、缺失 404 仍带头；文档更新验证状态
+
+### Main Changes
+
+- .trellis/spec/frontend/build-serve-deploy.md
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `02b5dbc` | docs: nginx 建议改为反代/静态 root 双拓扑，新增部署拓扑章节 [task:10-20-nginx-topologies] |
+
+### Testing
+
+- [OK] nginx -t 两段通过；curl 单条 Cache-Control；404 always；端口已关闭
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 运维侧按占位符落地；nginx 保留安装但未自启

@@ -99,7 +99,9 @@ pnpm build                 # = ... build --self-assets --out public
 > `<app_upstream>` 是反代目标（socket 或 `<host>:<app_port>`），`<static_root>` 是构建产物（`public/` 内容）在 nginx 主机上的目录，
 > TLS 证书在 `<cert_path>`，产物目录布局、压缩与 CDN 策略
 > 都由实际部署决定，本仓库不预设。**改远端配置需用户/运维授权，由运维执行。**
-> 本机未安装 nginx，片段未通过 `nginx -t` 校验（属未验证项）。
+> 两段片段已用 nginx 1.18 在独立 prefix 下通过 `nginx -t`，并起临时实例实测：
+> `/images/**` 响应只有一条 `Cache-Control: no-cache`，缺失文件 404 仍带该头（`always` 生效）。
+> 真实环境仍需按自己的 upstream/证书/压缩/CDN 配置调整。
 
 ### 覆盖 `/images/**` 的缓存头
 
