@@ -47,7 +47,8 @@ pub fn env_url() -> Option<String> {
 pub fn warn_if_env_url_missing() {
     if env_url().is_none() {
         eprintln!(
-            "警告：未设置 SITE_URL，站点绝对链接回退到内置默认地址 {}；生产部署请设置 SITE_URL=https://你的域名。",
+            "警告：未设置 SITE_URL，站点绝对链接回退到内置默认地址 {}；生产部署请设置 SITE_URL=https://你的域名。\
+             动态模式默认只按 Host 头推断、不信任 X-Forwarded-*；若前面有可信反向代理，请设 NOBELOG_TRUST_FORWARDED=1。",
             SITE.url
         );
     }
