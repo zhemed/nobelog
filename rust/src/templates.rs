@@ -787,12 +787,16 @@ fn render_layout(
   <meta name="generator" content="nobelog">
   <link rel="canonical" href="{url}{path}">
   <link rel="alternate" type="application/rss+xml" title="{site_title}" href="/feed.xml">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32-transparent.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192-transparent.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/site-icon-180.png">
 {EARLY_SCRIPT}
   <link rel="stylesheet" href="{css}">
   <meta property="og:title" content="{page_title}">
   <meta property="og:description" content="{description}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{url}{path}">
+  <meta property="og:image" content="{url}/images/site-icon-512.png">
   <meta name="twitter:card" content="summary">
   <script src="{js}" type="module"></script>
 </head>
@@ -1667,5 +1671,20 @@ mod tests {
         assert!(html.contains("https://e.com/&quot;onmouseover=&quot;alert(1)"));
         // 页脚链接同样要转义。
         assert!(html.contains("href=\"https://e.com/&quot;onmouseover=&quot;alert(1)\">"));
+        // 站点图标：favicon 用透明版（32/192），apple-touch-icon 用不透明版。
+        for tag in [
+            r#"<link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32-transparent.png">"#,
+            r#"<link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192-transparent.png">"#,
+            r#"<link rel="apple-touch-icon" sizes="180x180" href="/images/site-icon-180.png">"#,
+        ] {
+            assert!(html.contains(tag), "head 缺少 {tag}");
+        }
+        // og:image 用转义后的 base_url 拼绝对地址（爬虫按绝对 URL 取图）。
+        assert!(
+            html.contains(
+                r#"<meta property="og:image" content="https://e.com/&quot;onmouseover=&quot;alert(1)/images/site-icon-512.png">"#
+            ),
+            "og:image 未使用转义后的 base_url：{html}"
+        );
     }
 }

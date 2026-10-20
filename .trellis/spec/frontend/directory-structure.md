@@ -16,6 +16,8 @@
 | `public/` | **构建产物（冻结基准）** | ⛔ 不手改 | 静态构建产物 + `assets-manifest.json` |
 | `rust/dist/` | Rust 构建产物 | ⛔ 不手改 | `nobelog build` 默认输出目录，已被 `.gitignore` 忽略 |
 | `tools/package.sh` | 发布脚本 | ✅ | 打 `dist/nobelog-<version>-linux-x86_64.tar.gz` |
+| `tools/make-icons.py` | 图标生成 | ✅ | 从 `tools/assets/site-icon-source.png` 生成 `content/images/site-icon-*.png`（favicon 透明版 / apple-touch / og:image） |
+| `tools/assets/` | 设计源文件 | ✅ | 不入构建产物（源图不放 `content/images`，避免进发布包） |
 | `.trellis/` | Trellis 流程 | ✅ 按流程 | 任务/spec/journal，见 `.trellis/workflow.md` |
 
 根目录 `package.json` 只是 pnpm 别名（`serve` / `serve:static` / `build` / `dev` / `start`），
