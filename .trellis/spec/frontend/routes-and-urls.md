@@ -52,7 +52,7 @@
 1. 环境变量 `SITE_URL`（静态构建、动态模式都生效）。
 2. 动态模式的请求推断：`request_base_url(headers, fallback)`，按 `Host` / `X-Forwarded-Proto` 拼出
    `scheme://host`（见 `serve.rs`）。
-3. `SITE.url` 默认值 `http://127.0.0.1:10086`。
+3. `SITE.url` 的内置默认值（见 `rust/src/site.rs`；生产必须用 `SITE_URL` 覆盖，不要依赖它）。
 
 影响的输出：canonical、`og:url`、RSS 链接、sitemap、页脚与分享链接。
 **新增绝对链接时必须使用 `ctx.base_url`（模板层）或 `Site::root_url`（路由层），不要写死 `SITE.url`。**

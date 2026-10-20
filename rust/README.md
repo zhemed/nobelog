@@ -27,7 +27,7 @@ Node 源码已移除（完整归档在 `/root/博客/.backups/`，可整包回�
 | `cargo run -- build` | 生成到 `rust/dist/`。默认复用 `public/assets` 与 manifest，便于逐字节对照 |
 | `cargo run -- build --self-assets --out public` | 由 Rust 自建 CSS/JS（`src/assets.rs`）并写发布目录 |
 | `cargo run -- diff ../public dist` | 与基准逐字节对比；`<lastBuildDate>` 自动归一化；加 `--normalize-assets` 忽略资源哈希 |
-| `cargo run -- serve --host 0.0.0.0 --port 10086` | 本地/局域网静态服务（axum），缓存头与 Node 版一致 |
+| `cargo run -- serve --host 0.0.0.0 --port <port>` | 本地/局域网静态服务（axum），缓存头与 Node 版一致 |
 | `pnpm serve`（仓库根） | 同上，release 构建 |
 
 `build` 可选参数：`--out <目录>`（默认 `dist`）、`--root <仓库根>`（默认 `rust/` 的上一级）。

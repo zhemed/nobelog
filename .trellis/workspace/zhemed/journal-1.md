@@ -471,3 +471,35 @@ P3：符号链接指纹跟随+link target、.mdx CSS 扫描、保留名小写且
 ### Next Steps
 
 - 远程部署仍由用户执行；可选让动态模式也提供 /robots.txt
+
+
+## Session 15: 部署文档 nginx 双拓扑化
+<!-- trellis-session: v=2 fp=cd2a71838487c475 -->
+
+**Date**: 2026-10-20
+**Task**: 部署文档 nginx 双拓扑化
+**Branch**: `main`
+
+### Summary
+
+build-serve-deploy 新增部署拓扑章节（a反代/b静态root/c动态直连）与判定方法；/images 双片段（反代三件套/静态 try_files）；add_header 继承坑与 CDN 说明；占位符化真实域名/IP/端口；README 等 4 个 md 同步
+
+### Main Changes
+
+- .trellis/spec/frontend/{build-serve-deploy,routes-and-urls}.md、README.md、rust/README.md
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] grep 占位符 0 命中；本机 /images 单条 no-cache、/assets 长缓存、页面 feed 200；nginx -t 未执行（本机无 nginx）
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 如需 nginx -t 实测，需授权 docker pull nginx 或安装 nginx
