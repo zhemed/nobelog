@@ -566,6 +566,22 @@ footer p:last-child::before {
   margin: 0;
 }
 
+/* 首页卡片留白（上游两条规则在本站模板下都失效，所以只能在这里补）：
+   1) 上游卡片间距写的是 `#post-list a.card-wrapper:not(:last-child){margin-bottom:1.25rem}`，
+      本站外层容器是 `<article class="card-wrapper">`（内层才是 `<a class="card ...">`），
+      选择器匹配不到 article → 实测两张卡片间距为 0，卡片贴在一起；
+   2) 卡片正文的 padding-bottom 是 1.25rem、padding-top 是 1.75rem，上大下小，
+      日期/分类那行（.post-meta，margin 为 0）贴到卡片底边，只剩 20px。
+   这里按上游的设计值补齐：间距恢复 1.25rem，padding-bottom 与 padding-top 对齐 1.75rem。
+   只补这两处，不回改 vendor/chirpy/main.css。 */
+#post-list .card-wrapper:not(:last-child) {
+  margin-bottom: 1.25rem;
+}
+
+#post-list .card .card-body {
+  padding-bottom: 1.75rem;
+}
+
 /* 面包屑：官方新版写死 gray，旧版跟随 --text-muted-color */
 #topbar #breadcrumb {
   color: var(--text-muted-color);
