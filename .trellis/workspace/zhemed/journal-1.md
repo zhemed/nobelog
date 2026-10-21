@@ -1043,3 +1043,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 如需上线本机/发版另行确认；真机暗色可再复核一次
+
+
+## Session 32: 发布 v0.0.27（图标引用清理）并上线
+<!-- trellis-session: v=2 fp=5a7df86bf72ca0af -->
+
+**Date**: 2026-10-21
+**Task**: 发布 v0.0.27（图标引用清理）并上线
+**Branch**: `main`
+
+### Summary
+
+版本三源 0.0.27、包 sha256 50d5cc77…（4901856B，比 v0.0.26 少 630873B）、tag 与 GitHub Release 已推送；本机重启（PID 641637→662401，exe sha ce1d09bb…）：head 7 条声明、7 图标 200、transparent-512 404、9 路由回归全绿、线上双主题匹配正确
+
+### Main Changes
+
+- rust/Cargo.toml、package.json、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b61dc44` | chore: 发布 v0.0.27（版本号同步） [task:10-21-release-27] |
+
+### Testing
+
+- [OK] cargo test 92；包 sha256sum -c；本机 head 声明数/端点/双主题/回归断言
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责
