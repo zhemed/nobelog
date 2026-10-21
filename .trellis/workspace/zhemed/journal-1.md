@@ -975,3 +975,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责；暗色备用件是否清理待定
+
+
+## Session 30: 发布 v0.0.26（粉笔少女图标）并上线
+<!-- trellis-session: v=2 fp=e37dcc793e900519 -->
+
+**Date**: 2026-10-21
+**Task**: 发布 v0.0.26（粉笔少女图标）并上线
+**Branch**: `main`
+
+### Summary
+
+版本三源 0.0.26、包 sha256 003cc01b…（5532729B）、tag 与 GitHub Release 已推送；本机重启（PID 639000→641637，exe sha 4b06b758…）：head 五处、7 图标资源 200、四角 alpha=0、9 路由回归全绿
+
+### Main Changes
+
+- rust/Cargo.toml、package.json、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `46c9c41` | chore: 发布 v0.0.26（版本号同步） [task:10-21-release-26] |
+
+### Testing
+
+- [OK] cargo test 92；包 sha256sum -c；本机 head/图标/透明/回归断言
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；如需可精简图标体积（包 +1.06MB）
