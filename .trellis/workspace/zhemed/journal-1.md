@@ -907,3 +907,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责；如需可精简 SVG/512 体积
+
+
+## Session 28: favicon 清晰化 + 四角透明修复（上线）
+<!-- trellis-session: v=2 fp=68513c10bacb0a91 -->
+
+**Date**: 2026-10-21
+**Task**: favicon 清晰化 + 四角透明修复（上线）
+**Branch**: `main`
+
+### Summary
+
+16/32/48 专用简化版（更紧脸部特写 + 加粗 + 去噪），SVG 内嵌简化 48px；首轮上线发现 16px 实心方块（膨胀环带填黑 + 越界），打回修复为圆角遮罩 + 环带取描边色 + 生成期四角断言；二次上线复验四角 alpha=0、透明占比 19-25%，head 七处、回归全绿
+
+### Main Changes
+
+- content/images/site-icon-16/32/48(-dark).png、site-icon.svg、tools/make-icons.py、rust/src/templates.rs
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `48f9504` | fix: favicon 小尺寸清晰化（16/32/48 简化版 + SVG 内嵌 48px） [task:10-21-favicon-crisp] |
+
+### Testing
+
+- [OK] cargo test 92；生成期自检；本机下载字节解码四角 alpha=0；head 七处；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；下次发版写进 Release notes
