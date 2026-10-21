@@ -941,3 +941,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责；下次发版写进 Release notes
+
+
+## Session 29: 回退 favicon 清晰化（回到粉笔少女细节版）
+<!-- trellis-session: v=2 fp=cf425b08d74f98ff -->
+
+**Date**: 2026-10-21
+**Task**: 回退 favicon 清晰化（回到粉笔少女细节版）
+**Branch**: `main`
+
+### Summary
+
+按用户决定 revert 235f071 + 48f9504：删除 16/32/48 简化版与其暗色变体、恢复 32-transparent、SVG 回到内嵌 192 细节版、head 回到五处、脚本去掉 small 模式；重建后二进制与清晰化前逐字节一致（a889d13f…），本机重启（PID 634710→639000），资源与回归全 PASS
+
+### Main Changes
+
+- content/images/site-icon*、site-icon.svg、tools/make-icons.py、rust/src/templates.rs（回退）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6f14454` | revert: 废除 favicon 清晰化，回到粉笔少女细节版 [task:10-21-revert-crisp] |
+
+### Testing
+
+- [OK] cargo test 92；二进制 sha 与 6a5754e 状态一致；7 个图标文件 sha256 MATCH；head 五处；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；暗色备用件是否清理待定

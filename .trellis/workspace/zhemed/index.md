@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 28
+- **Total Sessions**: 29
 - **Last Active**: 2026-10-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~943 | Active |
+| `journal-1.md` | ~977 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 29 | 2026-10-21 | 回退 favicon 清晰化（回到粉笔少女细节版） | `6f14454` | `main` |
 | 28 | 2026-10-21 | favicon 清晰化 + 四角透明修复（上线） | `48f9504` | `main` |
 | 27 | 2026-10-21 | 粉笔少女图标（透明 + 暗色变体 / 上线） | `6a5754e` | `main` |
 | 26 | 2026-10-21 | 少女插画图标（bleed 特写 / 上线） | `a5653d1` | `main` |
