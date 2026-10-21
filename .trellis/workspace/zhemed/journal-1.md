@@ -1211,3 +1211,37 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 发版流程改两源（Cargo.toml + Cargo.lock）；是否发 v0.0.29 待用户确认
+
+
+## Session 37: 发布 v0.0.29（去 Node 化收尾）并上线
+<!-- trellis-session: v=2 fp=2f09972d08bbe07c -->
+
+**Date**: 2026-10-21
+**Task**: 发布 v0.0.29（去 Node 化收尾）并上线
+**Branch**: `main`
+
+### Summary
+
+版本两源 0.0.29（package.json 已删）、包 sha256 ed3fe2e5…（4900595B）、tag 与 GitHub Release 已推送；本机重启（PID 713904→797659，exe sha 976fee0f…）：CSS main.1ca5c955.css、head 7 条声明、7 图标 200、运行二进制已无 node 脚本提示文案、9 路由回归全绿
+
+### Main Changes
+
+- rust/Cargo.toml、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7899d5a` | chore: 发布 v0.0.29（版本号同步，两源） [task:10-21-release-29] |
+
+### Testing
+
+- [OK] cargo test 92；包 sha256sum -c；包内 Node/PHP 文件计数 0；本机 CSS/head/图标/回归断言
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；发版流程已改两源
