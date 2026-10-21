@@ -13,9 +13,10 @@
         （边长 = 短边 * --crop，默认 0.62；中心 y = 高 * --crop-y，默认 0.44），
         LANCZOS 缩放出不透明 PNG；另出 full/face 两张预览对比图。
     small：favicon 小尺寸简化版（16/32/48），更紧的脸部特写 + 二值 alpha（去半透明噪点）
-        + alpha 膨胀加粗描边（16px 用 2px，其余 1px）+ 只保留含画面中心的主体连通域
-        （裁切框内的星星/爱心/问号等装饰会被丢掉）；输出透明底 PNG 与暗色变体，
-        并用简化版 48px 重建 site-icon.svg。
+        + 圆角方形遮罩（四角恒透明）+ alpha 膨胀 1px 加粗描边（环带取相邻描边色，不填黑）
+        + 只保留含画面中心的主体连通域（裁切框内的星星/爱心/问号等装饰会被丢掉）；
+        输出透明底 PNG 与暗色变体，并用简化版 48px 重建 site-icon.svg。
+        结束前会对所有透明产出做「四角 alpha=0」自检，不通过直接非零退出。
         注意：换模式后另一模式的旧产出不会自动删除，需手工清理；
         SVG 以最后运行的 small 模式为准（先跑 lineart 再跑 small）。
 
@@ -103,8 +104,11 @@ SMALL_SIZES = [16, 32, 48]
 SMALL_CROP = 0.45
 SMALL_CROP_X = 0.50
 SMALL_CROP_Y = 0.65
-SMALL_DILATE = {16: 2, 32: 1, 48: 1}  # 16px 用更粗的描边
+SMALL_DILATE = {16: 1, 32: 1, 48: 1}  # 1px 膨胀；再粗会把 16px 撑满整幅
 SMALL_SVG_SIZE = 48  # SVG 内嵌简化版 48px（缩到 16px 也不糊）
+# 小尺寸裁切是紧贴脸部的特写（整幅都被头发/脸覆盖），所以用圆角方形遮罩切掉四角，
+# 保证四角始终透明、标签页里不再出现实心方块；0.30 = 圆角半径占边长比例。
+SMALL_SHAPE_RADIUS = 0.30
 
 # flood fill 容差（PIL 按通道差绝对值之和比较）：只吃纯白/近白背景，
 # 奶白脸与白底的差约 37，留在容差外，且脸被描边包围，本来就填不进去。
@@ -224,21 +228,61 @@ def keep_center_component(mask):
     return keep
 
 
-def simplify_small(crop, size, dilate_px):
-    """小尺寸简化：缩放 → 二值 alpha（去半透明噪点）→ alpha 膨胀加粗描边 → 去装饰。
+def shape_mask(size, radius_ratio):
+    """圆角方形遮罩（radius_ratio=0 时是直角方形）。"""
+    mask = Image.new("L", (size, size), 0)
+    draw = ImageDraw.Draw(mask)
+    if radius_ratio <= 0:
+        draw.rectangle([0, 0, size - 1, size - 1], fill=255)
+    else:
+        draw.rounded_rectangle(
+            [0, 0, size - 1, size - 1], radius=max(1, int(round(size * radius_ratio))), fill=255
+        )
+    return mask
 
-    膨胀出来的环带用墨色补，避免把背景的白色带进描边。
+
+def simplify_small(crop, size, dilate_px, radius_ratio):
+    """小尺寸简化：缩放 → 二值 alpha（去半透明噪点）→ 圆角遮罩 → 膨胀加粗 → 去装饰。
+
+    要点（上一版踩过的坑）：
+    - 膨胀只作用在 alpha 上，环带颜色取相邻主体像素（最近的描边色），不填纯黑，
+      否则会在整幅外围生成不透明黑边；
+    - 膨胀后再与圆角遮罩 + 内侧 dilate_px 的安全边相交，保证四角 alpha 恒为 0；
+    - 只保留含画面中心的主体连通域，裁切框内的星星/爱心/问号会被丢掉。
     """
     rgb = crop.resize((size, size), Image.LANCZOS)
     subject = keep_center_component(subject_mask(rgb))
-    thick = subject.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
+    shape = shape_mask(size, radius_ratio)
+    subject = ImageChops.multiply(subject, shape)
+
+    thick = subject.filter(ImageFilter.MaxFilter(2 * dilate_px + 1)) if dilate_px > 0 else subject
+    thick = ImageChops.multiply(thick, shape)
+    if dilate_px > 0:
+        safe = Image.new("L", (size, size), 0)
+        ImageDraw.Draw(safe).rectangle(
+            [dilate_px, dilate_px, size - 1 - dilate_px, size - 1 - dilate_px], fill=255
+        )
+        thick = ImageChops.multiply(thick, safe)
+
     added = ImageChops.subtract(thick, subject)
     out = rgb.copy()
-    out_pixels, added_pixels = out.load(), added.load()
+    source_pixels = rgb.load()
+    subject_pixels = subject.load()
+    added_pixels = added.load()
+    out_pixels = out.load()
     for y in range(size):
         for x in range(size):
-            if added_pixels[x, y]:
-                out_pixels[x, y] = (0, 0, 0)
+            if not added_pixels[x, y]:
+                continue
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < size and 0 <= ny < size and subject_pixels[nx, ny]:
+                        out_pixels[x, y] = source_pixels[nx, ny]
+                        break
+                else:
+                    continue
+                break
     out.putalpha(thick)
     return out
 
@@ -360,6 +404,36 @@ def svg_with_variants(light, dark, size):
 """
 
 
+def check_alpha_corners(paths):
+    """自检：打印每张透明图的透明像素占比与四角 alpha，四角不为 0 就非零退出。"""
+    print("\n透明自检（四角 alpha 必须为 0）：")
+    failures = []
+    for path in paths:
+        if path.suffix.lower() != ".png":
+            continue
+        with Image.open(path) as image:
+            if image.mode != "RGBA":
+                continue
+            width, height = image.size
+            alpha = image.getchannel("A")
+            alpha_pixels = alpha.load()
+            transparent = sum(1 for value in alpha.getdata() if value == 0)
+            corners = [
+                alpha_pixels[0, 0],
+                alpha_pixels[width - 1, 0],
+                alpha_pixels[0, height - 1],
+                alpha_pixels[width - 1, height - 1],
+            ]
+            print(
+                f"  {display(path)}  透明像素 {transparent}/{width * height}"
+                f" ({transparent * 100.0 / (width * height):.1f}%)  四角 alpha={corners}"
+            )
+            if any(value != 0 for value in corners):
+                failures.append((str(path), corners))
+    if failures:
+        raise SystemExit(f"自检失败：以下图标四角 alpha 不为 0：{failures}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="生成 nobelog 站点图标")
     parser.add_argument(
@@ -465,7 +539,7 @@ def main():
         light_icons = {}
         dark_icons = {}
         for size in SMALL_SIZES:
-            icon = simplify_small(face, size, SMALL_DILATE.get(size, 1))
+            icon = simplify_small(face, size, SMALL_DILATE.get(size, 1), SMALL_SHAPE_RADIUS)
             light_icons[size] = icon
             dark_icons[size] = dark_variant(icon)
             path = out_dir / f"{PREFIX}-{size}.png"
@@ -549,6 +623,8 @@ def main():
                 f"  {path.stat().st_size} B  {oct(path.stat().st_mode & 0o777)}"
                 f"  sha256={sha256(path)[:12]}"
             )
+    check_alpha_corners(produced)
+
     print(f"\n预览产出（{display(preview_dir)}，不入库）：")
     for path in preview_files:
         if path.suffix == ".svg":
