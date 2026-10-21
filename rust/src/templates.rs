@@ -787,8 +787,9 @@ fn render_layout(
   <meta name="generator" content="nobelog">
   <link rel="canonical" href="{url}{path}">
   <link rel="alternate" type="application/rss+xml" title="{site_title}" href="/feed.xml">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/images/site-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32-transparent.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192-transparent.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/site-icon-180.png">
 {EARLY_SCRIPT}
   <link rel="stylesheet" href="{css}">
@@ -1671,10 +1672,12 @@ mod tests {
         assert!(html.contains("https://e.com/&quot;onmouseover=&quot;alert(1)"));
         // 页脚链接同样要转义。
         assert!(html.contains("href=\"https://e.com/&quot;onmouseover=&quot;alert(1)\">"));
-        // 站点图标：32/192 PNG + apple-touch 180（满幅插画走 bleed 模式，不透明输出，无 SVG）。
+        // 站点图标：SVG（内嵌亮/暗两版，按 prefers-color-scheme 切换）+ 透明 PNG 回退
+        // + apple-touch 180。透明底让标签页没有白框，暗色版保留彩色元素。
         for tag in [
-            r#"<link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32.png">"#,
-            r#"<link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192.png">"#,
+            r#"<link rel="icon" type="image/svg+xml" href="/images/site-icon.svg">"#,
+            r#"<link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32-transparent.png">"#,
+            r#"<link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192-transparent.png">"#,
             r#"<link rel="apple-touch-icon" sizes="180x180" href="/images/site-icon-180.png">"#,
         ] {
             assert!(html.contains(tag), "head 缺少 {tag}");
