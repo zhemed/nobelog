@@ -1111,3 +1111,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 按用户选择上线并发 v0.0.28
+
+
+## Session 34: 发布 v0.0.28（首页卡片留白）并上线
+<!-- trellis-session: v=2 fp=df1d8b5daab1ad27 -->
+
+**Date**: 2026-10-21
+**Task**: 发布 v0.0.28（首页卡片留白）并上线
+**Branch**: `main`
+
+### Summary
+
+版本三源 0.0.28、包 sha256 790ca653…（4900689B）、tag 与 GitHub Release 已推送；本机重启（PID 662401→713904，exe sha 28e61375…）：CSS 切到 main.1ca5c955.css、计算样式 margin-bottom=20px / padding-bottom=28px、head 7 条声明、9 路由回归全绿
+
+### Main Changes
+
+- rust/Cargo.toml、package.json、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c190ef6` | chore: 发布 v0.0.28（版本号同步） [task:10-21-release-28] |
+
+### Testing
+
+- [OK] cargo test 92；包 sha256sum -c；本机 CSS 哈希/manifest/计算样式/回归断言
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；动态模式对任意 CSS 哈希均返回当前样式的行为已记录
