@@ -1,6 +1,6 @@
 [package]
 name = "nobelog"
-version = "0.0.25"
+version = "0.0.26"
 edition = "2024"
 rust-version = "1.99"
 description = "nobelog 静态博客生成器（Rust 重写）"
