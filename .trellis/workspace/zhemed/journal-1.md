@@ -1077,3 +1077,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责
+
+
+## Session 33: 首页卡片留白（评估 + 上线 + v0.0.28）
+<!-- trellis-session: v=2 fp=a77251f2eb0e1291 -->
+
+**Date**: 2026-10-21
+**Task**: 首页卡片留白（评估 + 上线 + v0.0.28）
+**Branch**: `main`
+
+### Summary
+
+基线实测：卡片间距 0px（上游选择器 #post-list a.card-wrapper 与本站 article.card-wrapper 不匹配）、卡片底部内边距 20px 小于顶部 28px；patch.css 补两行：间距 1.25rem、padding-bottom 1.75rem；改后间距 20px、meta 到底边 35px；CSS 哈希 1f82b0f7 → 1ca5c955
+
+### Main Changes
+
+- vendor/patches/patch.css
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `106005a` | style: 首页卡片补留白（卡片间距恢复 1.25rem，卡片底部内边距与顶部对齐） [task:10-21-card-spacing] |
+
+### Testing
+
+- [OK] cargo test 92；临时实例计算样式与像素测量；前后对比截图
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 按用户选择上线并发 v0.0.28
