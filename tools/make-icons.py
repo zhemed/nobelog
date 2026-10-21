@@ -12,13 +12,7 @@
     bleed：满幅彩色插画（无白底、不需要透明），按 --crop 从画面中心偏上裁脸部特写
         （边长 = 短边 * --crop，默认 0.62；中心 y = 高 * --crop-y，默认 0.44），
         LANCZOS 缩放出不透明 PNG；另出 full/face 两张预览对比图。
-    small：favicon 小尺寸简化版（16/32/48），更紧的脸部特写 + 二值 alpha（去半透明噪点）
-        + 圆角方形遮罩（四角恒透明）+ alpha 膨胀 1px 加粗描边（环带取相邻描边色，不填黑）
-        + 只保留含画面中心的主体连通域（裁切框内的星星/爱心/问号等装饰会被丢掉）；
-        输出透明底 PNG 与暗色变体，并用简化版 48px 重建 site-icon.svg。
-        结束前会对所有透明产出做「四角 alpha=0」自检，不通过直接非零退出。
-        注意：换模式后另一模式的旧产出不会自动删除，需手工清理；
-        SVG 以最后运行的 small 模式为准（先跑 lineart 再跑 small）。
+        注意：换模式后另一模式的旧产出（svg / transparent / dark）不会自动删除，需手工清理。
 
 输出前缀固定 `site-icon`，写进 content/images/（权限 644）：
     site-icon.svg                   内嵌「亮色 192 + 暗色 192」两张透明 PNG，
@@ -64,7 +58,6 @@ import hashlib
 import io
 import os
 import shutil
-from collections import deque
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
@@ -97,18 +90,6 @@ BLEED_SIZES = [32, 180, 192, 512]
 BLEED_CROP = 0.62
 BLEED_CROP_Y = 0.44
 BLEED_COMPARE = 512
-
-# small 模式（favicon 小尺寸简化）：更紧的脸部特写 + alpha 膨胀 + 二值化去噪。
-# 0.45 / (0.50, 0.65) 是拿 16px 试过 0.45-0.55 与 cy 0.60-0.70 后选的最清楚一档。
-SMALL_SIZES = [16, 32, 48]
-SMALL_CROP = 0.45
-SMALL_CROP_X = 0.50
-SMALL_CROP_Y = 0.65
-SMALL_DILATE = {16: 1, 32: 1, 48: 1}  # 1px 膨胀；再粗会把 16px 撑满整幅
-SMALL_SVG_SIZE = 48  # SVG 内嵌简化版 48px（缩到 16px 也不糊）
-# 小尺寸裁切是紧贴脸部的特写（整幅都被头发/脸覆盖），所以用圆角方形遮罩切掉四角，
-# 保证四角始终透明、标签页里不再出现实心方块；0.30 = 圆角半径占边长比例。
-SMALL_SHAPE_RADIUS = 0.30
 
 # flood fill 容差（PIL 按通道差绝对值之和比较）：只吃纯白/近白背景，
 # 奶白脸与白底的差约 37，留在容差外，且脸被描边包围，本来就填不进去。
@@ -167,124 +148,6 @@ def padded_square(image, bbox):
     canvas = Image.new("RGB", (side, side), (255, 255, 255))
     canvas.paste(image.crop(bbox), ((side - width) // 2, (side - height) // 2))
     return canvas
-
-
-def face_crop(image, crop_ratio, crop_x, crop_y):
-    """按比例在 (crop_x, crop_y) 处裁一个正方形（small / bleed 共用）。"""
-    width, height = image.size
-    side = max(1, min(int(round(min(width, height) * crop_ratio)), min(width, height)))
-    center_x = int(round(width * crop_x))
-    center_y = int(round(height * crop_y))
-    left = max(0, min(center_x - side // 2, width - side))
-    top = max(0, min(center_y - side // 2, height - side))
-    return image.crop((left, top, left + side, top + side))
-
-
-def subject_mask(rgb):
-    """主体二值掩码：四角 flood fill 掉与边缘相连的近白背景，其余为 255。"""
-    width, height = rgb.size
-    sentinel = (255, 0, 255)
-    work = rgb.copy()
-    for seed in [(0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)]:
-        if work.getpixel(seed) != sentinel:
-            ImageDraw.floodfill(work, seed, sentinel, thresh=FLOOD_THRESHOLD)
-    background = (
-        ImageChops.difference(work, Image.new("RGB", (width, height), sentinel))
-        .convert("L")
-        .point(lambda value: 255 if value == 0 else 0)
-    )
-    return ImageChops.invert(background)
-
-
-def keep_center_component(mask):
-    """只保留含画面中心（或离中心最近的主体像素）的连通域。
-
-    裁切框里若混进星星/爱心/问号等独立装饰，它们不连着头像，会被这一步丢掉。
-    """
-    width, height = mask.size
-    pixels = mask.load()
-    center_x, center_y = width // 2, height // 2
-    if pixels[center_x, center_y] == 0:
-        best = None
-        for y in range(height):
-            for x in range(width):
-                if pixels[x, y]:
-                    distance = (x - center_x) ** 2 + (y - center_y) ** 2
-                    if best is None or distance < best[0]:
-                        best = (distance, x, y)
-        if best is None:
-            return mask
-        center_x, center_y = best[1], best[2]
-    keep = Image.new("L", (width, height), 0)
-    kept = keep.load()
-    kept[center_x, center_y] = 255
-    queue = deque([(center_x, center_y)])
-    while queue:
-        x, y = queue.popleft()
-        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
-            if 0 <= nx < width and 0 <= ny < height and pixels[nx, ny] and not kept[nx, ny]:
-                kept[nx, ny] = 255
-                queue.append((nx, ny))
-    return keep
-
-
-def shape_mask(size, radius_ratio):
-    """圆角方形遮罩（radius_ratio=0 时是直角方形）。"""
-    mask = Image.new("L", (size, size), 0)
-    draw = ImageDraw.Draw(mask)
-    if radius_ratio <= 0:
-        draw.rectangle([0, 0, size - 1, size - 1], fill=255)
-    else:
-        draw.rounded_rectangle(
-            [0, 0, size - 1, size - 1], radius=max(1, int(round(size * radius_ratio))), fill=255
-        )
-    return mask
-
-
-def simplify_small(crop, size, dilate_px, radius_ratio):
-    """小尺寸简化：缩放 → 二值 alpha（去半透明噪点）→ 圆角遮罩 → 膨胀加粗 → 去装饰。
-
-    要点（上一版踩过的坑）：
-    - 膨胀只作用在 alpha 上，环带颜色取相邻主体像素（最近的描边色），不填纯黑，
-      否则会在整幅外围生成不透明黑边；
-    - 膨胀后再与圆角遮罩 + 内侧 dilate_px 的安全边相交，保证四角 alpha 恒为 0；
-    - 只保留含画面中心的主体连通域，裁切框内的星星/爱心/问号会被丢掉。
-    """
-    rgb = crop.resize((size, size), Image.LANCZOS)
-    subject = keep_center_component(subject_mask(rgb))
-    shape = shape_mask(size, radius_ratio)
-    subject = ImageChops.multiply(subject, shape)
-
-    thick = subject.filter(ImageFilter.MaxFilter(2 * dilate_px + 1)) if dilate_px > 0 else subject
-    thick = ImageChops.multiply(thick, shape)
-    if dilate_px > 0:
-        safe = Image.new("L", (size, size), 0)
-        ImageDraw.Draw(safe).rectangle(
-            [dilate_px, dilate_px, size - 1 - dilate_px, size - 1 - dilate_px], fill=255
-        )
-        thick = ImageChops.multiply(thick, safe)
-
-    added = ImageChops.subtract(thick, subject)
-    out = rgb.copy()
-    source_pixels = rgb.load()
-    subject_pixels = subject.load()
-    added_pixels = added.load()
-    out_pixels = out.load()
-    for y in range(size):
-        for x in range(size):
-            if not added_pixels[x, y]:
-                continue
-            for dy in (-1, 0, 1):
-                for dx in (-1, 0, 1):
-                    nx, ny = x + dx, y + dy
-                    if 0 <= nx < size and 0 <= ny < size and subject_pixels[nx, ny]:
-                        out_pixels[x, y] = source_pixels[nx, ny]
-                        break
-                else:
-                    continue
-                break
-    out.putalpha(thick)
-    return out
 
 
 def bleed_face(image, crop_ratio, crop_y):
@@ -404,36 +267,6 @@ def svg_with_variants(light, dark, size):
 """
 
 
-def check_alpha_corners(paths):
-    """自检：打印每张透明图的透明像素占比与四角 alpha，四角不为 0 就非零退出。"""
-    print("\n透明自检（四角 alpha 必须为 0）：")
-    failures = []
-    for path in paths:
-        if path.suffix.lower() != ".png":
-            continue
-        with Image.open(path) as image:
-            if image.mode != "RGBA":
-                continue
-            width, height = image.size
-            alpha = image.getchannel("A")
-            alpha_pixels = alpha.load()
-            transparent = sum(1 for value in alpha.getdata() if value == 0)
-            corners = [
-                alpha_pixels[0, 0],
-                alpha_pixels[width - 1, 0],
-                alpha_pixels[0, height - 1],
-                alpha_pixels[width - 1, height - 1],
-            ]
-            print(
-                f"  {display(path)}  透明像素 {transparent}/{width * height}"
-                f" ({transparent * 100.0 / (width * height):.1f}%)  四角 alpha={corners}"
-            )
-            if any(value != 0 for value in corners):
-                failures.append((str(path), corners))
-    if failures:
-        raise SystemExit(f"自检失败：以下图标四角 alpha 不为 0：{failures}")
-
-
 def main():
     parser = argparse.ArgumentParser(description="生成 nobelog 站点图标")
     parser.add_argument(
@@ -450,27 +283,21 @@ def main():
     )
     parser.add_argument(
         "--mode",
-        choices=["lineart", "bleed", "small"],
+        choices=["lineart", "bleed"],
         default="lineart",
-        help="lineart=白底/透明线稿（默认）；bleed=满幅插画脸部特写；small=favicon 小尺寸简化版",
+        help="lineart=白底/透明线稿（默认）；bleed=满幅插画脸部特写",
     )
     parser.add_argument(
         "--crop",
         type=float,
-        default=None,
-        help=f"裁切比例（相对短边；bleed 默认 {BLEED_CROP}，small 默认 {SMALL_CROP}）",
+        default=BLEED_CROP,
+        help=f"bleed 模式裁切比例（相对短边，默认 {BLEED_CROP}）",
     )
     parser.add_argument(
         "--crop-y",
         type=float,
-        default=None,
-        help=f"裁切中心 y 比例（bleed 默认 {BLEED_CROP_Y}，small 默认 {SMALL_CROP_Y}）",
-    )
-    parser.add_argument(
-        "--crop-x",
-        type=float,
-        default=SMALL_CROP_X,
-        help=f"small 模式裁切中心 x 比例（默认 {SMALL_CROP_X}）",
+        default=BLEED_CROP_Y,
+        help=f"bleed 模式裁切中心 y 比例（0=顶部，默认 {BLEED_CROP_Y}）",
     )
     args = parser.parse_args()
 
@@ -505,12 +332,10 @@ def main():
     stem = source_path.stem.replace("-source", "")
 
     if args.mode == "bleed":
-        crop_ratio = args.crop if args.crop is not None else BLEED_CROP
-        crop_y = args.crop_y if args.crop_y is not None else BLEED_CROP_Y
-        face = bleed_face(source, crop_ratio, crop_y)
+        face = bleed_face(source, args.crop, args.crop_y)
         print(
             f"bleed 模式：脸部特写 {face.size[0]}x{face.size[1]}"
-            f"（crop={crop_ratio:.2f}，中心 y={crop_y:.2f}）→ 不透明 PNG"
+            f"（crop={args.crop:.2f}，中心 y={args.crop_y:.2f}）→ 不透明 PNG"
         )
         for size in BLEED_SIZES:
             path = out_dir / f"{PREFIX}-{size}.png"
@@ -527,37 +352,6 @@ def main():
             path = preview_dir / f"{PREFIX}-{size}.png"
             save_png(face.resize((size, size), Image.LANCZOS), path)
             preview_extras.append(path)
-    elif args.mode == "small":
-        crop_ratio = args.crop if args.crop is not None else SMALL_CROP
-        crop_y = args.crop_y if args.crop_y is not None else SMALL_CROP_Y
-        face = face_crop(source, crop_ratio, args.crop_x, crop_y)
-        print(
-            f"small 模式：脸部特写 {face.size[0]}x{face.size[1]}"
-            f"（crop={crop_ratio:.2f}，中心 {args.crop_x:.2f},{crop_y:.2f}）"
-            f" → 二值 alpha + 膨胀 + 去装饰"
-        )
-        light_icons = {}
-        dark_icons = {}
-        for size in SMALL_SIZES:
-            icon = simplify_small(face, size, SMALL_DILATE.get(size, 1), SMALL_SHAPE_RADIUS)
-            light_icons[size] = icon
-            dark_icons[size] = dark_variant(icon)
-            path = out_dir / f"{PREFIX}-{size}.png"
-            save_png(icon, path)
-            produced.append(path)
-            dark_path = out_dir / f"{PREFIX}-{size}-dark.png"
-            save_png(dark_icons[size], dark_path)
-            produced.append(dark_path)
-        # SVG 用简化版 48px（亮/暗）重建，替代 192 细节版，缩到 16px 也不糊。
-        svg_path = out_dir / f"{PREFIX}.svg"
-        svg_path.write_text(
-            svg_with_variants(
-                light_icons[SMALL_SVG_SIZE], dark_icons[SMALL_SVG_SIZE], SMALL_SVG_SIZE
-            ),
-            encoding="utf-8",
-        )
-        os.chmod(svg_path, 0o644)
-        produced.append(svg_path)
     else:
         bbox = ink_bbox(source)
         square = padded_square(source, bbox)
@@ -623,8 +417,6 @@ def main():
                 f"  {path.stat().st_size} B  {oct(path.stat().st_mode & 0o777)}"
                 f"  sha256={sha256(path)[:12]}"
             )
-    check_alpha_corners(produced)
-
     print(f"\n预览产出（{display(preview_dir)}，不入库）：")
     for path in preview_files:
         if path.suffix == ".svg":
