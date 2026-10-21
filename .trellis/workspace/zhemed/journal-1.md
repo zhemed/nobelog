@@ -703,3 +703,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 图标方案待用户再定；如再做建议先不提交、先看预览
+
+
+## Session 22: 猫咪线稿站点图标（生成/接入/上线）
+<!-- trellis-session: v=2 fp=093287b4bcb80522 -->
+
+**Date**: 2026-10-21
+**Task**: 猫咪线稿站点图标（生成/接入/上线）
+**Branch**: `main`
+
+### Summary
+
+按用户指定图做图标：阈值裁到笔画 bbox + 6% 内边距 → 416 方形；产出 SVG（明暗自适应）+ 32 透明 PNG + 192/180/512 白底；脚本 tools/make-icons.py 与源图入库 tools/assets；模板 head 五处链接；本机重启上线（PID 434553→565325，exe sha 15df48b3…），端点/head/回归全 PASS
+
+### Main Changes
+
+- content/images/cat-icon*、tools/make-icons.py、tools/assets/cat-icon-source.jpg、rust/src/templates.rs、spec directory-structure
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `07b2f81` | feat: 猫咪线稿站点图标（SVG 明暗自适应 + PNG 兜底） [task:10-21-cat-icon] |
+
+### Testing
+
+- [OK] cargo test 92；静态构建 images/ 仅 5 图标；本机 5 端点 200 且类型正确、head 五处、浏览器实际拉取 200；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程部署由用户负责；32px 是否增强待定
