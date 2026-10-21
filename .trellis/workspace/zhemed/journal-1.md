@@ -805,3 +805,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 用户确认后可远程同步；暗色身体对比度可再调
+
+
+## Session 25: 发布 v0.0.25（站点图标）并上线
+<!-- trellis-session: v=2 fp=4090eea6f5974ccc -->
+
+**Date**: 2026-10-21
+**Task**: 发布 v0.0.25（站点图标）并上线
+**Branch**: `main`
+
+### Summary
+
+版本三源 0.0.25、包 sha256 75f2dc45…（4472508B）、tag 与 GitHub Release 已推送；本机重启（PID 603947→607302，exe sha 229fe5a3…）：7 图标资源 200、旧白底 404、head 五处、像素角 alpha=0、9 路由回归全绿
+
+### Main Changes
+
+- rust/Cargo.toml、package.json、rust/Cargo.lock
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7cea335` | chore: 发布 v0.0.25（版本号同步） [task:10-21-release-25] |
+
+### Testing
+
+- [OK] cargo test 92；包 sha256sum -c；本机图标/head/像素/回归断言
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；如需可精简图标体积
