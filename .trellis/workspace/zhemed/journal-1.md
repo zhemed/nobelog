@@ -873,3 +873,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责；如需可调 crop 或 512 减重
+
+
+## Session 27: 粉笔少女图标（透明 + 暗色变体 / 上线）
+<!-- trellis-session: v=2 fp=12dca9bf0772223e -->
+
+**Date**: 2026-10-21
+**Task**: 粉笔少女图标（透明 + 暗色变体 / 上线）
+**Branch**: `main`
+
+### Summary
+
+按用户指定图换图标：lineart 路径（bbox 1102x856 + 5% 内边距 → 1212 方形）；暗色映射改饱和度分流保留蓝眼/粉腮红/黄星/红心；产出 SVG + 32/192 transparent + 32/192 dark + 180/512 白底；模板 head 五处；本机重启（PID 618323→623385，exe sha a889d13f…），端点/head/像素/回归全 PASS
+
+### Main Changes
+
+- content/images/site-icon*、tools/make-icons.py、tools/assets/chalk-girl-icon-source.png、rust/src/templates.rs
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6a5754e` | feat: 换用粉笔风少女图标（透明 + 暗色变体，彩色保留） [task:10-21-chalk-girl-icon] |
+
+### Testing
+
+- [OK] cargo test 92；脚本可复现；本机 7 资源 200、旧不透明 404、透明角 alpha=0、head 五处；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；如需可精简 SVG/512 体积
