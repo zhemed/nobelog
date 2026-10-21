@@ -36,10 +36,11 @@
 这张图的脸是奶白（min 通道约 228），那样会把整张脸洗成半透明。
 
 暗色变体：在透明版基础上按像素重映射（保持 alpha）——
-    近黑描边/眼睛/鼻子（亮度 < INK_LUMA）→ 近白 #f2f2f2；
-    粉色耳朵（r-g 明显且够亮）→ 略提亮；
-    其余（奶白身体）→ 深灰 #2b2b2b。
-这样暗色标签页里轮廓与五官可见，而不是一块白方块。
+    高饱和彩色（蓝眼/蓝问号/粉腮红/黄星/红心，max-min 通道差 >= SAT_THRESHOLD）→
+        保留色相、朝白色提亮 COLOR_BRIGHTEN_PCT%；
+    近中性深色（黑发/描边/五官，亮度 < INK_LUMA）→ 近白 #f2f2f2；
+    近中性浅色（米白脸/浅底）→ 深灰 #2b2b2b。
+这样暗色标签页里轮廓与五官可见、彩色元素仍然是彩色的，而不是一块白方块或一团灰。
 
 bleed 模式的入库产出（全部不透明、脸部特写）：
     site-icon-32.png / site-icon-192.png / site-icon-180.png / site-icon-512.png
@@ -97,11 +98,15 @@ FLOOD_THRESHOLD = 30
 EDGE_RING = 3
 
 # 暗色变体的映射目标。
-DARK_BODY = (43, 43, 43)  # #2b2b2b：奶白身体 → 深灰
-DARK_INK = (242, 242, 242)  # #f2f2f2：黑描边/眼睛/鼻子 → 近白
-INK_LUMA = 90  # 亮度低于此值算「墨色」
-PINK_MIN_RED = 140  # 粉耳判定：够亮
-PINK_MIN_DIFF = 25  # 粉耳判定：r - g 明显大于 0（奶白脸 r-g 只有约 2）
+DARK_BODY = (43, 43, 43)  # #2b2b2b：近中性浅色（米白脸/浅底）→ 深灰
+DARK_INK = (242, 242, 242)  # #f2f2f2：近中性深色（黑发/描边/五官）→ 近白
+INK_LUMA = 90  # 近中性像素亮度低于此值算「墨色」
+# 饱和度（max-min 通道差）≥ 此值算「彩色」，保留色相（蓝眼/蓝问号/粉腮红/黄星/红心）。
+# 米白底与白脸的饱和度只有 1-2，浅粉心形约 33，故取 25 既不会误伤中性色，
+# 又能保住浅色彩块。
+SAT_THRESHOLD = 25
+# 彩色像素朝白色提亮的百分比（暗底上更亮一点，色相不变）。
+COLOR_BRIGHTEN_PCT = 12
 
 
 def sha256(path):
@@ -208,7 +213,13 @@ def background_to_alpha(image):
 
 
 def dark_variant(rgba):
-    """透明底暗色变体：身体→深灰、墨色→近白、粉耳略提亮（alpha 不变）。"""
+    """透明底暗色变体（保持 alpha）：
+
+    高饱和彩色（蓝眼/蓝问号/粉腮红/黄星/红心）→ 保留原色并略提亮；
+    近中性深色（黑发/描边/五官）→ 近白 #f2f2f2；
+    近中性浅色（米白脸/浅底）→ 深灰 #2b2b2b。
+    判定用饱和度而不是亮度，否则蓝眼会被当成深色变成白点。
+    """
     out = rgba.copy()
     pixels = out.load()
     width, height = out.size
@@ -217,8 +228,13 @@ def dark_variant(rgba):
             r, g, b, a = pixels[x, y]
             if a == 0:
                 continue
-            if r - g > PINK_MIN_DIFF and r > PINK_MIN_RED:
-                pixels[x, y] = (min(255, r + 16), min(255, g + 24), min(255, b + 20), a)
+            if max(r, g, b) - min(r, g, b) >= SAT_THRESHOLD:
+                pixels[x, y] = (
+                    r + (255 - r) * COLOR_BRIGHTEN_PCT // 100,
+                    g + (255 - g) * COLOR_BRIGHTEN_PCT // 100,
+                    b + (255 - b) * COLOR_BRIGHTEN_PCT // 100,
+                    a,
+                )
                 continue
             luma = (299 * r + 587 * g + 114 * b) // 1000
             if luma < INK_LUMA:
