@@ -737,3 +737,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程部署由用户负责；32px 是否增强待定
+
+
+## Session 23: 熊脸图标（生成/通用命名/上线）
+<!-- trellis-session: v=2 fp=6a1e5a96e726500d -->
+
+**Date**: 2026-10-21
+**Task**: 熊脸图标（生成/通用命名/上线）
+**Branch**: `main`
+
+### Summary
+
+按用户新图换图标：通用脚本 tools/make-icons.py 支持传源图，输出统一 site-icon-*（白底彩色 32/192/180/512 + 透明 512 备用）；删 cat-icon*、源图保留 tools/assets；模板 head 改指 site-icon；本机重启（PID 565325→580737，exe sha 8bb26865…），端点/head/回归全 PASS
+
+### Main Changes
+
+- content/images/site-icon*、tools/make-icons.py、tools/assets/bear-icon-source.jpg、rust/src/templates.rs
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0519018` | feat: 换用熊脸图标并统一为 site-icon 通用命名 [task:10-21-bear-icon] |
+
+### Testing
+
+- [OK] cargo test 92；脚本可复现且可切回猫源图；本机 5 端点 200、cat-icon 全 404、head 四处；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 若定稿可远程同步；透明 512 用途待定
