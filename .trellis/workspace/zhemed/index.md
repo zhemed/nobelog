@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 21
-- **Last Active**: 2026-10-20
+- **Total Sessions**: 22
+- **Last Active**: 2026-10-21
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~705 | Active |
+| `journal-1.md` | ~739 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 22 | 2026-10-21 | 猫咪线稿站点图标（生成/接入/上线） | `07b2f81` | `main` |
 | 21 | 2026-10-20 | 回退站点图标（含源图与脚本） | `5cbad23` | `main` |
 | 20 | 2026-10-20 | 粉笔涂鸦站点图标（生成/接入/上线本机） | `1d8e38d` | `main` |
 | 19 | 2026-10-20 | 发布 v0.0.24 并上线本机 | `d4215a6` | `main` |
