@@ -788,9 +788,7 @@ fn render_layout(
   <link rel="canonical" href="{url}{path}">
   <link rel="alternate" type="application/rss+xml" title="{site_title}" href="/feed.xml">
   <link rel="icon" type="image/svg+xml" href="/images/site-icon.svg">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/site-icon-16.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32.png">
-  <link rel="icon" type="image/png" sizes="48x48" href="/images/site-icon-48.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32-transparent.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192-transparent.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/site-icon-180.png">
 {EARLY_SCRIPT}
@@ -1674,14 +1672,11 @@ mod tests {
         assert!(html.contains("https://e.com/&quot;onmouseover=&quot;alert(1)"));
         // 页脚链接同样要转义。
         assert!(html.contains("href=\"https://e.com/&quot;onmouseover=&quot;alert(1)\">"));
-        // 站点图标：SVG（内嵌简化版 48px 亮/暗，按 prefers-color-scheme 切换）
-        // + 16/32/48 小尺寸专用简化版 + 192 透明高分屏 + apple-touch 180。
-        // 小尺寸单独出图是为了让浏览器别把细节版缩到 16px 糊成一团。
+        // 站点图标：SVG（内嵌亮/暗两版，按 prefers-color-scheme 切换）+ 透明 PNG 回退
+        // + apple-touch 180。透明底让标签页没有白框，暗色版保留彩色元素。
         for tag in [
             r#"<link rel="icon" type="image/svg+xml" href="/images/site-icon.svg">"#,
-            r#"<link rel="icon" type="image/png" sizes="16x16" href="/images/site-icon-16.png">"#,
-            r#"<link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32.png">"#,
-            r#"<link rel="icon" type="image/png" sizes="48x48" href="/images/site-icon-48.png">"#,
+            r#"<link rel="icon" type="image/png" sizes="32x32" href="/images/site-icon-32-transparent.png">"#,
             r#"<link rel="icon" type="image/png" sizes="192x192" href="/images/site-icon-192-transparent.png">"#,
             r#"<link rel="apple-touch-icon" sizes="180x180" href="/images/site-icon-180.png">"#,
         ] {
