@@ -771,3 +771,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 若定稿可远程同步；透明 512 用途待定
+
+
+## Session 24: favicon 去白框（透明 + 暗色变体）
+<!-- trellis-session: v=2 fp=644ff164b16ff45a -->
+
+**Date**: 2026-10-21
+**Task**: favicon 去白框（透明 + 暗色变体）
+**Branch**: `main`
+
+### Summary
+
+用户反馈标签页有白框，根因是白底 favicon。改为 SVG（内嵌亮/暗两版 + prefers-color-scheme）+ 32/192 透明 PNG 回退 + 暗色变体；白底 32/192 删除，apple-touch/og 保持白底；本机重启（PID 580737→603947，exe sha 4f8243e4…），像素采样角落 alpha=0 证实无白框，回归全绿
+
+### Main Changes
+
+- content/images/site-icon*、tools/make-icons.py、rust/src/templates.rs
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `629c838` | fix: favicon 去白框（透明版 + 暗色变体 SVG） [task:10-21-icon-noframe] |
+
+### Testing
+
+- [OK] cargo test 92；本机 7 资源 200、旧白底 404、head 五处；canvas/PIL 像素 alpha 采样；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 用户确认后可远程同步；暗色身体对比度可再调
