@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 33
+- **Total Sessions**: 34
 - **Last Active**: 2026-10-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1113 | Active |
+| `journal-1.md` | ~1147 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 34 | 2026-10-21 | 发布 v0.0.28（首页卡片留白）并上线 | `c190ef6` | `main` |
 | 33 | 2026-10-21 | 首页卡片留白（评估 + 上线 + v0.0.28） | `106005a` | `main` |
 | 32 | 2026-10-21 | 发布 v0.0.27（图标引用清理）并上线 | `b61dc44` | `main` |
 | 31 | 2026-10-21 | 清理孤儿图标（暗色补引用 + 删备用图） | `04ac939` | `main` |
