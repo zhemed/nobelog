@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 35
+- **Total Sessions**: 36
 - **Last Active**: 2026-10-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1179 | Active |
+| `journal-1.md` | ~1213 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 36 | 2026-10-21 | 去 Node 化收尾（删 package.json + 清理过期说明） | `edad187` | `main` |
 | 35 | 2026-10-21 | 只读审核：博客是否包含 Node.js 与 PHP | - | `main` |
 | 34 | 2026-10-21 | 发布 v0.0.28（首页卡片留白）并上线 | `c190ef6` | `main` |
 | 33 | 2026-10-21 | 首页卡片留白（评估 + 上线 + v0.0.28） | `106005a` | `main` |
