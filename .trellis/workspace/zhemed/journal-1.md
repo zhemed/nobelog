@@ -1145,3 +1145,35 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责；动态模式对任意 CSS 哈希均返回当前样式的行为已记录
+
+
+## Session 35: 只读审核：博客是否包含 Node.js 与 PHP
+<!-- trellis-session: v=2 fp=bbc76295be8e6a24 -->
+
+**Date**: 2026-10-21
+**Task**: 只读审核：博客是否包含 Node.js 与 PHP
+**Branch**: `main`
+
+### Summary
+
+A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash+python3；唯一 JS 是浏览器端 rust/client/main.js；根 package.json 仅 pnpm 别名、无依赖）；PHP 完全不存在（0 个 .php、无 composer、无 php-fpm/fastcgi、运行物 ldd 无 libphp）；产物与 v0.0.28 发布包内同样为 0；content 文章正文无相关主题
+
+### Main Changes
+
+- 无（只读审核，仅 .run 报告）
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] git ls-files 统计、find public/包内统计、ldd/ps/systemctl、文档 grep、content 关键词扫描
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 可选：清理 vendor/fonts/README.md 与 rust/data/README.md 里已失效的 node 脚本说明（需授权）
