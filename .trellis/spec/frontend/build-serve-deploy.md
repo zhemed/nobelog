@@ -4,12 +4,15 @@
 
 ```bash
 # 本地动态模式（改 md 刷新即生效）
-pnpm serve                 # = cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port <port> --dynamic
-pnpm serve:static          # 同端口，静态模式
-pnpm build                 # = ... build --self-assets --out public
+cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port <port> --dynamic
+# 静态模式（同端口）
+cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port <port>
+# 静态构建
+cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out public
 ```
 
-等价的 cargo 命令见 README。端口不在本规范里写死：文档统一用占位符 `<port>`，实际默认值见 `package.json` 的 scripts 与 CLI。
+> 用户 2026-10-21 授权清理：仓库已**删除** `package.json`（原 pnpm 别名），构建/运行一律用上面的
+> cargo 命令；本仓库不含任何 Node 生态文件。端口不在本规范里写死：文档统一用占位符 `<port>`。
 `rust/rust-toolchain.toml` 固定 `1.99.1` + `rustfmt` + `clippy`。
 
 三个子命令（`rust/src/main.rs`）：
@@ -176,7 +179,8 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 
 固定动作：
 
-1. **版本同步**：`rust/Cargo.toml`、`package.json`、`rust/Cargo.lock`（`name = "nobelog"` 那一项）三处一起改成新版本号。
+1. **版本同步**：`rust/Cargo.toml` 与 `rust/Cargo.lock`（`name = "nobelog"` 那一项）两处一起改成新版本号
+   （`package.json` 已于 2026-10-21 删除，不再是版本源）。
 2. **门禁**：`cd rust && cargo fmt --check && cargo clippy --all-targets && cargo test`。
 3. **打包**：仓库根 `VERSION=<x.y.z> tools/package.sh` → `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`；
    `(cd dist && sha256sum -c SHA256SUMS)`，并解包确认 `./nobelog --version` 为新版本。

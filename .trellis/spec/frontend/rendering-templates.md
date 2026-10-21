@@ -75,7 +75,8 @@ fn escape_html(input: &str) -> String {
 ## 改模板的正确姿势
 
 1. 先看 `public/` 里冻结产物的对应片段（用 `diff` 判断你的改动是否改变了字节）。
-2. 改 `templates.rs` 后跑 `pnpm build`（会写 `rust/dist/`）再跑
+2. 改 `templates.rs` 后跑
+   `cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out dist`（会写 `rust/dist/`）再跑
    `./rust/target/release/nobelog diff public dist`；预期差异必须只包含你这次想改的页面。
 3. 只动视觉、不动结构时优先改 `vendor/patches/patch.css`，不要为了加个 class 去改模板。
 

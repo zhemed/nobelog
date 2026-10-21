@@ -20,8 +20,8 @@
 | `tools/assets/` | 设计源文件 | ✅ | 不入构建产物（源图不放 `content/images`，避免进发布包） |
 | `.trellis/` | Trellis 流程 | ✅ 按流程 | 任务/spec/journal，见 `.trellis/workflow.md` |
 
-根目录 `package.json` 只是 pnpm 别名（`serve` / `serve:static` / `build` / `dev` / `start`），
-没有 `node_modules`、没有前端构建链，不要为它引入 npm 依赖。
+根目录**没有** `package.json`、`node_modules` 或任何前端构建链（2026-10-21 已删除原 pnpm 别名）；
+构建/运行一律用 cargo 命令（见 `build-serve-deploy.md`），**不要为它引入 npm 依赖**。
 
 ## Rust 模块表
 

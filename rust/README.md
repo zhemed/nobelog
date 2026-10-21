@@ -1,7 +1,9 @@
 # nobelog（Rust 重写）
 
-本目录是 `nobelog` 静态博客生成器的 Rust 实现。**自 2026-10-17 起 `pnpm build` 与 `pnpm serve` 都走 Rust**：
-构建 `build --self-assets --out public`，服务 `serve`（axum，行为对齐 `server/serve.ts`）。
+本目录是 `nobelog` 静态博客生成器的 Rust 实现。**自 2026-10-17 起构建与服务都走 Rust**
+（当时通过仓库根的 `pnpm build` / `pnpm serve` 别名调用，这两个别名已随 `package.json` 删除）：
+构建 `cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out public`，
+服务 `serve`（axum，行为对齐 TS 时代的 `server/serve.ts`）。
 Node 源码已移除（完整归档在 `/root/博客/.backups/`，可整包回退）。
 
 - 内核：**content → render → artifacts**；默认产物写 `public/`，对照构建可写 `rust/dist/`。
@@ -23,12 +25,12 @@ Node 源码已移除（完整归档在 `/root/博客/.backups/`，可整包回�
 | 命令 | 说明 |
 | --- | --- |
 | `cargo build --locked` | 编译 |
-| `pnpm build`（仓库根） | 默认发布：`build --self-assets --out public` |
+| `cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out public`（仓库根执行） | 默认发布：自建 CSS/JS 并写发布目录 |
 | `cargo run -- build` | 生成到 `rust/dist/`。默认复用 `public/assets` 与 manifest，便于逐字节对照 |
 | `cargo run -- build --self-assets --out public` | 由 Rust 自建 CSS/JS（`src/assets.rs`）并写发布目录 |
 | `cargo run -- diff ../public dist` | 与基准逐字节对比；`<lastBuildDate>` 自动归一化；加 `--normalize-assets` 忽略资源哈希 |
 | `cargo run -- serve --host 0.0.0.0 --port <port>` | 本地/局域网静态服务（axum），缓存头与 Node 版一致 |
-| `pnpm serve`（仓库根） | 同上，release 构建 |
+| `cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --port <port>`（仓库根执行） | 同上，release 构建 |
 
 `build` 可选参数：`--out <目录>`（默认 `dist`）、`--root <仓库根>`（默认 `rust/` 的上一级）。
 `diff` 的两个参数是相对当前工作目录的路径（默认 `public dist`）；在 `rust/` 下运行时写 `../public dist`。
@@ -77,7 +79,7 @@ Node 源码已移除（完整归档在 `/root/博客/.backups/`，可整包回�
 
 ### 阶段二：已切换为默认（2026-10-17）
 
-- `pnpm build` 使用 `--self-assets`：CSS 按 `paths::STYLE_ORDER` 拼接并轻量压缩，JS 由 `client/main.js` 最小化，
+- 默认发布命令（`build --self-assets --out public`）使用 `--self-assets`：CSS 按 `paths::STYLE_ORDER` 拼接并轻量压缩，JS 由 `client/main.js` 最小化，
   文件名沿用 `main.<sha256 前 8 位>.css/js`。
 - 只承诺**视觉等价**（截图/状态对比），不追 esbuild 的字节级一致，因此哈希与 Node 产物必然不同；
   对比时用 `diff --normalize-assets`。
