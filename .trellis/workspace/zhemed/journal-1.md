@@ -1177,3 +1177,37 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 可选：清理 vendor/fonts/README.md 与 rust/data/README.md 里已失效的 node 脚本说明（需授权）
+
+
+## Session 36: 去 Node 化收尾（删 package.json + 清理过期说明）
+<!-- trellis-session: v=2 fp=7db6d964c65a6bf8 -->
+
+**Date**: 2026-10-21
+**Task**: 去 Node 化收尾（删 package.json + 清理过期说明）
+**Branch**: `main`
+
+### Summary
+
+删除 package.json（pnpm 别名/版本标记）与 .gitignore 的 node_modules 行；README 与 rust/README 的 pnpm 命令入口改 cargo；vendor/fonts/README 与 rust/data/README 的过期 node 脚本说明改现状；assets.rs 四处报错文案去掉不存在的 node 脚本；spec 同步（pnpm→cargo、版本同步两源、package.json 已删）。release 构建+静态构建通过，CSS/JS 哈希不变
+
+### Main Changes
+
+- package.json（删）、.gitignore、README.md、rust/README.md、rust/data/README.md、vendor/fonts/README.md、rust/src/assets.rs、.trellis/spec/frontend/*
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `edad187` | chore: 去 Node 化收尾（删 package.json、清理过期 node 说明与报错文案） [task:10-21-denode-cleanup] |
+
+### Testing
+
+- [OK] cargo fmt/clippy/test 92；release --locked 构建；无 package.json 下 --self-assets 构建 15 页且 manifest 与 v0.0.28 一致；git ls-files 无 Node 文件
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 发版流程改两源（Cargo.toml + Cargo.lock）；是否发 v0.0.29 待用户确认
