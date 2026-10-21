@@ -2,8 +2,17 @@
 """生成 nobelog 站点图标（可复跑，源图可选）。
 
 用法（仓库根或任意目录）：
-    python3 tools/make-icons.py                                    # 默认熊脸 tools/assets/bear-icon-source.jpg
-    python3 tools/make-icons.py tools/assets/cat-icon-source.jpg   # 换回猫咪（一键切换）
+    python3 tools/make-icons.py                                    # lineart：默认熊脸 tools/assets/bear-icon-source.jpg
+    python3 tools/make-icons.py tools/assets/cat-icon-source.jpg   # lineart：换回猫咪（一键切换）
+    python3 tools/make-icons.py tools/assets/girl-icon-source.jpg --mode bleed   # 满幅插画：脸部特写
+
+两种模式：
+    lineart（默认）：白底/透明线稿类图，走「暗像素 bbox + 5% 内边距 + 方形画布」，
+        产出透明版、暗色变体与 SVG（见下）。
+    bleed：满幅彩色插画（无白底、不需要透明），按 --crop 从画面中心偏上裁脸部特写
+        （边长 = 短边 * --crop，默认 0.62；中心 y = 高 * --crop-y，默认 0.44），
+        LANCZOS 缩放出不透明 PNG；另出 full/face 两张预览对比图。
+        注意：换模式后另一模式的旧产出（svg / transparent / dark）不会自动删除，需手工清理。
 
 输出前缀固定 `site-icon`，写进 content/images/（权限 644）：
     site-icon.svg                   内嵌「亮色 192 + 暗色 192」两张透明 PNG，
@@ -32,8 +41,12 @@
     其余（奶白身体）→ 深灰 #2b2b2b。
 这样暗色标签页里轮廓与五官可见，而不是一块白方块。
 
+bleed 模式的入库产出（全部不透明、脸部特写）：
+    site-icon-32.png / site-icon-192.png / site-icon-180.png / site-icon-512.png
+
 预览专用（默认 .run/review/<源图名去掉 -source>/，可用 --preview-dir 指定，不入库）：
-16 / 48 的亮色与暗色透明小图 + 全部产出副本。
+lineart：16 / 48 的亮色与暗色透明小图 + 全部产出副本；
+bleed：<name>-full.png（整幅）与 <name>-face.png（特写）对比图 + 16 / 48 小图 + 产出副本。
 
 换图只需替换 tools/assets 下的源图后重跑本脚本，或把别的源图路径作为参数传入。
 """
@@ -70,6 +83,12 @@ PREVIEW_LIGHT = [16, 48]
 PREVIEW_DARK = [16, 48]
 # SVG 内嵌的两张透明 PNG 尺寸。
 SVG_SIZE = 192
+
+# bleed 模式（满幅插画）：不透明尺寸、裁切比例（相对短边）、裁切中心 y 比例、对比图尺寸。
+BLEED_SIZES = [32, 180, 192, 512]
+BLEED_CROP = 0.62
+BLEED_CROP_Y = 0.44
+BLEED_COMPARE = 512
 
 # flood fill 容差（PIL 按通道差绝对值之和比较）：只吃纯白/近白背景，
 # 奶白脸与白底的差约 37，留在容差外，且脸被描边包围，本来就填不进去。
@@ -124,6 +143,17 @@ def padded_square(image, bbox):
     canvas = Image.new("RGB", (side, side), (255, 255, 255))
     canvas.paste(image.crop(bbox), ((side - width) // 2, (side - height) // 2))
     return canvas
+
+
+def bleed_face(image, crop_ratio, crop_y):
+    """满幅插画的脸部特写裁切：边长 = 短边 * crop_ratio，中心在 (宽/2, 高 * crop_y)。"""
+    width, height = image.size
+    side = max(1, min(int(round(min(width, height) * crop_ratio)), min(width, height)))
+    center_x = width // 2
+    center_y = int(round(height * crop_y))
+    left = max(0, min(center_x - side // 2, width - side))
+    top = max(0, min(center_y - side // 2, height - side))
+    return image.crop((left, top, left + side, top + side))
 
 
 def background_to_alpha(image):
@@ -235,6 +265,24 @@ def main():
         default=None,
         help="预览目录（默认 .run/review/<源图名去掉 -source>）",
     )
+    parser.add_argument(
+        "--mode",
+        choices=["lineart", "bleed"],
+        default="lineart",
+        help="lineart=白底/透明线稿（默认）；bleed=满幅插画脸部特写",
+    )
+    parser.add_argument(
+        "--crop",
+        type=float,
+        default=BLEED_CROP,
+        help=f"bleed 模式裁切比例（相对短边，默认 {BLEED_CROP}）",
+    )
+    parser.add_argument(
+        "--crop-y",
+        type=float,
+        default=BLEED_CROP_Y,
+        help=f"bleed 模式裁切中心 y 比例（0=顶部，默认 {BLEED_CROP_Y}）",
+    )
     args = parser.parse_args()
 
     source_path = Path(args.source)
@@ -253,64 +301,91 @@ def main():
         preview_dir = ROOT / ".run/review" / source_path.stem.replace("-source", "")
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(preview_dir, exist_ok=True)
+    # 预览目录引用同目录图标：先清旧副本，再写全量（含预览专用图）。
+    for stale in preview_dir.glob(f"{PREFIX}-*"):
+        stale.unlink()
 
     source = Image.open(source_path).convert("RGB")
-    bbox = ink_bbox(source)
-    square = padded_square(source, bbox)
     print(
         f"源图 {display(source_path)} {source.size[0]}x{source.size[1]}"
         f" sha256={sha256(source_path)}"
     )
-    print(
-        f"内容 bbox={bbox} 尺寸={bbox[2] - bbox[0]}x{bbox[3] - bbox[1]}"
-        f" → 方形画布 {square.size[0]}x{square.size[1]}（每边留白约 {PADDING_RATIO * 100:.0f}%）"
-    )
 
     produced = []
-    for size in OPAQUE:
-        path = out_dir / f"{PREFIX}-{size}.png"
-        save_png(square.resize((size, size), Image.LANCZOS), path)
-        produced.append(path)
-    for size in LIGHT_TRANSPARENT:
-        path = out_dir / f"{PREFIX}-{size}-transparent.png"
-        save_png(background_to_alpha(square.resize((size, size), Image.LANCZOS)), path)
-        produced.append(path)
-    for size in DARK_TRANSPARENT:
-        light = background_to_alpha(square.resize((size, size), Image.LANCZOS))
-        path = out_dir / f"{PREFIX}-{size}-dark.png"
-        save_png(dark_variant(light), path)
-        produced.append(path)
-    for size in BACKUP_TRANSPARENT:
-        path = out_dir / f"{PREFIX}-transparent-{size}.png"
-        save_png(background_to_alpha(square.resize((size, size), Image.LANCZOS)), path)
-        produced.append(path)
+    preview_extras = []
+    stem = source_path.stem.replace("-source", "")
 
-    svg_light = background_to_alpha(square.resize((SVG_SIZE, SVG_SIZE), Image.LANCZOS))
-    svg_path = out_dir / f"{PREFIX}.svg"
-    svg_path.write_text(
-        svg_with_variants(svg_light, dark_variant(svg_light), SVG_SIZE), encoding="utf-8"
-    )
-    os.chmod(svg_path, 0o644)
-    produced.append(svg_path)
+    if args.mode == "bleed":
+        face = bleed_face(source, args.crop, args.crop_y)
+        print(
+            f"bleed 模式：脸部特写 {face.size[0]}x{face.size[1]}"
+            f"（crop={args.crop:.2f}，中心 y={args.crop_y:.2f}）→ 不透明 PNG"
+        )
+        for size in BLEED_SIZES:
+            path = out_dir / f"{PREFIX}-{size}.png"
+            save_png(face.resize((size, size), Image.LANCZOS), path)
+            produced.append(path)
+        # 预览用对比图：整幅 vs 脸部特写。
+        full_path = preview_dir / f"{stem}-full.png"
+        save_png(source.resize((BLEED_COMPARE, BLEED_COMPARE), Image.LANCZOS), full_path)
+        preview_extras.append(full_path)
+        face_path = preview_dir / f"{stem}-face.png"
+        save_png(face.resize((BLEED_COMPARE, BLEED_COMPARE), Image.LANCZOS), face_path)
+        preview_extras.append(face_path)
+        for size in PREVIEW_LIGHT:
+            path = preview_dir / f"{PREFIX}-{size}.png"
+            save_png(face.resize((size, size), Image.LANCZOS), path)
+            preview_extras.append(path)
+    else:
+        bbox = ink_bbox(source)
+        square = padded_square(source, bbox)
+        print(
+            f"lineart 模式：内容 bbox={bbox} 尺寸={bbox[2] - bbox[0]}x{bbox[3] - bbox[1]}"
+            f" → 方形画布 {square.size[0]}x{square.size[1]}（每边留白约 {PADDING_RATIO * 100:.0f}%）"
+        )
+        for size in OPAQUE:
+            path = out_dir / f"{PREFIX}-{size}.png"
+            save_png(square.resize((size, size), Image.LANCZOS), path)
+            produced.append(path)
+        for size in LIGHT_TRANSPARENT:
+            path = out_dir / f"{PREFIX}-{size}-transparent.png"
+            save_png(background_to_alpha(square.resize((size, size), Image.LANCZOS)), path)
+            produced.append(path)
+        for size in DARK_TRANSPARENT:
+            light = background_to_alpha(square.resize((size, size), Image.LANCZOS))
+            path = out_dir / f"{PREFIX}-{size}-dark.png"
+            save_png(dark_variant(light), path)
+            produced.append(path)
+        for size in BACKUP_TRANSPARENT:
+            path = out_dir / f"{PREFIX}-transparent-{size}.png"
+            save_png(background_to_alpha(square.resize((size, size), Image.LANCZOS)), path)
+            produced.append(path)
 
-    # 预览目录引用同目录图标：先清旧副本，再放全量（含预览专用的亮/暗小图）。
-    for stale in preview_dir.glob(f"{PREFIX}-*"):
-        stale.unlink()
+        svg_light = background_to_alpha(square.resize((SVG_SIZE, SVG_SIZE), Image.LANCZOS))
+        svg_path = out_dir / f"{PREFIX}.svg"
+        svg_path.write_text(
+            svg_with_variants(svg_light, dark_variant(svg_light), SVG_SIZE), encoding="utf-8"
+        )
+        os.chmod(svg_path, 0o644)
+        produced.append(svg_path)
+
+        for size in PREVIEW_LIGHT:
+            light = background_to_alpha(square.resize((size, size), Image.LANCZOS))
+            path = preview_dir / f"{PREFIX}-{size}-transparent.png"
+            save_png(light, path)
+            preview_extras.append(path)
+        for size in PREVIEW_DARK:
+            light = background_to_alpha(square.resize((size, size), Image.LANCZOS))
+            path = preview_dir / f"{PREFIX}-{size}-dark.png"
+            save_png(dark_variant(light), path)
+            preview_extras.append(path)
+
     preview_files = []
     for path in produced:
         target = preview_dir / path.name
         shutil.copy2(path, target)
         preview_files.append(target)
-    for size in PREVIEW_LIGHT:
-        light = background_to_alpha(square.resize((size, size), Image.LANCZOS))
-        path = preview_dir / f"{PREFIX}-{size}-transparent.png"
-        save_png(light, path)
-        preview_files.append(path)
-    for size in PREVIEW_DARK:
-        light = background_to_alpha(square.resize((size, size), Image.LANCZOS))
-        path = preview_dir / f"{PREFIX}-{size}-dark.png"
-        save_png(dark_variant(light), path)
-        preview_files.append(path)
+    preview_files.extend(preview_extras)
 
     print(f"\n入库产出（{display(out_dir)}）：")
     for path in produced:
