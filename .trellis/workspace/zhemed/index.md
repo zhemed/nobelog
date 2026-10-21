@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 31
+- **Total Sessions**: 32
 - **Last Active**: 2026-10-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1045 | Active |
+| `journal-1.md` | ~1079 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 32 | 2026-10-21 | 发布 v0.0.27（图标引用清理）并上线 | `b61dc44` | `main` |
 | 31 | 2026-10-21 | 清理孤儿图标（暗色补引用 + 删备用图） | `04ac939` | `main` |
 | 30 | 2026-10-21 | 发布 v0.0.26（粉笔少女图标）并上线 | `46c9c41` | `main` |
 | 29 | 2026-10-21 | 回退 favicon 清晰化（回到粉笔少女细节版） | `6f14454` | `main` |
