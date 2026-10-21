@@ -1009,3 +1009,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责；如需可精简图标体积（包 +1.06MB）
+
+
+## Session 31: 清理孤儿图标（暗色补引用 + 删备用图）
+<!-- trellis-session: v=2 fp=1dd40e532c02a3a4 -->
+
+**Date**: 2026-10-21
+**Task**: 清理孤儿图标（暗色补引用 + 删备用图）
+**Branch**: `main`
+
+### Summary
+
+3 个孤儿图标处理：32-dark/192-dark 补 media=(prefers-color-scheme: dark) 引用（含测试断言），transparent-512 停止生成并删除；静态产物 7 个图标全部有引用（各命中 14 个 HTML），head 7 条声明；临时实例 7 端点 200、被删文件 404；CDP 双主题匹配矩阵正确
+
+### Main Changes
+
+- rust/src/templates.rs、tools/make-icons.py、content/images/site-icon-transparent-512.png（删除）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `04ac939` | fix: 消除孤儿图标（暗色变体补 media 引用，删除无用途备用图） [task:10-21-icon-orphans] |
+
+### Testing
+
+- [OK] cargo test 92；find/grep 孤儿扫描 0 命中；临时实例端点表；CDP Emulation.setEmulatedMedia 明暗矩阵
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 如需上线本机/发版另行确认；真机暗色可再复核一次
