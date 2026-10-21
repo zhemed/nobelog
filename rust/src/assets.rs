@@ -127,7 +127,7 @@ fn load_styles(root: &Path) -> Result<String> {
         let file = root.join(name);
         let text = fs::read_to_string(&file).with_context(|| {
             format!(
-                "缺少样式文件：{}\n  提示：主题样式由 node scripts/fetch-theme-assets.mjs 入库（vendor/chirpy/main.css）",
+                "缺少样式文件：{}\n  提示：仓库不完整或 vendor 资产未入库，请检查 vendor/ 是否完整（如 vendor/chirpy/main.css）",
                 file.display()
             )
         })?;
@@ -267,7 +267,7 @@ fn copy_vendored_assets(root: &Path, assets_dir: &Path) -> Result<()> {
         let file = vendor_dir.join(name);
         let data = fs::read(&file).with_context(|| {
             format!(
-                "缺少 vendored 资产：{}\n  提示：先运行 node scripts/fetch-theme-assets.mjs",
+                "缺少 vendored 资产：{}\n  提示：仓库不完整或 vendor 资产未入库，请检查 vendor/ 是否完整",
                 file.display()
             )
         })?;
@@ -277,7 +277,7 @@ fn copy_vendored_assets(root: &Path, assets_dir: &Path) -> Result<()> {
     let font_dir = root.join("vendor/fonts");
     if !font_dir.is_dir() {
         bail!(
-            "缺少自托管字体目录：{}\n  提示：先运行 node scripts/fetch-fonts.mjs",
+            "缺少自托管字体目录：{}\n  提示：仓库不完整或 vendor 资产未入库，请检查 vendor/fonts/ 是否完整",
             font_dir.display()
         );
     }
@@ -293,7 +293,7 @@ fn copy_vendored_assets(root: &Path, assets_dir: &Path) -> Result<()> {
     fonts.sort();
     if fonts.is_empty() {
         bail!(
-            "{} 下没有 woff2 文件\n  提示：先运行 node scripts/fetch-fonts.mjs",
+            "{} 下没有 woff2 文件\n  提示：仓库不完整或 vendor 资产未入库，请检查 vendor/fonts/ 是否完整",
             font_dir.display()
         );
     }

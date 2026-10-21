@@ -1,7 +1,6 @@
 # 构建缓存与产物
 rust/target/
 rust/dist/
-node_modules/
 .nobelog-cache/
 *.log
 .DS_Store

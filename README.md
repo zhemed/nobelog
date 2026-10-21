@@ -31,8 +31,8 @@ cargo run --release --manifest-path rust/Cargo.toml -- serve --host 0.0.0.0 --po
 cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out public
 ```
 
-也可以用仓库根的 pnpm 别名：`pnpm serve` / `pnpm serve:static` / `pnpm build`。
-端口统一用占位符 `<port>`，实际默认值见 `package.json` 的 scripts 与 CLI。
+静态服务用同一条 cargo 命令（去掉 `--dynamic` 即静态模式），端口用 `<port>` 占位，
+默认值见 `cargo run --manifest-path rust/Cargo.toml -- serve --help`。
 
 ## 目录
 

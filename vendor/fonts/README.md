@@ -5,15 +5,11 @@
 装了这两个字体的人能看到设计字形，没装的人看到的是系统回退字形。
 本目录把这两个字体族自托管进来，让所有访客看到同一套字形。
 
-## 抓取方式（可复现）
+## 来源与现状
 
-```bash
-node scripts/fetch-fonts.mjs            # 幂等：内容未变则跳过下载，重建 fonts.css 并清理多余文件
-node scripts/fetch-fonts.mjs --force    # 强制重抓
-```
-
-- 来源：`fonts.googleapis.com`（CSS，现代 UA 才返回 woff2）→ `fonts.gstatic.com`（woff2 文件）
-- 抓取时间：2026-10-17（CST）
+- 来源：Google Fonts（其 CSS，现代 UA 才返回 woff2）→ woff2 文件；抓取时间 2026-10-17（CST）。
+- 抓取脚本（`scripts/fetch-fonts.mjs`）已随 Node 版一起从仓库移除，
+  **本目录是入库的冻结产物**：构建期不下载、不重新生成，克隆仓库即可离线构建。
 - 只取 **latin + latin-ext** 子集：中文等 CJK 字符不在这些子集内，
   按主题设计**回退到系统字体**（Microsoft YaHei 等）——与原站行为一致。
 
@@ -32,7 +28,7 @@ node scripts/fetch-fonts.mjs --force    # 强制重抓
 | `source-sans-pro-400-italic-latin.woff2` | 15.4 KB | `3c230c03425a2866` | 正文斜体（`<em>`） |
 | `source-sans-pro-400-italic-latin-ext.woff2` | 31.4 KB | `97f4d6bf2b17b551` | 同上 |
 
-- `fonts.css` 由脚本生成（14 条 @font-face），**请勿手工编辑**。
+- `fonts.css` 与上面的 woff2 一起入库（14 条 @font-face），是冻结产物，**请勿手工编辑**。
 - ⚠️ **可变字体去重**：Google Fonts 对 Source Sans 3 的 400/600/700 返回**同一个文件**，
   所以 14 条 @font-face 只对应 10 个文件，多个字重共用同一个 URL（浏览器只下载一次）。
   统一文件名取首个命中者（`source-sans-pro-400-*.woff2`）。
@@ -49,11 +45,12 @@ node scripts/fetch-fonts.mjs --force    # 强制重抓
 
 本目录只做**格式转换（原样下载 woff2，未改动字体数据）**，并保留上述版权与许可文本。
 
-## 构建集成
+## 构建集成（Rust）
 
-- `server/paths.ts` 的 `STYLE_ORDER` 把 `vendor/fonts/fonts.css` 排在主题 CSS 之后、`patch.css` 之前；
-- `server/build.ts` 会把本目录下所有 `*.woff2` 以**原文件名**拷到 `public/assets/`
-  （不能加内容哈希 —— `fonts.css` 里写死了 `/assets/xxx.woff2`）；
+- `rust/src/paths.rs` 的 `STYLE_ORDER` 把 `vendor/fonts/fonts.css` 排在主题 CSS 之后、`patch.css` 之前；
+- `rust/src/assets.rs` 的 `copy_vendored_assets()` 会把本目录下所有 `*.woff2` 以**原文件名**拷到
+  输出目录的 `assets/`（`--self-assets` 模式；部署时输出目录即 `public/`）。
+  不能加内容哈希 —— `fonts.css` 里写死了 `/assets/xxx.woff2`；
 - 因此首屏会多 1~3 个字体请求（只在实际用到对应字形时触发），全部同源、
   且带 `Cache-Control: public, max-age=31536000, …`。
 
