@@ -839,3 +839,37 @@ A/B/C/E 全 PASS（90 测试、静态 15 页+robots、服务缓存/压缩/Range/
 ### Next Steps
 
 - 远程同步由用户负责；如需可精简图标体积
+
+
+## Session 26: 少女插画图标（bleed 特写 / 上线）
+<!-- trellis-session: v=2 fp=cf20b237fb4b96f1 -->
+
+**Date**: 2026-10-21
+**Task**: 少女插画图标（bleed 特写 / 上线）
+**Branch**: `main`
+
+### Summary
+
+按用户指定插画换图标：make-icons.py 新增 --mode bleed（脸部特写 crop 0.62 / crop-y 0.44，不透明）；content/images 换成 site-icon-32/192/180/512.png，删除熊脸 6 个文件；模板 head 四 PNG；本机重启（PID 607302→618323，exe sha d7bf069b…），端点/head/像素/回归全 PASS
+
+### Main Changes
+
+- content/images/site-icon*、tools/make-icons.py、tools/assets/girl-icon-source.jpg、rust/src/templates.rs
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a5653d1` | feat: 换用少女插画图标（bleed 脸部特写） [task:10-21-girl-icon] |
+
+### Testing
+
+- [OK] cargo test 92；bleed 可复现、lineart 未回归；本机 4 端点 200 不透明、6 个旧文件 404、head 四处；9 路由回归
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步由用户负责；如需可调 crop 或 512 减重
