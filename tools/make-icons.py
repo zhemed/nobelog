@@ -23,7 +23,6 @@
     site-icon-192-dark.png          暗色变体（同上，高分屏）
     site-icon-180.png               白底原色（apple-touch-icon 需要不透明）
     site-icon-512.png               白底原色（og:image）
-    site-icon-transparent-512.png   透明底原色大图（备用）
 
 流程：
     1. 用亮度阈值找「暗像素」（描边/五官）的 bbox；
@@ -77,8 +76,6 @@ OPAQUE = [180, 512]
 LIGHT_TRANSPARENT = [32, 192]
 # 暗色变体尺寸（透明底）。
 DARK_TRANSPARENT = [32, 192]
-# 透明底原色大图（备用）。
-BACKUP_TRANSPARENT = [512]
 # 仅预览用的透明小图尺寸（亮色 / 暗色各一份）。
 PREVIEW_LIGHT = [16, 48]
 PREVIEW_DARK = [16, 48]
@@ -372,11 +369,6 @@ def main():
             path = out_dir / f"{PREFIX}-{size}-dark.png"
             save_png(dark_variant(light), path)
             produced.append(path)
-        for size in BACKUP_TRANSPARENT:
-            path = out_dir / f"{PREFIX}-transparent-{size}.png"
-            save_png(background_to_alpha(square.resize((size, size), Image.LANCZOS)), path)
-            produced.append(path)
-
         svg_light = background_to_alpha(square.resize((SVG_SIZE, SVG_SIZE), Image.LANCZOS))
         svg_path = out_dir / f"{PREFIX}.svg"
         svg_path.write_text(
