@@ -165,10 +165,18 @@ location ^~ /images/ {
 
 ```bash
 cd rust && cargo fmt --check && cargo clippy --all-targets && cargo test
-cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out dist
-./rust/target/release/nobelog diff public dist        # 只允许出现本次预期差异
+cd .. && cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out rust/dist
+./rust/target/release/nobelog diff public rust/dist        # 只允许出现本次预期差异
 ```
 
+- `--out` 相对路径按**当前工作目录**解析，不是按仓库根：在仓库根写 `--out dist` 会清空
+  仓库根的 `dist/`（历史发布包与 `SHA256SUMS` 所在地），而不是写 `rust/dist/`。
+  因此构建产物固定写 `rust/dist/`，从仓库根执行时显式写 `--out rust/dist`。
+- `public/` 冻结基准是用固定 `SITE_URL` 构建的（当前基线为 `https://example.com`）；
+  复跑 `diff` 前要设同样的 `SITE_URL`，否则 canonical / RSS / sitemap 会整批出现域名差异，
+  掩盖真实回归。
+- 首页卡片的相对日期文案（`N 天前`）随构建时刻漂移；隔天与冻结基准对比会出现这类非代码差异，
+  按环境差异解释，不算回归。
 - 改了 `markdown.rs` / `templates.rs`：`diff` 是最关键的一步，它直接给出首个差异行。
 - 改了 `serve.rs`：必须跑 `cargo test`（含路径穿越、目录 index、百分号解码用例）。
 - 改了资源构建：对比 `assets-manifest.json` 与构建日志（`NOBELOG_CSS_REPORT=1` 可看裁剪统计）。
