@@ -1338,3 +1338,46 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 - 未 push，远程同步由用户决定
 - 小熊测试任务记录与 spec 修正保留在本地历史与 journal
 - 外部 CDN 与反代的缓存行为不在本机验证范围
+
+
+## Session 40: 核查博客与 GitHub 同步现状
+<!-- trellis-session: v=2 fp=a377ef7622d0d566 -->
+
+**Date**: 2026-10-30
+**Task**: 核查博客与 GitHub 同步现状
+**Branch**: `main`
+
+### Summary
+
+只读核查结论：代码、内容、标签、Release、发布包与运行二进制互相对得上；唯一不同步是本地领先 origin/main 5 个未推送提交，净差异 14 个文件全部在 .trellis 下。运行服务为 v0.0.29 动态模式，自 10-21 起持续运行未重启；SITE_URL 未设置、动态模式 robots.txt 404、rust/dist 为过期测试构建等风险已记录。
+
+### Main Changes
+
+- `research/sync-audit.md`：新增只读核查报告，含工作区与 GitHub 对账、标签与 Release 三方核对、运行现状、内容配置与风险清单
+- 核查范围：本地 git 仓库、GitHub `zhemed/nobelog`、`nobelog-local.service` 与 10086 本地服务
+- 全程只读：未改动任何已跟踪文件，未 fetch、未 push、未重启服务，未探测未授权的公网博客域名
+
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] 本地 ahead 5 / behind 0；远程 main 为 28f80ea，5 个未推送提交净 diff 14 文件 +261/-6 全部在 .trellis 下
+- [OK] 本地标签 29、远程标签 29、GitHub Releases 29，名称集合与对象哈希逐条一致，最新 v0.0.29
+- [OK] 本地 dist 的 v0.0.29 包与 SHA256SUMS 和远程资产字节数、sha256 逐字节一致
+- [OK] 运行二进制、进程 exe、rust/target/release/nobelog 与包内二进制 sha256 同为 976fee0f，NRestarts=0
+- [OK] 内容 2 篇文章、1 个页面、8 张图片；站点标题 吱吱；Rust 工具链 1.99.1
+- [OK] 只读核查无文件改动与 git 写操作，报告已落盘 research/sync-audit.md
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 本地 5 个未推送提交是否推送到 GitHub 由用户决定
+- SITE_URL 未设置，生产应设 https://example.com，否则 canonical 与分享卡片回退本机地址
+- 动态模式 /robots.txt 返回 404；rust/dist 是过期测试构建，勿当部署产物
+- 公网 example.com 未授权未探测，线上部署、DNS、TLS 与缓存未验证
