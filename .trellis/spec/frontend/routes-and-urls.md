@@ -50,9 +50,14 @@
 优先级（由高到低）：
 
 1. 环境变量 `SITE_URL`（静态构建、动态模式都生效）。
-2. 动态模式的请求推断：`request_base_url(headers, fallback)`，按 `Host` / `X-Forwarded-Proto` 拼出
-   `scheme://host`（见 `serve.rs`）。
-3. `SITE.url` 的内置默认值（见 `rust/src/site.rs`；生产必须用 `SITE_URL` 覆盖，不要依赖它）。
+2. 动态模式的请求推断：`request_base_url(headers, fallback, peer)`（见 `serve.rs`）：
+   - 域名只来自 `Host`，默认不采信 `X-Forwarded-Host`；`Host` 走字符白名单，非法值回退默认地址。
+   - scheme 默认固定 `http`；客户端对端地址为环回或私网时，额外采信 `X-Forwarded-Proto` 还原 https。
+   - 显式设置 `NOBELOG_TRUST_FORWARDED=1` 时全量信任 `X-Forwarded-Host` 与 `X-Forwarded-Proto`。
+3. `SITE.url` 的内置默认值（见 `rust/src/site.rs`；生产必须用 `SITE_URL` 或可信请求推断，不要依赖它）。
+
+安全取舍：环回或私网内的客户端可以伪造 `X-Forwarded-Proto`，影响仅限 scheme，不涉及域名；
+公网对端伪造转发头一律无效。反代必须显式透传 `Host`，否则域名退回上游地址。
 
 影响的输出：canonical、`og:url`、RSS 链接、sitemap、页脚与分享链接。
 **新增绝对链接时必须使用 `ctx.base_url`（模板层）或 `Site::root_url`（路由层），不要写死 `SITE.url`。**

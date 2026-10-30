@@ -47,8 +47,13 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 
 ## 部署提示
 
-对外部署时设置 `SITE_URL`（例如 `SITE_URL=https://<domain>`），sitemap、RSS、canonical、页脚与分享链接都会使用它。
-未设置时，动态模式会按请求的 `Host` / `X-Forwarded-Proto` 自动推断；静态构建则回退到默认地址。
+对外部署时优先设置 `SITE_URL`（例如 `SITE_URL=https://<domain>`），sitemap、RSS、canonical、页脚与分享链接都会使用它。
+未设置时，动态模式按请求的 `Host` 推断域名，scheme 默认 `http`；只有客户端来自本机或私网地址时，才额外采信
+`X-Forwarded-Proto` 还原 https。`X-Forwarded-Host` 与其它场景的转发头仍需显式设置 `NOBELOG_TRUST_FORWARDED=1` 后才采信。
+静态构建不参与请求推断，直接回退到默认地址。
+
+发布包用 `SITE_URL=https://<domain> VERSION=<x.y.z> tools/package.sh` 打包；脚本会拒绝空值、http、本机地址与已下线域名，
+并用 `SITE_URL` 重建包内 `public/` 的静态产物，因此包内绝对地址就是打包时传入的域名。
 
 ## 数据
 

@@ -66,13 +66,17 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 
 ## 部署
 
-- **必须设置 `SITE_URL`**（如 `SITE_URL=https://<domain>`）：canonical / RSS / sitemap / 页脚 / 分享链接都用它；
-  未设置时动态模式**默认只信 `Host`、scheme 固定 `http`，并忽略 `X-Forwarded-*`**（避免任意客户端伪造
-  `X-Forwarded-Host` 改写 canonical）；静态构建回退到 `SITE.url` 的内置默认地址（见 `rust/src/site.rs`；不要依赖它），
+- **推荐显式设置 `SITE_URL`**（如 `SITE_URL=https://<domain>`）：canonical / RSS / sitemap / 页脚 / 分享链接都用它，
+  静态构建与动态模式都生效。
+- 未设置 `SITE_URL` 时，动态模式按请求推断：域名来自 `Host`；scheme 默认 `http`，但当客户端对端地址是
+  环回或私网时，自动采信 `X-Forwarded-Proto` 还原 https，同机或局域网 TLS 反代可以零配置得到
+  `https://<host>`。`X-Forwarded-Host` 默认始终不采信，避免任意客户端改写 canonical 域名。
+- 反向代理不在环回或私网、或无法识别对端时，显式设置 `NOBELOG_TRUST_FORWARDED=1`（接受 `1/true/yes/on`）
+  才全量信任 `X-Forwarded-Host` 与 `X-Forwarded-Proto`；这是 v0.0.24 起的兼容开关。
+- 静态构建没有请求上下文，回退 `SITE.url` 的内置默认地址（见 `rust/src/site.rs`，不要依赖它），
   `serve` 启动时会打一行告警。
-  如果应用确实部署在**可信反向代理**后面，需要转发头生效，必须二选一：设置 `SITE_URL`（推荐），
-  或显式设 `NOBELOG_TRUST_FORWARDED=1`（接受 `1/true/yes/on`）才信任 `X-Forwarded-Host` / `X-Forwarded-Proto`。
-  注意：在 TLS 反代后运行又没设 `SITE_URL` 时，canonical 会退化成 `http://<host>`。
+- 安全取舍：环回或私网内的客户端仍可伪造 `X-Forwarded-Proto`，影响仅限 scheme，不涉及域名；
+  公网对端伪造转发头一律无效。反代必须显式透传 `Host`，否则域名会退回上游地址。
 - 本机当前以 systemd 单元 `nobelog-local.service` 托管 release 二进制：
   `nobelog serve --host 0.0.0.0 --port <port> --root <仓库根> --dynamic`（端口默认值见 CLI）。
   排查"线上页面不对"时先 `systemctl status nobelog-local`，再确认它跑的是 `rust/target/release/nobelog`
@@ -81,6 +85,10 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
   `cargo build --release --locked` + `nobelog build --self-assets --out public`，产物
   `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`。包内放二进制、`content/ vendor/ public/`、
   `rust/client/main.js`、README、LICENSE、VERSION。
+- 打包会以当时的 `SITE_URL` 重建 `public/`，包内静态产物的绝对地址即来自该值；脚本强制要求 `SITE_URL`
+  为 https、拒绝 example.com 与 127.0.0.1，并校验 `VERSION` 与 `rust/Cargo.toml` 一致。
+  当前发布包示例域名用 `https://example.com`；静态部署的客户必须用自己域名的 `SITE_URL` 重建 `public/`，
+  动态部署不需要这样做，站点会按请求 Host 自动识别域名。example.com 已于 2026-10-30 下线，禁止再用。
 - 动态模式的内存开销来自"整站内容 + CSS/JS 常驻"；内容规模变大时先量内存再谈优化，不要随意改缓存策略。
 
 ## 部署拓扑
@@ -90,8 +98,8 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 - **(a) nginx 反代 → 应用**：有独立应用进程（`nobelog serve` 静态模式）托管 `public/`，`nginx -T` 里该站点是 `proxy_pass`。
   响应中能看到应用下发的 `PAGE_CACHE` / `ASSET_CACHE` 原值，ETag 是 `weak_etag()` 形态
   （`W/"<size 十六进制>-<mtime_ms 十六进制>"`）。
-  > 应用在反代后若需要 `X-Forwarded-*`（例如 canonical 用外网域名），必须设 `SITE_URL` 或 `NOBELOG_TRUST_FORWARDED=1`；
-  > 默认只信 `Host`、scheme 固定 `http`。
+  > 应用在反代后若需要 `X-Forwarded-*`：对端为环回或私网时自动采信 `X-Forwarded-Proto`；公网反代或需要
+  > `X-Forwarded-Host` 时必须设 `SITE_URL` 或 `NOBELOG_TRUST_FORWARDED=1`。反代必须显式透传 `Host`。
 - **(b) nginx root/alias 纯静态**：`nginx -T` 里该站点用 `root` / `alias` 直接指向构建产物目录，没有应用进程参与；
   静态文件、压缩、缓存头、错误页全归 nginx。
 - **(c) 动态模式直连**：直接访问应用端口，或前置层只做 TLS 透传、不改写缓存头。
@@ -172,7 +180,7 @@ cd .. && cargo run --release --manifest-path rust/Cargo.toml -- build --self-ass
 - `--out` 相对路径按**当前工作目录**解析，不是按仓库根：在仓库根写 `--out dist` 会清空
   仓库根的 `dist/`（历史发布包与 `SHA256SUMS` 所在地），而不是写 `rust/dist/`。
   因此构建产物固定写 `rust/dist/`，从仓库根执行时显式写 `--out rust/dist`。
-- `public/` 冻结基准是用固定 `SITE_URL` 构建的（当前基线为 `https://example.com`）；
+- `public/` 冻结基准是用固定 `SITE_URL` 构建的（当前基线为 `https://example.com`，仅示例；example.com 已下线）；
   复跑 `diff` 前要设同样的 `SITE_URL`，否则 canonical / RSS / sitemap 会整批出现域名差异，
   掩盖真实回归。
 - 首页卡片的相对日期文案（`N 天前`）随构建时刻漂移；隔天与冻结基准对比会出现这类非代码差异，
@@ -190,8 +198,10 @@ cd .. && cargo run --release --manifest-path rust/Cargo.toml -- build --self-ass
 1. **版本同步**：`rust/Cargo.toml` 与 `rust/Cargo.lock`（`name = "nobelog"` 那一项）两处一起改成新版本号
    （`package.json` 已于 2026-10-21 删除，不再是版本源）。
 2. **门禁**：`cd rust && cargo fmt --check && cargo clippy --all-targets && cargo test`。
-3. **打包**：仓库根 `VERSION=<x.y.z> tools/package.sh` → `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`；
+3. **打包**：仓库根 `SITE_URL=https://<正式域名> VERSION=<x.y.z> tools/package.sh` → `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`；
    `(cd dist && sha256sum -c SHA256SUMS)`，并解包确认 `./nobelog --version` 为新版本。
+   `SITE_URL` 缺失、非 https 或 `VERSION` 与 `rust/Cargo.toml` 不一致时脚本直接失败。没有正式域名时可用
+   `https://example.com` 打示例包，并在 Release notes 注明静态部署需自行用正式域名重建。
 4. **提交与 tag**：提交消息带任务锚点；打 annotated tag `v<x.y.z>`，message 用 `<x.y.z>：<一句话主题>`；
    `git push origin main && git push origin v<x.y.z>`。
 5. **GitHub Release（默认动作）**：用 `gh` 建 release 并附二进制与校验文件：
