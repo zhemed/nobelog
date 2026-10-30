@@ -1473,3 +1473,38 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 - 公网反代仍须设置 SITE_URL 或 NOBELOG_TRUST_FORWARDED=1，并显式透传 Host
 - 私网内可伪造 scheme 属已记录的安全取舍，影响仅限协议
 - 2.3.4 若为外部需求条目，需用户提供原文再逐条验收
+
+
+## Session 43: Trellis 残留盘点与工作流放置评估
+<!-- trellis-session: v=2 fp=cccc70961bcaa517 -->
+
+**Date**: 2026-10-30
+**Task**: Trellis 残留盘点与工作流放置评估
+**Branch**: `main`
+
+### Summary
+
+只读盘点 nobelog 的 .trellis 任务与工作区残留：活跃树无未闭环任务，42 个归档任务全部 completed；旧备份含旧世代未闭环任务但仅存于备份；清理低风险运行期残留；评估结论为 .trellis 维持 nobelog 项目内，不迁主工作区。
+
+### Main Changes
+
+- 创建并归档任务 10-30-trellis-residue-placement，补录 directive.md 与 research/audit-findings.md
+- 盘点活跃与归档任务，核查 42 个归档任务状态与 git 对应关系
+- 清理运行期残留，保留旧备份并只读留档
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] Lead 复核归档任务 42/42 completed；备份内未归档任务抽查；清理后 git status 仅余流程文件
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 后续会话工作区使用 /root/博客/nobelog
+- 如需处理旧备份中的未闭环任务，另立任务并授权
