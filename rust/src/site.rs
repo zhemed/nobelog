@@ -35,8 +35,13 @@ pub struct SiteConfig {
 
 /// 部署时用 SITE_URL 覆盖站点绝对地址；未设置时回退到默认值。
 pub fn env_url() -> Option<String> {
-    std::env::var("SITE_URL")
-        .ok()
+    normalize_url(std::env::var("SITE_URL").ok().as_deref())
+}
+
+/// `SITE_URL` 归一化：去首尾空白与尾部 `/`，空值视为未设置。
+/// 独立成纯函数，测试不依赖进程环境变量。
+pub fn normalize_url(value: Option<&str>) -> Option<String> {
+    value
         .map(|value| value.trim().trim_end_matches('/').to_string())
         .filter(|value| !value.is_empty())
 }
@@ -48,7 +53,8 @@ pub fn warn_if_env_url_missing() {
     if env_url().is_none() {
         eprintln!(
             "警告：未设置 SITE_URL，站点绝对链接回退到内置默认地址 {}；生产部署请设置 SITE_URL=https://你的域名。\
-             动态模式默认只按 Host 头推断、不信任 X-Forwarded-*；若前面有可信反向代理，请设 NOBELOG_TRUST_FORWARDED=1。",
+             动态模式默认只按请求 Host 推断域名、scheme 固定 http；对端是本机或私网时额外采信 X-Forwarded-Proto 还原 https。\
+             X-Forwarded-Host 与其它场景的转发头仍需显式设置 NOBELOG_TRUST_FORWARDED=1 才采信。",
             SITE.url
         );
     }

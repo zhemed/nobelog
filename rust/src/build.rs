@@ -435,6 +435,18 @@ mod tests {
             )
         );
         assert!(robots_txt(default_url).contains("Sitemap: http://127.0.0.1:10086/sitemap.xml"));
+
+        // SITE_URL 的空白与尾斜杠在 env_url() 里先归一化，再进入 robots.txt。
+        assert_eq!(
+            crate::site::normalize_url(Some("https://example.com/")),
+            Some("https://example.com".to_string())
+        );
+        assert_eq!(
+            crate::site::normalize_url(Some("  https://example.com//  ")),
+            Some("https://example.com".to_string())
+        );
+        assert_eq!(crate::site::normalize_url(Some("   ")), None);
+        assert_eq!(crate::site::normalize_url(None), None);
     }
 
     #[test]
