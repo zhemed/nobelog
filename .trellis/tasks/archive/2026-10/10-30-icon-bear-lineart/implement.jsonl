@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "站点前端三层约定与不可协商红线，确认 content/images 与模板边界"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "目录可写性：content/images 加图、tools/assets 源文件、public 不可手改"}
+{"file": ".trellis/spec/frontend/styling-and-assets.md", "reason": "资源管线与图标生成约定，确认不引入前端构建链"}
+{"file": ".trellis/spec/frontend/build-serve-deploy.md", "reason": "构建、静态与动态服务、验证清单和 /images/** 缓存策略"}
+{"file": ".trellis/spec/frontend/rendering-templates.md", "reason": "head 图标声明与 base_url 约定，确认模板无需改动"}

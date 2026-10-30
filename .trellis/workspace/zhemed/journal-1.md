@@ -1245,3 +1245,53 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 远程同步由用户负责；发版流程已改两源
+
+
+## Session 38: 切换站点图标为小熊线稿
+<!-- trellis-session: v=2 fp=ac4a734b608f5944 -->
+
+**Date**: 2026-10-30
+**Task**: 切换站点图标为小熊线稿
+**Branch**: `main`
+
+### Summary
+
+将用户提供的小熊线稿接入站点图标管线：新增源图 tools/assets/lying-bear-icon-source.jpg，用 tools/make-icons.py 的 lineart 模式重生成 content/images/site-icon 七件套；本地动态站点直读 content/images 即生效，未重启服务；templates、public、vendor 均未改动。
+
+### Main Changes
+
+- `content/images/site-icon*` 七件套：由新源图按 lineart 模式重生成，透明版 RGBA、暗色变体与 SVG 内嵌明暗 PNG 全部更新
+- `tools/assets/lying-bear-icon-source.jpg`：新增源图归档，625242 B，权限 644
+- `.trellis/spec/frontend/build-serve-deploy.md`：补充 `--out` 相对当前目录的坑、对比冻结基准需对齐 `SITE_URL`、相对日期漂移说明
+- `.trellis/spec/frontend/directory-structure.md`：修正图标产物命名 `cat-icon*` 为 `site-icon*`
+
+### 事故与恢复
+
+- 10:11 首次验证构建在仓库根执行 `build --out dist`，清空了 gitignore 的仓库根 `dist/`：23 个历史发布包（v0.0.7 至 v0.0.29）与 SHA256SUMS 丢失，git 无法恢复
+- 按用户决定只恢复 v0.0.29：从 GitHub Release 重新下载 tar.gz 与 SHA256SUMS，`sha256sum -c`、`gzip -t`、tar 110 条目、解包 `nobelog --version` 全部通过；其余历史版本本机不再保留
+- 误写入仓库根 `dist/` 的站点构建产物已整体 move 至 `rust/dist/`，未删除；根 `dist/` 现仅含 v0.0.29 两件资产
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b07a0cd` | feat: 切换站点图标为小熊线稿 [task:10-30-icon-bear-lineart] |
+| `9157153` | docs: 记录构建输出目录与 SITE_URL 验证坑，修正图标产物命名 [task:10-30-icon-bear-lineart] |
+
+### Testing
+
+- [OK] cargo fmt --check、cargo clippy --all-targets、cargo test 92 全绿
+- [OK] 7 个图标 URL HTTP 200，sha256 与 content/images 一致，Cache-Control no-cache；首页 head 6 条 link 加 1 条 og:image
+- [OK] SITE_URL 对齐后 build 加 diff：34 相同 / 8 不同，除 7 个图标外仅 index.html 两处相对日期文案漂移
+- [OK] v0.0.29 恢复包 sha256sum -c 通过，解包二进制 --version 为 0.0.29
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 远程同步与是否发版由用户决定，本次未 push、未打包、未重启
+- 16px 下线条偏淡属横构图源图固有，如需更醒目需另开任务换更粗源图或调整生成几何
+- 历史发布包本机仅保留 v0.0.29，其余以 GitHub Releases 为准
