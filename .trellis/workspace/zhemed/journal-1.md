@@ -1508,3 +1508,38 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 
 - 后续会话工作区使用 /root/博客/nobelog
 - 如需处理旧备份中的未闭环任务，另立任务并授权
+
+
+## Session 44: 编写工作区 Trellis 使用指引
+<!-- trellis-session: v=2 fp=1b7894735a7e8aba -->
+
+**Date**: 2026-10-30
+**Task**: 编写工作区 Trellis 使用指引
+**Branch**: `main`
+
+### Summary
+
+在 /root/博客 根目录新增 README.md 与 AGENTS.md 指引，说明根目录不是 Trellis 项目、真实项目根为 nobelog，并给出开工方式、常用命令、红线与收尾约定；经团队成员只读校验并按发现修订。
+
+### Main Changes
+
+- 新增 /root/博客/README.md 与 /root/博客/AGENTS.md，解决根目录会话找不到工作流的问题
+- 创建并归档 Trellis 任务 10-30-workspace-trellis-guide，记录 directive.md、PRD 与 research/verification.md
+- 按独立校验意见修订：根目录内容表述、SessionStart 应答口径、spec 实际路径、收尾命令等
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] 团队成员只读校验：事实核对与只读命令全部通过；排版自查无命中
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 后续会话优先以 /root/博客/nobelog 作为工作区
+- 如根目录指引需更新，直接编辑 README.md 与 AGENTS.md
