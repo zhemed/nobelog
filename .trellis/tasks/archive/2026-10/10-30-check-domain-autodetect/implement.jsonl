@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/frontend/build-serve-deploy.md", "reason": "SITE_URL、动态模式 Host 推断、反代信任开关与验证清单"}
+{"file": ".trellis/spec/frontend/rendering-templates.md", "reason": "canonical/OG 等绝对地址在模板层的使用点"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "只读核查与证据标准"}

@@ -1381,3 +1381,45 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 - SITE_URL 未设置，生产应设 https://example.com，否则 canonical 与分享卡片回退本机地址
 - 动态模式 /robots.txt 返回 404；rust/dist 是过期测试构建，勿当部署产物
 - 公网 example.com 未授权未探测，线上部署、DNS、TLS 与缓存未验证
+
+
+## Session 41: 核查 2.3.4 域名自动识别
+<!-- trellis-session: v=2 fp=b1d40cf06a1beab9 -->
+
+**Date**: 2026-10-30
+**Task**: 核查 2.3.4 域名自动识别
+**Branch**: `main`
+
+### Summary
+
+只读核查：2.3.4 在仓库、139 个提交历史、全部文档与 GitHub issues/PR/wiki 中均无编号命中，最可能是外部需求文档条目。按「自动识别客户生产机域名」语义核对，Host 域名识别已完善，https scheme 默认不自动推断，整体判定部分完善；README 与 routes-and-urls 文档漂移解释了「记得已经好了」的来源。
+
+### Main Changes
+
+- `research/domain-autodetect.md`：新增只读核查报告，含 2.3.4 出处检索、域名识别实现链、Host 与转发头行为矩阵、测试覆盖与分场景判断
+- 检索范围：当前工作树、139 个提交全历史、`.trellis` 全部文档、5 个旧版本备份归档、GitHub issues/PR/wiki
+- 全程只读：未改其他文件，未 commit/push/fetch，未重启服务、未新起实例、未访问未授权公网域名
+
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] 2.3.4 字面命中仅历史部署脚本示例 IP 与旧锁文件 punycode 版本，均与需求无关
+- [OK] 代码链：SITE_URL 优先；默认只读 Host 且 scheme 固定 http；只有 NOBELOG_TRUST_FORWARDED=1 才采信 X-Forwarded-*
+- [OK] 本地 10086 行为矩阵：自定义 Host 生效，伪造 X-Forwarded-Host/Proto 被忽略，canonical 与 feed/sitemap 跟随 Host
+- [OK] 92 个单元测试中 serve.rs 5 组覆盖 Host 注入、转发头信任与安全回退；缺口是 SITE_URL 优先级组合与真实 TLS 反代端到端
+- [OK] 静态发布包 public/ 的 canonical 为构建期固化的 https://example.com/，客户机静态部署不会自动识别
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 若 2.3.4 是外部需求文档条目，需要用户提供原文再逐条验收
+- 生产部署建议显式设置 SITE_URL=https://域名；若依赖反代推断则设 NOBELOG_TRUST_FORWARDED=1 并透传 Host 与 X-Forwarded-Proto
+- README.md 与 routes-and-urls.md 的自动推断描述已过时，建议另开任务更新
+- 未做信任模式端到端与公网域名验证，本轮结论基于代码阅读、单测与本地行为矩阵
