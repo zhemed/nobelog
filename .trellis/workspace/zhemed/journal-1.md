@@ -1295,3 +1295,46 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 - 远程同步与是否发版由用户决定，本次未 push、未打包、未重启
 - 16px 下线条偏淡属横构图源图固有，如需更醒目需另开任务换更粗源图或调整生成几何
 - 历史发布包本机仅保留 v0.0.29，其余以 GitHub Releases 为准
+
+
+## Session 39: 回退小熊测试图标
+<!-- trellis-session: v=2 fp=c2b21cf4a66bead0 -->
+
+**Date**: 2026-10-30
+**Task**: 回退小熊测试图标
+**Branch**: `main`
+
+### Summary
+
+用户说明上一轮换图标仅为测试，要求回退。已 revert 图标提交 b07a0cd，恢复粉笔少女图标并删除小熊源图；本地动态站点即时恢复，未重启服务；保留 spec 修正与 v0.0.29 恢复成果。
+
+### Main Changes
+
+- `content/images/site-icon*` 七件套回退到 `28f80ea` 粉笔少女版本，删除 `tools/assets/lying-bear-icon-source.jpg`
+- revert 提交 `af21ccd`，消息为 `revert: 回退小熊线稿测试图标，恢复粉笔少女图标 [task:10-30-revert-bear-test]`
+- 清理测试预览 `.run/review/lying-bear-icon/`
+- 保留 `9157153` 的 spec 修正、10-30-icon-bear-lineart 归档记录、仓库根 `dist/` 的 v0.0.29 恢复包
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `af21ccd` | revert: 回退小熊线稿测试图标，恢复粉笔少女图标 [task:10-30-revert-bear-test] |
+
+### Testing
+
+- [OK] git diff 28f80ea -- 7 个图标与小熊源图路径输出为空，回退件与回退目标基线逐字节一致
+- [OK] 7 个图标 URL HTTP 200、sha256 与工作区一致、Cache-Control no-cache；服务启动时间未变，未重启
+- [OK] 首页 head 6 条 link 加 1 条 og:image；图标画面经 read_image 确认为粉笔少女版
+- [OK] 提交钩子一次通过；dist 与 rust/dist 未变；测试预览已清理
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 未 push，远程同步由用户决定
+- 小熊测试任务记录与 spec 修正保留在本地历史与 journal
+- 外部 CDN 与反代的缓存行为不在本机验证范围

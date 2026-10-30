@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "回退提交与工作区检查"}
+{"file": ".trellis/spec/frontend/build-serve-deploy.md", "reason": "本地服务回退验证"}

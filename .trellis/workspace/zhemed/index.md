@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 38
+- **Total Sessions**: 39
 - **Last Active**: 2026-10-30
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1297 | Active |
+| `journal-1.md` | ~1340 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 39 | 2026-10-30 | 回退小熊测试图标 | `af21ccd` | `main` |
 | 38 | 2026-10-30 | 切换站点图标为小熊线稿 | `b07a0cd`, `9157153` | `main` |
 | 37 | 2026-10-21 | 发布 v0.0.29（去 Node 化收尾）并上线 | `7899d5a` | `main` |
 | 36 | 2026-10-21 | 去 Node 化收尾（删 package.json + 清理过期说明） | `edad187` | `main` |
