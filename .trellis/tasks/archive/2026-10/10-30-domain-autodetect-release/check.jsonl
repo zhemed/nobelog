@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/build-serve-deploy.md", "reason": "发布流程与验证口径"}
+{"file": ".trellis/spec/frontend/rendering-templates.md", "reason": "canonical 与转义契约"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "门禁与兼容性红线"}
+{"file": ".trellis/tasks/10-30-domain-autodetect-release/research/domain-maintain-plan.md", "reason": "预期改动集与发版风险清单"}

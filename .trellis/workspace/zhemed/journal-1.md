@@ -1423,3 +1423,53 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 - 生产部署建议显式设置 SITE_URL=https://域名；若依赖反代推断则设 NOBELOG_TRUST_FORWARDED=1 并透传 Host 与 X-Forwarded-Proto
 - README.md 与 routes-and-urls.md 的自动推断描述已过时，建议另开任务更新
 - 未做信任模式端到端与公网域名验证，本轮结论基于代码阅读、单测与本地行为矩阵
+
+
+## Session 42: 域名自动识别维护与 v0.0.30 发版上线
+<!-- trellis-session: v=2 fp=fc549fc8bbdea5ea -->
+
+**Date**: 2026-10-30
+**Task**: 域名自动识别维护与 v0.0.30 发版上线
+**Branch**: `main`
+
+### Summary
+
+按用户决策完成域名自动识别维护：动态模式对环回或私网对端额外采信 X-Forwarded-Proto 还原 https，X-Forwarded-Host 仍默认不采信，SITE_URL 保持最高优先；补齐测试、修正文档、加固发布脚本；发布 v0.0.30 并重启本机服务上线，冒烟全绿。
+
+### Main Changes
+
+- `rust/src/serve.rs`：新增 peer 判定与 host/proto 双信任维度，接入 axum `ConnectInfo`；环回或私网对端额外采信 `X-Forwarded-Proto`，`X-Forwarded-Host` 仍只由 `NOBELOG_TRUST_FORWARDED` 控制
+- `rust/src/site.rs`：新增 `normalize_url` 纯函数，重写未设 `SITE_URL` 的启动告警文案
+- `rust/src/build.rs`：robots 测试样例域名改为中性域名，补 `SITE_URL` 尾斜杠 trim 断言
+- `README.md` 与 `.trellis/spec/frontend/routes-and-urls.md`、`build-serve-deploy.md`：修正自动推断描述，记录 peer 规则、安全取舍与发布包域名规则
+- `tools/package.sh`：`SITE_URL` 必须 https、拒绝 example.com 与 127.0.0.1，`VERSION` 与 Cargo 版本一致性校验
+- 版本两源升 0.0.30；`public/` 与 `rust/dist/` 以 `SITE_URL=https://example.com` 重建并逐字节一致
+- 发版：annotated tag v0.0.30、GitHub Release、本机服务重启上线
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `57fe5df` | feat: 动态模式支持私网反代自动还原 https [task:10-30-domain-autodetect-release] |
+| `164bf1e` | docs: 修正域名自动推断说明并记录 peer 规则 [task:10-30-domain-autodetect-release] |
+| `8941d2d` | chore: 发布 v0.0.30（发布脚本加固与版本同步） [task:10-30-domain-autodetect-release] |
+
+### Testing
+
+- [OK] cargo fmt --check、cargo clippy --all-targets、cargo test 98 passed；新增 6 组 peer 与优先级用例
+- [OK] 独立复核通过：环回或私网 peer 的 XFP 还原 https，公网伪造无效，XFH 不采信，SITE_URL 最高优先，总开关兼容 v0.0.24
+- [OK] package.sh 五类 fail-fast；发布包 sha256 28ccce43c4…，GitHub Release v0.0.30 资产与本地一致，非草稿非预发布
+- [OK] 上线：PID 797659 变为 2213866，运行 nobelog 0.0.30；9 路由与 404、7 个图标、CSS 哈希、canonical 矩阵全绿
+- [OK] main 与 tag v0.0.30 已推送，origin/main 与本地同步；v0.0.29 包保留用于回滚
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- systemd 未注入 SITE_URL，直接访问本机 canonical 仍为 http://127.0.0.1:10086/；需要固定正式域名须另开配置授权任务
+- 公网反代仍须设置 SITE_URL 或 NOBELOG_TRUST_FORWARDED=1，并显式透传 Host
+- 私网内可伪造 scheme 属已记录的安全取舍，影响仅限协议
+- 2.3.4 若为外部需求条目，需用户提供原文再逐条验收

@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/build-serve-deploy.md", "reason": "部署、SITE_URL 与发版流程的现行规则"}
+{"file": ".trellis/spec/frontend/routes-and-urls.md", "reason": "站点绝对地址优先级链，需按新 peer 规则更新"}
+{"file": ".trellis/spec/frontend/rendering-templates.md", "reason": "canonical、OG、RSS、sitemap 的 base_url 使用点"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "提交前门禁与禁止事项"}
+{"file": ".trellis/tasks/10-30-domain-autodetect-release/research/domain-maintain-plan.md", "reason": "本轮改动清单、发布流程事实与方案对比"}
+{"file": ".trellis/tasks/archive/2026-10/10-30-check-domain-autodetect/research/domain-autodetect.md", "reason": "2.3.4 核查：现有实现链、行为矩阵与测试缺口"}
