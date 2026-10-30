@@ -1543,3 +1543,42 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 
 - 后续会话优先以 /root/博客/nobelog 作为工作区
 - 如根目录指引需更新，直接编辑 README.md 与 AGENTS.md
+
+
+## Session 45: 核对工作区残留任务
+<!-- trellis-session: v=2 fp=e91077187574b785 -->
+
+**Date**: 2026-10-30
+**Task**: 核对工作区残留任务
+**Branch**: `main`
+
+### Summary
+
+只读盘点 /root/博客 工作区残留任务：活跃树无历史残留，归档 44/44 completed，工作树干净；旧世代未闭环任务仅存于 .backups 快照；结论经 r3-verifier 独立复核确认。
+
+### Main Changes
+
+- 创建并归档任务 10-30-audit-residual-tasks，记录 directive.md、PRD 与 research/audit-findings.md
+- 盘点活跃与归档任务、git 状态与 stash、根目录与 .backups 校验、journal 待决项与运行期残留
+- r3-verifier 独立只读复核确认结论，修正项回填证据文档
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9e010a0` | chore(task): archive 10-30-audit-residual-tasks [task:10-30-audit-residual-tasks] |
+
+### Testing
+
+- [OK] [OK] 归档 44/44 completed 且 completedAt、prd.md、directive.md 齐全；225 个归档文件全部被 git 跟踪
+- [OK] [OK] r3-verifier 独立复跑关键命令一致；Lead 抽查工作树文件数、workspace 主索引模板、备份 sha 重复均属实
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 后续会话以 /root/博客/nobelog 为工作区
+- 旧备份保持原样，禁止解压覆盖；如需处理旧世代任务另立任务并授权
+- 本地归档与 journal 提交尚未推送，按用户决定处理
