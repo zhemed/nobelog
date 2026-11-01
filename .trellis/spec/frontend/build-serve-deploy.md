@@ -86,9 +86,9 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
   `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`。包内放二进制、`content/ vendor/ public/`、
   `rust/client/main.js`、README、LICENSE、VERSION。
 - 打包会以当时的 `SITE_URL` 重建 `public/`，包内静态产物的绝对地址即来自该值；脚本强制要求 `SITE_URL`
-  为 https、拒绝 example.com 与 127.0.0.1，并校验 `VERSION` 与 `rust/Cargo.toml` 一致。
+  为 https、拒绝本机地址与已下线域名，并校验 `VERSION` 与 `rust/Cargo.toml` 一致。
   当前发布包示例域名用 `https://example.com`；静态部署的客户必须用自己域名的 `SITE_URL` 重建 `public/`，
-  动态部署不需要这样做，站点会按请求 Host 自动识别域名。example.com 已于 2026-10-30 下线，禁止再用。
+  动态部署不需要这样做，站点会按请求 Host 自动识别域名。旧域名已于 2026-10-30 下线，禁止再用。
 - 动态模式的内存开销来自"整站内容 + CSS/JS 常驻"；内容规模变大时先量内存再谈优化，不要随意改缓存策略。
 
 ## 部署拓扑
@@ -180,7 +180,7 @@ cd .. && cargo run --release --manifest-path rust/Cargo.toml -- build --self-ass
 - `--out` 相对路径按**当前工作目录**解析，不是按仓库根：在仓库根写 `--out dist` 会清空
   仓库根的 `dist/`（历史发布包与 `SHA256SUMS` 所在地），而不是写 `rust/dist/`。
   因此构建产物固定写 `rust/dist/`，从仓库根执行时显式写 `--out rust/dist`。
-- `public/` 冻结基准是用固定 `SITE_URL` 构建的（当前基线为 `https://example.com`，仅示例；example.com 已下线）；
+- `public/` 冻结基准是用固定 `SITE_URL` 构建的（当前基线为 `https://example.com`，仅示例；旧域名已下线）；
   复跑 `diff` 前要设同样的 `SITE_URL`，否则 canonical / RSS / sitemap 会整批出现域名差异，
   掩盖真实回归。
 - 首页卡片的相对日期文案（`N 天前`）随构建时刻漂移；隔天与冻结基准对比会出现这类非代码差异，

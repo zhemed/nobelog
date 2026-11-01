@@ -8,8 +8,8 @@
 
 1. **代码 R1**：动态模式新增 peer 判定。客户端 socket 地址为环回或私网时，额外采信 `X-Forwarded-Proto` 还原 https；`X-Forwarded-Host` 仍只由总信任开关控制；`SITE_URL` 保持最高优先；`NOBELOG_TRUST_FORWARDED=1` 保留为全量信任开关，行为与 v0.0.24 一致。
 2. **测试 R2**：新增 peer 判定矩阵、混合信任、`SITE_URL` 优先级、总开关兼容、注入回退等用例；更新既有 5 组测试的函数签名；`rust/src/build.rs` 中过时的示例域名改为中性域名并补 trim 断言。
-3. **文档 R3**：更新 `README.md`、`routes-and-urls.md`、`build-serve-deploy.md`，修正「按 Host 与 X-Forwarded-Proto 自动推断」的过时表述；补充发布包静态产物与 `SITE_URL` 的硬规则；冻结基准域名改为 `https://example.com` 并注明 example.com 已下线。
-4. **发布脚本 R4**：`tools/package.sh` 强制校验 `SITE_URL` 非空且为 https、拒绝 example.com 与 127.0.0.1、校验 `VERSION` 与 `rust/Cargo.toml` 版本一致，并打印实际取值。
+3. **文档 R3**：更新 `README.md`、`routes-and-urls.md`、`build-serve-deploy.md`，修正「按 Host 与 X-Forwarded-Proto 自动推断」的过时表述；补充发布包静态产物与 `SITE_URL` 的硬规则；冻结基准域名改为 `https://example.com` 并注明 旧域名已下线。
+4. **发布脚本 R4**：`tools/package.sh` 强制校验 `SITE_URL` 非空且为 https、拒绝本机地址与已下线域名、校验 `VERSION` 与 `rust/Cargo.toml` 版本一致，并打印实际取值。
 5. **版本 R5**：`rust/Cargo.toml` 与 `rust/Cargo.lock` 两源升到 0.0.30。
 6. **构建验证 R6**：`cargo fmt --check`、`cargo clippy --all-targets`、`cargo test` 全绿；用 `SITE_URL=https://example.com` 重建 `public/` 与 `rust/dist/`，两次构建逐字节一致，`nobelog diff` 只剩预期差异。
 7. **发版 R7**：提交带任务锚点；`VERSION=0.0.30 SITE_URL=https://example.com tools/package.sh`；`sha256sum -c` 通过，包内 `VERSION` 与二进制 `--version` 均为 0.0.30；打 annotated tag `v0.0.30`，push main 与 tag，创建 GitHub Release 附包与 SHA256SUMS。

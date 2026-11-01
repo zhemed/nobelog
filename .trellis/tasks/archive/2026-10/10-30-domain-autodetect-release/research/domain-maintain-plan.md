@@ -1,6 +1,6 @@
 # Research: 域名自动识别维护与发版改动清单
 
-- Query: 维护域名自动识别逻辑并修复 2.3.4 核查发现的问题，随后发版；example.com 域名已下线
+- Query: 维护域名自动识别逻辑并修复 2.3.4 核查发现的问题，随后发版；旧域名已下线
 - Scope: mixed，内部代码与文档盘点、发布流程事实、axum 可行性评估、本地服务只读核对
 - Date: 2026-10-30
 - 核查时刻: 2026-10-30T11:35Z 至 11:45Z，命令在仓库根 `/root/博客/nobelog` 执行
@@ -8,7 +8,7 @@
 
 ## 一、结论摘要
 
-1. **硬编码盘点**：example.com 虽然已下线，仓库里仍有 19 个已跟踪文件共 48 处；另有被忽略的 `public/` 与 `rust/dist/` 各 82 处，历史发布包内 82 处。已跟踪部分真正需要随这次改动处理的是 `rust/src/build.rs:422-458` 的 7 处测试样例与 `.trellis/spec/frontend/build-serve-deploy.md:175` 的冻结基准说明；其余 41 处集中在历史归档任务、journal 与旧研究报告，建议保留为历史记录，不改写。`content/`、`README.md`、`tools/` 本身没有 example.com。
+1. **硬编码盘点**：旧域名虽然已下线，仓库里仍有 19 个已跟踪文件共 48 处；另有被忽略的 `public/` 与 `rust/dist/` 各 82 处，历史发布包内 82 处。已跟踪部分真正需要随这次改动处理的是 `rust/src/build.rs:422-458` 的 7 处测试样例与 `.trellis/spec/frontend/build-serve-deploy.md:175` 的冻结基准说明；其余 41 处集中在历史归档任务、journal 与旧研究报告，建议保留为历史记录，不改写。`content/`、`README.md`、`tools/` 本身没有旧域名。
 2. **发布流程事实**：`tools/package.sh` 在打包时用当前环境变量 `SITE_URL` 重建一次 `public/` 再打包；脚本不校验 `SITE_URL`，缺失时构建退回 `SITE.url` 的 `http://127.0.0.1:10086`。版本来源是 `rust/Cargo.toml` 与 `rust/Cargo.lock` 两处；包名版本来自 `VERSION` 环境变量或 `git describe`，与二进制版本可能脱节。tag、GitHub Release 与本机重启是 spec 里的手工步骤。
 3. **代码可行性**：`rust/Cargo.lock` 显示 axum 0.8.9、tower 0.5.3，当前代码完全未使用 `ConnectInfo`。把 `run()` 里的 `axum::serve(listener, app)` 改为 `app.into_make_service_with_connect_info::<SocketAddr>()`，在动态 handler 通过 `req.extensions()` 读取 peer 地址即可；改动集中在 `rust/src/serve.rs`，无新增依赖。需要把 `base_url_from_headers` 的单一信任布尔拆成 host 与 proto 两个开关。
 4. **方案推荐**：采用「对端地址是环回或私网时，只额外采信 `X-Forwarded-Proto` 用于 scheme；`Host` 仍只由 `SITE_URL` 或显式总开关决定」，保留 `NOBELOG_TRUST_FORWARDED=1` 作为全量信任开关。理由：同机或局域网 TLS 反代可以零配置得到正确 https；`X-Forwarded-Host` 域名劫持面不扩大；公网对端伪造 XFP 无效。
@@ -24,7 +24,7 @@
 | 分类 | 位置 | 数量 | 处置建议 |
 |---|---|---|---|
 | 源码测试 | `rust/src/build.rs:422-458` | 7 处 | 改为中性样例域名，如 `https://example.com`，去掉对下线域名的依赖 |
-| 活跃 spec | `.trellis/spec/frontend/build-serve-deploy.md:175` | 1 处 | 随新域名重建后更新，明确 example.com 已下线 |
+| 活跃 spec | `.trellis/spec/frontend/build-serve-deploy.md:175` | 1 处 | 随新域名重建后更新，明确 旧域名已下线 |
 | 归档任务与旧报告 | `.trellis/tasks/archive/2026-10/**` | 15 个文件、32 处 | 历史记录，保留不改；新任务与 journal 说明即可 |
 | workspace 历史 | `.trellis/workspace/zhemed/index.md`、`journal-1.md` | 2 个文件、8 处 | 历史记录，保留不改 |
 | 本地冻结基准 | `public/` 42 个文件 | 82 处 | 新域名确定后用新 `SITE_URL` 重建 |
@@ -38,7 +38,7 @@
 - 当前 `public/index.html`、`public/posts/typeset-test/index.html`、`rust/dist/index.html` 的 canonical 都是 `https://example.com/`。
 - `public/` 构建于 2026-10-21 15:28，`rust/dist/` 构建于 2026-10-30 10:19，两者都含下线域名。
 - git 历史里有 12 个提交改动过 example.com 相关行，全部是历史发布、核对与文档记录，不需要重写历史。
-- `content/` 中没有 example.com 或 i.miio.cc 引用，域名下线不影响文章内容。
+- `content/` 中没有 example.com 或 example.com 引用，域名下线不影响文章内容。
 
 ### 2. SITE_URL
 
@@ -284,7 +284,7 @@ peer 判定建议范围：IPv4 环回 127.0.0.0/8、IPv6 环回 `::1`、RFC1918 
 | `.trellis/spec/frontend/routes-and-urls.md:52-55` | 第 53 至 54 行写「按 Host / X-Forwarded-Proto 拼出 scheme://host」 | 未说明默认只信 Host、scheme 固定 http、以及信任开关 | 重写优先级链：SITE_URL；动态推断的 Host；scheme 由 peer 规则与总开关决定；最后 SITE.url |
 | `.trellis/spec/frontend/build-serve-deploy.md:69-75` | 「默认只信 Host、scheme 固定 http，并忽略 X-Forwarded-*」「TLS 反代后没设 SITE_URL 会退化成 http」 | 本次改动后默认行为变化，需要重写 | 分三种场景写：SITE_URL 推荐；环回或私网反代自动还原 https；公网反代仍需总开关 |
 | 同上 `:93` | 反代拓扑说明「必须设 SITE_URL 或 NOBELOG_TRUST_FORWARDED=1；默认只信 Host、scheme 固定 http」 | 同上 | 补充 peer 规则与「Host 必须透传」 |
-| 同上 `:175` | 「冻结基准当前基线为 https://example.com」 | 域名已下线 | 改为新域名，或改为中性基准域名并说明 example.com 已下线 |
+| 同上 `:175` | 「冻结基准当前基线为 https://example.com」 | 域名已下线 | 改为新域名，或改为中性基准域名并说明 旧域名已下线 |
 | 同上 `:193` | 打包命令只写 `VERSION=<x.y.z> tools/package.sh` | 没写 SITE_URL，历史上靠操作者记忆 | 改为 `SITE_URL=https://<正式域名> VERSION=<x.y.z> tools/package.sh`，并写明禁止使用已下线域名 |
 | 同上 `:80-83` | 发布包说明未提 SITE_URL 注入 | 读者不知道包内绝对地址来自打包时环境变量 | 补一句「打包时以 SITE_URL 重建 public，包内绝对地址即来自该值」 |
 | `.trellis/spec/frontend/rendering-templates.md:12`、`71` | base_url 注释与 RSS/sitemap 说明 | 与本次改动基本兼容，未提 peer 规则 | 可选补充一句指向 routes-and-urls |
@@ -320,7 +320,7 @@ peer 判定建议范围：IPv4 环回 127.0.0.0/8、IPv6 环回 `::1`、RFC1918 
 
 | 项 | 改动 | 预期行为 |
 |---|---|---|
-| `tools/package.sh` | 构建前强制 `SITE_URL`：非空、以 `https://` 开头、拒绝 example.com 与 127.0.0.1；打印实际值；校验 `VERSION` 与 `rust/Cargo.toml` 版本一致；可选校验工作区干净 | 错误配置在打包前失败，不再产出域名错误的包 |
+| `tools/package.sh` | 构建前强制 `SITE_URL`：非空、以 `https://` 开头、拒绝本机地址与已下线域名；打印实际值；校验 `VERSION` 与 `rust/Cargo.toml` 版本一致；可选校验工作区干净 | 错误配置在打包前失败，不再产出域名错误的包 |
 | 版本两源 | `rust/Cargo.toml:3` 与 `rust/Cargo.lock:765-766` 改为 0.0.30 | 二进制 `--version` 为 0.0.30 |
 | `public/` | 新域名确定后执行 `SITE_URL=https://<新域名> cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out public` | 冻结基准与包内产物使用新域名 |
 | `rust/dist/` | 用同一 `SITE_URL` 重建，或清理后重建 | 回归 diff 的对照产物不再含下线域名 |
@@ -342,7 +342,7 @@ peer 判定建议范围：IPv4 环回 127.0.0.0/8、IPv6 环回 `::1`、RFC1918 
 
 ## 七、发版风险
 
-### 1. example.com 下线后的发布包域名处理建议
+### 1. 旧域名下线后的发布包域名处理建议
 
 1. **先定新域名，再打包**。`SITE_URL` 是唯一可信来源；新域名未定时不要产出正式包，否则包内静态 public 的 canonical 只能是 `http://127.0.0.1:10086`，或继续沿用已下线的 example.com。
 2. **package.sh 增加 fail-fast 校验**：`SITE_URL` 为空、不是 https、是 example.com 或 127.0.0.1 时直接报错退出，避免误打包。
@@ -389,9 +389,9 @@ peer 判定建议范围：IPv4 环回 127.0.0.0/8、IPv6 环回 `::1`、RFC1918 
 ### 1. 硬编码计数
 
 ```bash
-$ git grep -c 'z\.miio\.cc' | awk -F: '{s+=$2; n++} END{print "files:", n, "occurrences:", s}'
+$ git grep -c 'example\.com' | awk -F: '{s+=$2; n++} END{print "files:", n, "occurrences:", s}'
 files: 19 occurrences: 48
-$ for d in public rust/dist; do echo -n "$d: "; grep -rc 'z\.miio\.cc' "$d" | awk -F: '{s+=$2} END{print s}'; done
+$ for d in public rust/dist; do echo -n "$d: "; grep -rc 'example\.com' "$d" | awk -F: '{s+=$2} END{print s}'; done
 public: 82
 rust/dist: 82
 $ git grep -c 'SITE_URL' | awk -F: '{s+=$2; n++} END{print "files:", n, "occurrences:", s}'
@@ -468,7 +468,7 @@ nobelog 0.0.29
 
 ## 九、未覆盖项与不确定
 
-1. **新域名未知**：用户只说 example.com 已下线，没有给出新域名；发版前必须补齐，否则无法正确重建基准与打包。
+1. **新域名未知**：用户只说 旧域名已下线，没有给出新域名；发版前必须补齐，否则无法正确重建基准与打包。
 2. **ConnectInfo 与 tap_io 兼容性未编译验证**：本次只读，不运行 cargo；axum 0.8.9 的标准入口需要实现阶段用 `cargo build` 与测试确认。若 `TapIo` 包装后无法提供连接信息，需要调整监听器封装，方案本身仍成立。
 3. **未运行任何构建或测试**：测试数量、行号与行为结论来自现有源码与上一轮只读核查记录；实现后需以实际 `cargo test` 结果为准。
 4. **未访问公网域名**：新域名是否可用、远端部署形态与 TLS 反代配置均未验证。

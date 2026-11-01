@@ -1442,7 +1442,7 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 - `rust/src/site.rs`：新增 `normalize_url` 纯函数，重写未设 `SITE_URL` 的启动告警文案
 - `rust/src/build.rs`：robots 测试样例域名改为中性域名，补 `SITE_URL` 尾斜杠 trim 断言
 - `README.md` 与 `.trellis/spec/frontend/routes-and-urls.md`、`build-serve-deploy.md`：修正自动推断描述，记录 peer 规则、安全取舍与发布包域名规则
-- `tools/package.sh`：`SITE_URL` 必须 https、拒绝 example.com 与 127.0.0.1，`VERSION` 与 Cargo 版本一致性校验
+- `tools/package.sh`：`SITE_URL` 必须 https、拒绝本机地址与已下线域名，`VERSION` 与 Cargo 版本一致性校验
 - 版本两源升 0.0.30；`public/` 与 `rust/dist/` 以 `SITE_URL=https://example.com` 重建并逐字节一致
 - 发版：annotated tag v0.0.30、GitHub Release、本机服务重启上线
 
