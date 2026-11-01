@@ -31,11 +31,25 @@ if [ -z "${SITE_URL#https://}" ]; then
   exit 1
 fi
 case "$SITE_URL" in
-  *example.com*|*127.0.0.1*)
-    echo "错误：SITE_URL 不允许使用已下线域名或本机地址，当前为：$SITE_URL" >&2
+  *127.0.0.1*|*localhost*)
+    echo "错误：SITE_URL 不允许使用本机地址，当前为：$SITE_URL" >&2
     exit 1
     ;;
 esac
+# 已下线域名清单：本地文件 tools/banned-domains.txt，每行一个主机名（不入库）。
+# 这样脚本里不出现任何真实域名，换域名只改本地清单。
+BANNED_FILE="$(dirname "$0")/banned-domains.txt"
+if [ -f "$BANNED_FILE" ]; then
+  while IFS= read -r banned || [ -n "$banned" ]; do
+    case "$banned" in ''|'#'*) continue ;; esac
+    case "$SITE_URL" in
+      *"$banned"*)
+        echo "错误：SITE_URL 命中本机已下线域名清单（$BANNED_FILE）：$SITE_URL" >&2
+        exit 1
+        ;;
+    esac
+  done < "$BANNED_FILE"
+fi
 # 与 env_url() 一致：去掉尾部斜杠，避免包内出现 https://host// 形式的绝对地址。
 SITE_URL="${SITE_URL%/}"
 export SITE_URL
