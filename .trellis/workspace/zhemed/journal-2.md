@@ -65,3 +65,37 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 61: 文章标题与面包屑可点击回干净地址
+<!-- trellis-session: v=2 fp=94d5591058eda113 -->
+
+**Date**: 2026-11-02
+**Task**: 文章标题与面包屑可点击回干净地址
+**Branch**: `main`
+
+### Summary
+
+面包屑当前文章名与文章 h1 都改为指向 /posts/<slug>/ 的自链接，点一下清除 #锚点；其它页面面包屑保持纯文本。
+
+### Main Changes
+
+- rust/src/templates.rs：breadcrumb() 末项支持链接、文章页 crumbs 带 href、h1 包自链接；vendor/patches/patch.css：标题自链接样式
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b2089cb` | feat: 文章标题与面包屑可点击回干净地址 [task:11-02-post-title-link] |
+
+### Testing
+
+- [OK] 点击两处均清空 location.hash；/archives/ 等页面面包屑仍纯文本；归一化后仅 2 个文章页产物变化；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 模板变化使静态产物与旧 public 基线不再逐字节一致；如需保持基线，需要重建基准目录
