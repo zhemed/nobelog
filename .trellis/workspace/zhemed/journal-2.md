@@ -129,3 +129,33 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 63: 正文链接改用更醒目的蓝色
+<!-- trellis-session: v=2 fp=1de1277f196ba293 -->
+
+**Date**: 2026-11-02
+**Task**: 正文链接改用更醒目的蓝色
+**Branch**: `main`
+
+### Summary
+
+强调蓝 #3b5b7a 对比不足；新增 --link-body（亮 #0969da / 暗 #58a6ff）用于正文行内链接，导航类链接与 --accent 其它用途不变。
+
+### Main Changes
+
+- vendor/patches/patch.css +3/-1：两个令牌块新增 --link-body，.markdown-body a 改用之
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2a65f11` | style: 正文链接改用更醒目的蓝色 [task:11-02-inline-link-bright] |
+
+### Testing
+
+- [OK] 正文链接亮 rgb(9,105,218)、暗 rgb(88,166,255)；面包屑/目录/归档不变；仅 CSS 哈希变化；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**

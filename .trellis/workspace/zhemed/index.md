@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 62
+- **Total Sessions**: 63
 - **Last Active**: 2026-11-02
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~131 | Active |
+| `journal-2.md` | ~161 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 63 | 2026-11-02 | 正文链接改用更醒目的蓝色 | `2a65f11` | `main` |
 | 62 | 2026-11-02 | 正文行内链接恢复强调蓝 | `ffe7033` | `main` |
 | 61 | 2026-11-02 | 文章标题与面包屑可点击回干净地址 | `b2089cb` | `main` |
 | 60 | 2026-11-02 | 目录激活项加 2px 竖条提示 | `11abcd7` | `main` |
