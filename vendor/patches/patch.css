@@ -1093,22 +1093,14 @@ a {
   -webkit-user-drag: none;
 }
 
-/* 链接改为墨色后与正文同色，hover 用下划线保留可点击提示 */
-.markdown-body a,
-#archives a,
-#page-tag a,
-#panel-wrapper .post-content a,
-footer a {
+/* 正文链接跟随全站墨色（github-markdown 自带 GitHub 蓝 #0969da）；
+   链接不设 hover 装饰，可点击感交给整行/整卡片的高亮与指针 */
+.markdown-body a {
   color: var(--link-color);
 }
 
-.markdown-body a:hover,
-#archives a:hover,
-#page-tag a:hover,
-#panel-wrapper .post-content a:hover,
-footer a:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
+.markdown-body a:hover {
+  text-decoration: none;
 }
 
 /* 标题与副标题保持不可选中（其余文字可选中） */
