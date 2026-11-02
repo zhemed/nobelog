@@ -1652,3 +1652,33 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 1200px 以下断点未纳入本次改动；若后续调整版式数值，改一处 --layout-gap 即可
+
+
+## Session 48: 标签索引页胶囊对齐侧栏口径
+<!-- trellis-session: v=2 fp=f50dc2c765e24a9c -->
+
+**Date**: 2026-11-02
+**Task**: 标签索引页胶囊对齐侧栏口径
+**Branch**: `main`
+
+### Summary
+
+/tags/ 的主题默认 .tag 是大字号+外阴影+Oswald 计数的重样式，与侧栏 .post-tag 割裂。新增 #tags .tag 规则把它收敛到侧栏口径（13.6px、1.05rem 行高、.8rem 圆角、无阴影、灰字），计数保留但改为继承字体并按基线对齐。
+
+### Main Changes
+
+- vendor/patches/patch.css +25 行：新增 #tags .tag 与 #tags .tag span，inline-flex + baseline；边框用 !important 覆盖主题的 !important 规则
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `80d75e4` | style: 标签索引页胶囊对齐侧栏热门标签观感 [task:11-02-tag-index-chips] |
+
+### Testing
+
+- [OK] 胶囊 28px/13.6px/12.8px/无阴影与侧栏一致；canvas 度量计数基线差 0.5px；侧栏 .post-tag 与其它页未变；fmt/clippy/test(98)/build 全绿；HTML 产物仅 feed 时间变化
+
+### Status
+
+[OK] **Completed**
