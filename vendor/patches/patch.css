@@ -996,6 +996,7 @@ html:not([data-mode]), html[data-mode="light"] {
   --ink-body: #33373d;
   --ink-muted: #6b7280;
   --accent: #3b5b7a;
+  --link-body: #0969da;
 
   --main-bg: var(--paper);
   --bs-body-bg: var(--paper);
@@ -1024,6 +1025,7 @@ html[data-mode="dark"] {
   --ink-body: #c7ccd3;
   --ink-muted: #8b939c;
   --accent: #8fb3d9;
+  --link-body: #58a6ff;
 
   --main-bg: var(--paper);
   --bs-body-bg: var(--paper);
@@ -1173,7 +1175,7 @@ a {
 /* 正文行内链接用强调色，与正文可区分；导航类链接仍用墨色。
    github-markdown 自带的 GitHub 蓝 #0969da 由此覆盖 */
 .markdown-body a {
-  color: var(--accent);
+  color: var(--link-body);
 }
 
 .markdown-body a:hover {
