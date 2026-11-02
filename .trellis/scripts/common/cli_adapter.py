@@ -1,7 +1,7 @@
 """
 CLI Adapter for Multi-Platform Support.
 
-Abstracts differences between Claude Code, OpenCode, Cursor, iFlow, Codex, Kilo, Kiro Code, Gemini CLI, Antigravity, Devin, Qoder, CodeBuddy, GitHub Copilot, Factory Droid, Pi Agent, and DeepSeek Harness interfaces.
+Abstracts differences between Claude Code, OpenCode, Cursor, iFlow, Codex, Kilo, Kiro Code, Gemini CLI, Antigravity, Devin, Qoder, CodeBuddy, GitHub Copilot, Factory Droid, and Pi Agent interfaces.
 
 Supported platforms:
 - claude: Claude Code (default)
@@ -23,7 +23,6 @@ Supported platforms:
 - omp: Oh My Pi
 - grok: Grok Build (pull-based skills/agents; no hook context injection)
 - kimi: Kimi Code (pull-based skills; commands delivered as skills; no hook context injection)
-- dsh: DeepSeek Harness (pull-based skills + native shell session identity)
 
 Usage:
     from common.cli_adapter import CLIAdapter
@@ -62,7 +61,6 @@ Platform = Literal[
     "omp",
     "grok",
     "kimi",
-    "dsh",
 ]
 
 
@@ -145,8 +143,6 @@ class CLIAdapter:
             return ".grok"
         elif self.platform == "kimi":
             return ".kimi-code"
-        elif self.platform == "dsh":
-            return ".dsh"
         else:
             return ".claude"
 
@@ -174,14 +170,6 @@ class CLIAdapter:
         mapped_name = self.get_agent_name(agent)
         if self.platform == "codex":
             return self.get_config_dir(project_root) / "agents" / f"{mapped_name}.toml"
-        if self.platform == "dsh":
-            role = mapped_name.removeprefix("trellis-").removeprefix("agent-")
-            return (
-                self.get_config_dir(project_root)
-                / "skills"
-                / f"trellis-agent-{role}"
-                / "SKILL.md"
-            )
         return self.get_config_dir(project_root) / "agents" / f"{mapped_name}.md"
 
     def get_commands_path(self, project_root: Path, *parts: str) -> Path:
@@ -224,8 +212,8 @@ class CLIAdapter:
                 return commands_dir / f"trellis-{filename}.md"
             return commands_dir / Path(*parts)
 
-        # Kimi and DSH: commands are skills under the platform-private skill root.
-        if self.platform in ("kimi", "dsh"):
+        # Kimi: commands are skills under .kimi-code/skills/trellis-<name>/SKILL.md
+        if self.platform == "kimi":
             skills_dir = self.get_config_dir(project_root) / "skills"
             if not parts:
                 return skills_dir
@@ -323,8 +311,6 @@ class CLIAdapter:
             return f"{self.config_dir_name}/commands/trellis-{name}.md"
         elif self.platform == "kimi":
             return f".kimi-code/skills/trellis-{name}/SKILL.md"
-        elif self.platform == "dsh":
-            return f".dsh/skills/trellis-{name}/SKILL.md"
         else:
             return f"{self.config_dir_name}/commands/trellis/{name}.md"
 
@@ -369,8 +355,6 @@ class CLIAdapter:
         elif self.platform == "grok":
             return {}
         elif self.platform == "kimi":
-            return {}
-        elif self.platform == "dsh":
             return {}
         else:
             return {"CLAUDE_NON_INTERACTIVE": "1"}
@@ -472,10 +456,6 @@ class CLIAdapter:
             # Headless single-prompt with auto-approval; sub-agents are the
             # built-in coder/explore/plan agents dispatched in-session.
             cmd = ["kimi", "-p", prompt, "--yolo"]
-        elif self.platform == "dsh":
-            # The headless profile accepts one prompt and exits. Trellis roles
-            # are loaded as skills by in-session sub-agents, not CLI agent ids.
-            cmd = ["dsh", "--profile", "headless", prompt]
 
         else:  # claude
             cmd = ["claude", "-p"]
@@ -554,8 +534,6 @@ class CLIAdapter:
             return ["grok", "-c"]
         elif self.platform == "kimi":
             return ["kimi", "--session", session_id]
-        elif self.platform == "dsh":
-            return ["dsh", "--profile", "tui", "--resume", session_id]
         else:
             return ["claude", "--resume", session_id]
 
@@ -638,8 +616,6 @@ class CLIAdapter:
             return "grok"
         elif self.platform == "kimi":
             return "kimi"
-        elif self.platform == "dsh":
-            return "dsh"
         else:
             return "claude"
 
@@ -658,7 +634,6 @@ class CLIAdapter:
             "pi",
             "grok",
             "kimi",
-            "dsh",
         )
 
     @property
@@ -713,7 +688,7 @@ def get_cli_adapter(platform: str = "claude") -> CLIAdapter:
     """Get CLI adapter for the specified platform.
 
     Args:
-        platform: Platform name ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'trae', 'omp', 'grok', 'kimi', or 'dsh')
+        platform: Platform name ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', or 'trae')
 
     Returns:
         CLIAdapter instance
@@ -748,10 +723,9 @@ def get_cli_adapter(platform: str = "claude") -> CLIAdapter:
         "omp",
         "grok",
         "kimi",
-        "dsh",
     ):
         raise ValueError(
-            f"Unsupported platform: {platform} (must be 'claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'trae', 'omp', 'grok', 'kimi', or 'dsh')"
+            f"Unsupported platform: {platform} (must be 'claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'trae', 'omp', 'grok', or 'kimi')"
         )
 
     return CLIAdapter(platform=platform)  # type: ignore
@@ -778,7 +752,6 @@ _ALL_PLATFORM_CONFIG_DIRS = (
     ".omp",
     ".grok",
     ".kimi-code",
-    ".dsh",
 )
 """Platform-specific config directory names used by detect_platform exclusion
 checks. `.agents/skills/` is NOT listed here: it is a shared cross-platform
@@ -822,7 +795,7 @@ def detect_platform(project_root: Path) -> Platform:
         project_root: Project root directory
 
     Returns:
-        Detected platform ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'trae', 'omp', 'grok', 'kimi', 'dsh', or default 'claude')
+        Detected platform ('claude', 'opencode', 'cursor', 'iflow', 'codex', 'kilo', 'kiro', 'gemini', 'antigravity', 'devin', 'qoder', 'codebuddy', 'copilot', 'droid', 'pi', 'trae', or default 'claude')
     """
     import os
 
@@ -851,7 +824,6 @@ def detect_platform(project_root: Path) -> Platform:
         "omp",
         "grok",
         "kimi",
-        "dsh",
     ):
         return env_platform  # type: ignore
 
@@ -943,10 +915,6 @@ def detect_platform(project_root: Path) -> Platform:
     # Check for .kimi-code directory (Kimi Code-specific)
     if (project_root / ".kimi-code").is_dir():
         return "kimi"
-
-    # Check for .dsh directory (DeepSeek Harness-specific)
-    if (project_root / ".dsh").is_dir():
-        return "dsh"
 
     # Fallback: checkout only has the Codex shared-skills layer
     # (.agents/skills/trellis-* dirs) and no explicit platform config dir.
