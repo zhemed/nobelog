@@ -1582,3 +1582,38 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 - 后续会话以 /root/博客/nobelog 为工作区
 - 旧备份保持原样，禁止解压覆盖；如需处理旧世代任务另立任务并授权
 - 本地归档与 journal 提交尚未推送，按用户决定处理
+
+
+## Session 46: 修复文章页宽内容横向溢出（patch.css min-width:0）
+<!-- trellis-session: v=2 fp=a5fa1e70b1a957c8 -->
+
+**Date**: 2026-11-02
+**Task**: 修复文章页宽内容横向溢出（patch.css min-width:0）
+**Branch**: `main`
+
+### Summary
+
+定位到 patch.css 版式补丁的 flex 收缩缺陷：容器 width:100% + 左右 56px 外边距依赖收缩吸收，而 main 的 min-width:auto 被长代码行/宽表格顶住，右栏被挤出视口。为容器与 main 加 min-width:0 后，1264px 视口下溢出归零、右栏恢复可见，宽内容转为块内滚动。
+
+### Main Changes
+
+- vendor/patches/patch.css +9 行（≥1200px 断点，min-width:0 !important 作用于 #main-wrapper > .container 与 #main-wrapper .row.flex-grow-1 > main）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c157201` | fix: 文章页宽内容不再撑出横向滚动条 [task:11-02-fix-post-overflow] |
+| `11f76f0` | chore(task): archive 11-02-fix-post-overflow |
+
+### Testing
+
+- [OK] cargo fmt --check / clippy / test（98 passed）/ build --release --locked 全绿；浏览器实测 overflow 0、右栏 953-1193 可见；静态构建 HTML 与改动前一致，仅 CSS 哈希变化
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 如需彻底消除 width:100% + 外边距的脆弱写法，可另立任务改为 calc(100% - 112px)；1200px 以下断点未改动，未验证

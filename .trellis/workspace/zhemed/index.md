@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 45
-- **Last Active**: 2026-10-30
+- **Total Sessions**: 46
+- **Last Active**: 2026-11-02
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1584 | Active |
+| `journal-1.md` | ~1619 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 46 | 2026-11-02 | 修复文章页宽内容横向溢出（patch.css min-width:0） | `c157201`, `11f76f0` | `main` |
 | 45 | 2026-10-30 | 核对工作区残留任务 | `9e010a0` | `main` |
 | 44 | 2026-10-30 | 编写工作区 Trellis 使用指引 | - | `main` |
 | 43 | 2026-10-30 | Trellis 残留盘点与工作流放置评估 | - | `main` |
