@@ -1671,6 +1671,19 @@ footer {
   color: var(--ink) !important;
 }
 
+/* 面板列表行：hover 补上整行浅灰底，与归档行一致 */
+#panel-wrapper .post-content li {
+  /* 内边距与等量负外边距抵消，文字位置不变，只让 hover 底色有呼吸感 */
+  padding: 0 0.4rem;
+  margin: 0 -0.4rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease-in-out;
+}
+
+#panel-wrapper .post-content li:hover {
+  background-color: var(--brand-hover);
+}
+
 /* 文章页：标题 700，正文 400 */
 main h1,
 .markdown-body h1,
