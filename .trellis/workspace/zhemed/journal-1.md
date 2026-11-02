@@ -1848,3 +1848,33 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Status
 
 [OK] **Completed**
+
+
+## Session 54: 面板列表补齐 hover 浅灰底
+<!-- trellis-session: v=2 fp=49fa5276d847a891 -->
+
+**Date**: 2026-11-02
+**Task**: 面板列表补齐 hover 浅灰底
+**Branch**: `main`
+
+### Summary
+
+面板「最近更新」hover 时补上与归档行一致的整行浅灰底：--brand-hover + .5rem 圆角 + .3s 过渡，padding 与负 margin 抵消保证文字位置不变。
+
+### Main Changes
+
+- vendor/patches/patch.css +13 行：#panel-wrapper .post-content li 的圆角/过渡/内边距与 :hover 背景
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `28b7131` | style: 面板列表补齐 hover 浅灰底 [task:11-02-panel-hover-bg] |
+
+### Testing
+
+- [OK] hover 背景 #eef1f5、圆角 8px、文字左缘保持 974px；暗色 #1d232a；胶囊与标题未变；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
