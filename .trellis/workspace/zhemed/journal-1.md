@@ -1968,3 +1968,33 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Status
 
 [OK] **Completed**
+
+
+## Session 58: 目录 hover 补加粗加深，激活项改墨色
+<!-- trellis-session: v=2 fp=d72b379472a019fc -->
+
+**Date**: 2026-11-02
+**Task**: 目录 hover 补加粗加深，激活项改墨色
+**Branch**: `main`
+
+### Summary
+
+目录 hover 增加 700 字重；激活项由强调蓝+蓝条改为墨色+墨色条，与全站单色统一。面板区 400 字重规则带 !important，需同权覆盖。
+
+### Main Changes
+
+- vendor/patches/patch.css +9/-4：hover 的 font-weight、激活项颜色与 ::before 指示条
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6f25154` | style: 目录 hover 补加粗加深，激活项改墨色 [task:11-02-toc-hover-bold] |
+
+### Testing
+
+- [OK] hover 背景 rgb(238,241,245)/文字 rgb(17,20,24)/700；激活项墨色 700、指示条墨色；非激活默认 400 灰；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
