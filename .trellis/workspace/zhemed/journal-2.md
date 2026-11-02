@@ -35,3 +35,33 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 60: 目录激活项加 2px 竖条提示
+<!-- trellis-session: v=2 fp=d339e1c392b107e5 -->
+
+**Date**: 2026-11-02
+**Task**: 目录激活项加 2px 竖条提示
+**Branch**: `main`
+
+### Summary
+
+激活项取消特殊化后无法定位当前章节；在条目左缘加 2px 墨色圆角短竖条（垂直居中），文字保持次要灰 400；::before 需以条目为定位参照。
+
+### Main Changes
+
+- vendor/patches/patch.css +11/-1：.toc-link position:relative；激活项 ::before 显示 2px×1rem 墨色竖条
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `11abcd7` | style: 目录激活项加 2px 竖条提示 [task:11-02-toc-active-bar] |
+
+### Testing
+
+- [OK] 竖条 2px×16px 墨色、垂直居中、贴条目左侧；激活项文字仍灰 400；hover 仍 #eef1f5+墨色+700 且竖条保留；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
