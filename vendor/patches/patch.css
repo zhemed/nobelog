@@ -512,6 +512,48 @@ main h1 {
   background-color: var(--brand-hover) !important;
 }
 
+/* 列表 hover：复刻侧栏导航手感（常态 500/次墨色，悬停 700/墨色） */
+#archives ul li a,
+#page-tag li a,
+#page-category li a,
+.categories .card-header a {
+  font-weight: 500;
+  color: var(--ink-body);
+  transition: color 0.2s ease-in-out;
+}
+
+#archives ul li:hover a,
+#page-tag li:hover a,
+#page-category li:hover a,
+.categories.card:hover .card-header a {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* 详情列表的链接继承了 .post-content 的橙色 hover（带 !important），这里统一回墨色 */
+#page-tag li:hover a,
+#page-category li:hover a {
+  color: var(--ink) !important;
+  border-bottom: none !important;
+}
+
+/* 标签/分类详情行：补齐与归档一致的整行高亮 */
+#page-tag li.d-flex,
+#page-category li.d-flex {
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease-in-out;
+}
+
+#page-tag li.d-flex:hover,
+#page-category li.d-flex:hover {
+  background-color: var(--brand-hover);
+}
+
+/* 标签索引胶囊：加粗会让 flex-wrap 换行抖动，只做颜色加深 */
+#tags .tag:hover {
+  color: var(--ink);
+}
+
 /* 授权链接 / 页脚链接：旧版加粗并继承文字色 */
 .post-tail-wrapper .license-wrapper > a,
 footer a {
