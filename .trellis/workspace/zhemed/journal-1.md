@@ -1617,3 +1617,38 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 如需彻底消除 width:100% + 外边距的脆弱写法，可另立任务改为 calc(100% - 112px)；1200px 以下断点未改动，未验证
+
+
+## Session 47: 版式留白改为显式 calc，统一宽屏间距下限
+<!-- trellis-session: v=2 fp=f18a61b6fbd5e9b1 -->
+
+**Date**: 2026-11-02
+**Task**: 版式留白改为显式 calc，统一宽屏间距下限
+**Branch**: `main`
+
+### Summary
+
+把容器宽度从 width:100% + 外边距（靠 flex 收缩吸收）改为 calc(100% - gap*2)，并合并四段互相覆盖的旧留白规则；gap 统一为 max(56px, (100vw-1600)/3)，修掉 1650–1767px 区间间距塌陷到 16.7px 的不一致。
+
+### Main Changes
+
+- vendor/patches/patch.css −63/+10 行：删除三段历史留白规则块，新增单一 @media (min-width:1200px) 规则，容器宽度显式扣除 gap，panel margin-left 复用同一变量
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e26f5a8` | style: 版式留白改为显式 calc 并统一宽屏间距下限 [task:11-02-layout-gap-calc] |
+| `94fb78e` | chore(task): archive 11-02-layout-gap-calc |
+
+### Testing
+
+- [OK] 1200/1264/1440/1650/1800/1920 六档视口实测溢出均为 0、右栏可见；1650 间距由 16.7 修正为 56；fmt/clippy/test(98)/build 全绿；静态构建 HTML 与改动前一致
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 1200px 以下断点未纳入本次改动；若后续调整版式数值，改一处 --layout-gap 即可
