@@ -1102,15 +1102,20 @@ footer {
 }
 #toc-wrapper .toc-link:hover {
   background-color: var(--brand-hover);
+  font-weight: 700 !important;
 }
-/* 激活项保留强调色，hover 只加底色；非激活项 unsafe 的灰字来自
-   #panel-wrapper .toc-link 的 !important，这里用同权且更高特异度覆盖 */
+/* 非激活项的灰字来自 #panel-wrapper .toc-link 的 !important，
+   这里用同权且更高特异度覆盖，hover 转墨色 */
 #toc-wrapper .toc-link:not(.is-active-link):hover {
   color: var(--ink) !important;
 }
+/* 激活项跟随全站墨色语言：墨色 + 加粗 + 墨色指示条 */
 #toc-wrapper .toc-link.is-active-link {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--ink) !important;
+  font-weight: 700 !important;
+}
+#toc-wrapper .toc-link.is-active-link::before {
+  background-color: var(--ink) !important;
 }
 
 /* 任务列表复选框 */
