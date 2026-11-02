@@ -1938,3 +1938,33 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Status
 
 [OK] **Completed**
+
+
+## Session 57: 目录条目补上标签胶囊同款 hover
+<!-- trellis-session: v=2 fp=0114719b605d2dda -->
+
+**Date**: 2026-11-02
+**Task**: 目录条目补上标签胶囊同款 hover
+**Branch**: `main`
+
+### Summary
+
+文章页目录 toc-link 补上与标签胶囊一致的 hover：浅灰圆角底 + 墨色字；激活项保留强调色。目录在 #panel-wrapper 内，旧规则带 !important，需同权更高特异度覆盖。
+
+### Main Changes
+
+- vendor/patches/patch.css +10 行：toc-link 圆角/过渡、hover 背景、非激活项 hover 文字色
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ca75c6b` | style: 目录条目补上标签胶囊同款 hover [task:11-02-toc-hover] |
+
+### Testing
+
+- [OK] 普通项 hover 背景 rgb(238,241,245)、文字 rgb(17,20,24)、圆角 6px；激活项仍 rgb(59,91,122)；暗色自动 #1d232a；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
