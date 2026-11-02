@@ -7,8 +7,8 @@
 ## Current Status
 
 <!-- @@@auto:current-status -->
-- **Active File**: `journal-1.md`
-- **Total Sessions**: 58
+- **Active File**: `journal-2.md`
+- **Total Sessions**: 59
 - **Last Active**: 2026-11-02
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,8 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~2000 | Active |
+| `journal-2.md` | ~37 | Active |
+| `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 59 | 2026-11-02 | 目录激活项取消特殊处理 | `7cd7de9` | `main` |
 | 58 | 2026-11-02 | 目录 hover 补加粗加深，激活项改墨色 | `6f25154` | `main` |
 | 57 | 2026-11-02 | 目录条目补上标签胶囊同款 hover | `ca75c6b` | `main` |
 | 56 | 2026-11-02 | 标签胶囊 hover 不再变蓝 | `9b5ded0` | `main` |
