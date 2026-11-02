@@ -159,3 +159,33 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 64: 修复置顶图钉渲染成方块
+<!-- trellis-session: v=2 fp=23019997c8f9eded -->
+
+**Date**: 2026-11-02
+**Task**: 修复置顶图钉渲染成方块
+**Branch**: `main`
+
+### Summary
+
+meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular 字体；为 .post-meta 内 fas/fa-solid 恢复 900 并覆盖 #post-list 的高特异度规则。
+
+### Main Changes
+
+- vendor/patches/patch.css +9 行：图标字重恢复规则
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fc18749` | fix: 修复置顶图钉图标渲染成方块 [task:11-02-pin-icon-weight] |
+
+### Testing
+
+- [OK] 图钉计算字重 900、渲染正常；日历仍 400；meta 文字与图标颜色不变；仅 CSS 哈希变化；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
