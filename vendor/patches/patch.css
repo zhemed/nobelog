@@ -456,6 +456,20 @@ main h1 {
   background: none;
 }
 
+/* 胶囊带 Bootstrap 的 btn 类，hover 会被涂成亮蓝（背景 #0d6efd、边框 #007bff）；
+   统一回站点的浅灰底 + 墨色字，选择器需压过 .btn.btn-outline-primary:not(.disabled):hover */
+#panel-wrapper .post-tag:hover,
+#panel-wrapper .post-tag:focus,
+#panel-wrapper .post-tag:active,
+.post-tag.btn.btn-outline-primary:hover,
+.post-tag.btn.btn-outline-primary:focus,
+.post-tag.btn.btn-outline-primary:active {
+  background-color: var(--brand-hover) !important;
+  color: var(--ink) !important;
+  border-color: var(--btn-border-color) !important;
+  box-shadow: none !important;
+}
+
 /* 标签索引页：主题默认 .tag 是 3rem 行高 + 外阴影 + Oswald 计数，视觉偏重；
    统一到侧栏「热门标签」的口径，计数保留但与中文基线对齐 */
 #tags .tag {
