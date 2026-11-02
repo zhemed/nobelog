@@ -1784,3 +1784,37 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 正文链接仍有非 hover 的 1px 底部细线（主题默认），是否一并去掉需确认——去掉后正文链接将不可辨识
+
+
+## Session 52: 列表行 hover 复刻侧栏加粗变深
+<!-- trellis-session: v=2 fp=5483bb579a219e02 -->
+
+**Date**: 2026-11-02
+**Task**: 列表行 hover 复刻侧栏加粗变深
+**Branch**: `main`
+
+### Summary
+
+侧栏的舒适感来自 500→700 字重 + 加深；把同一套应用到归档行、分类卡片、标签索引与标签详情列表，标签胶囊只变色不加粗以防换行抖动。
+
+### Main Changes
+
+- vendor/patches/patch.css +42 行：列表链接常态 500/ink-body，hover 700/ink；详情行补整行高亮；详情链接用 !important 改回墨色并去橙色下边框
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8fb24a0` | style: 列表行 hover 复刻侧栏加粗变深 [task:11-02-list-hover-weight] |
+
+### Testing
+
+- [OK] 亮/暗两套实测：归档 500→700 且 #c7ccd3→#e6e9ec；分类同；标签胶囊宽度 56px、换行高度 39px 不变；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 加粗会让行内文字宽度变化 1–2px（侧栏同样如此）；如介意可用 text-shadow 模拟加粗，需另议

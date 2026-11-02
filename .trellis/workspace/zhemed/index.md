@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 51
+- **Total Sessions**: 52
 - **Last Active**: 2026-11-02
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1786 | Active |
+| `journal-1.md` | ~1820 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 52 | 2026-11-02 | 列表行 hover 复刻侧栏加粗变深 | `8fb24a0` | `main` |
 | 51 | 2026-11-02 | 移除链接 hover 下划线 | `aea6227` | `main` |
 | 50 | 2026-11-02 | 全站链接默认色统一为墨色 | `5dc6511` | `main` |
 | 49 | 2026-11-02 | 归档与分类改为悬停高亮并统一字体 | `1113df7` | `main` |
