@@ -303,7 +303,7 @@ fn breadcrumb(items: &[Breadcrumb]) -> String {
         .map(|(index, item)| {
             let name = escape_html(&item.name);
             match &item.href {
-                Some(href) if index != last => format!(
+                Some(href) if index != last || items.len() > 1 => format!(
                     r##"    <span>
       <a href="{href}">{name}</a>
     </span>"##
@@ -1187,9 +1187,10 @@ pub fn post_page(ctx: &Ctx, post: &Post, related: &[RelatedLink]) -> String {
     let license_url = SITE.license_url;
     let license_name = escape_html(SITE.license_name);
     let html = &post.html;
+    let post_href = post_url(post);
     let body = format!(
         r##"  <header>
-    <h1 data-toc-skip>{title}</h1>
+    <h1 data-toc-skip><a href="{post_href}">{title}</a></h1>
     <div class="post-meta text-muted">
       <!-- published date -->
       <span>
@@ -1241,7 +1242,7 @@ pub fn post_page(ctx: &Ctx, post: &Post, related: &[RelatedLink]) -> String {
     let mut crumbs = crumbs_home("主页");
     crumbs.push(Breadcrumb {
         name: post.title.clone(),
-        href: None,
+        href: Some(post_url(post)),
     });
     let toc = toc_wrapper(&post.toc);
     render_layout(
