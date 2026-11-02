@@ -1652,10 +1652,23 @@ footer {
   color: var(--ink) !important;
 }
 
-#panel-wrapper .post-content a,
 #panel-wrapper .post-tag {
   font-weight: 400 !important;
   color: var(--ink-muted) !important;
+}
+
+/* 面板列表链接：与归档行同一套手感（常态 500/次墨色，悬停 700/墨色） */
+#panel-wrapper .post-content a {
+  font-weight: 500 !important;
+  color: var(--ink-body) !important;
+  text-decoration: none;
+  border-bottom: none;
+  transition: color 0.2s ease-in-out;
+}
+
+#panel-wrapper .post-content a:hover {
+  font-weight: 700 !important;
+  color: var(--ink) !important;
 }
 
 /* 文章页：标题 700，正文 400 */
