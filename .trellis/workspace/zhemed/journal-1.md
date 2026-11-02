@@ -1878,3 +1878,33 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Status
 
 [OK] **Completed**
+
+
+## Session 55: 面板 hover 改由整行驱动加粗
+<!-- trellis-session: v=2 fp=2f55735d6ecfa993 -->
+
+**Date**: 2026-11-02
+**Task**: 面板 hover 改由整行驱动加粗
+**Branch**: `main`
+
+### Summary
+
+底色挂在 li:hover、加粗挂在 a:hover，导致鼠标在行内空白处只出底色不加粗。改为 li:hover a，整行任意位置同时生效。
+
+### Main Changes
+
+- vendor/patches/patch.css +2/-1：选择器由 #panel-wrapper .post-content a:hover 改为 li:hover a
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bb391e9` | fix: 面板 hover 改由整行驱动加粗 [task:11-02-panel-hover-row] |
+
+### Testing
+
+- [OK] 鼠标在文字右侧空白处：li:hover true / a:hover false，但字重 700、颜色 #111418、底色 #eef1f5 均已生效；其余列表本就是行驱动；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
