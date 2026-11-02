@@ -1716,3 +1716,37 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 如希望卡片 hover 再加轻微浮起阴影，可在此规则上叠加 box-shadow；1200 以下断点未专门验证
+
+
+## Session 50: 全站链接默认色统一为墨色
+<!-- trellis-session: v=2 fp=44df1f081cdbcea4 -->
+
+**Date**: 2026-11-02
+**Task**: 全站链接默认色统一为墨色
+**Branch**: `main`
+
+### Summary
+
+链接色从 --accent 改为 --ink，与侧栏导航一致；正文覆盖 github-markdown 的 GitHub 蓝；因链接与正文同色，补了 hover 下划线。
+
+### Main Changes
+
+- vendor/patches/patch.css +20/-2：--link-color 两处改 var(--ink)；.markdown-body a 覆盖；main/#archives/#page-tag/panel/footer 链接 hover 下划线
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5dc6511` | style: 全站链接默认色统一为墨色 [task:11-02-link-color-ink] |
+
+### Testing
+
+- [OK] 归档/正文/分类/标签/面包屑链接实测 rgb(17,20,24)，暗色 rgb(230,233,236)；TOC 激活仍为强调色；hover 下划线可见；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 面板与页脚仍是次要灰（原非蓝色链接），如需统一为墨色需另议；hover 颜色沿用主题行为
