@@ -1365,6 +1365,15 @@ html[data-mode="dark"] .post-meta-line {
     padding-right: 28px;
   }
 
+  /* 宽内容（长代码行、宽表格）不得撑开 flex 列：
+     容器 100% 宽 + 56px 外边距靠 flex 收缩吸收，而 main 的 min-width:auto
+     会被内容 min-content 顶住，导致右栏被挤出视口并出现横向滚动条。
+     置 0 后 main 可收缩，宽内容改在 .highlight pre / .table-wrapper 内部滚动。 */
+  #main-wrapper > .container,
+  #main-wrapper .row.flex-grow-1 > main {
+    min-width: 0 !important;
+  }
+
   #panel-wrapper {
     flex: 0 0 240px !important;
     width: 240px !important;
