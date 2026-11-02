@@ -1170,10 +1170,10 @@ a {
   -webkit-user-drag: none;
 }
 
-/* 正文链接跟随全站墨色（github-markdown 自带 GitHub 蓝 #0969da）；
-   链接不设 hover 装饰，可点击感交给整行/整卡片的高亮与指针 */
+/* 正文行内链接用强调色，与正文可区分；导航类链接仍用墨色。
+   github-markdown 自带的 GitHub 蓝 #0969da 由此覆盖 */
 .markdown-body a {
-  color: var(--link-color);
+  color: var(--accent);
 }
 
 .markdown-body a:hover {
