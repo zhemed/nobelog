@@ -1818,3 +1818,33 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 加粗会让行内文字宽度变化 1–2px（侧栏同样如此）；如介意可用 text-shadow 模拟加粗，需另议
+
+
+## Session 53: 侧栏面板列表对齐归档行 hover
+<!-- trellis-session: v=2 fp=124f115cbabc4442 -->
+
+**Date**: 2026-11-02
+**Task**: 侧栏面板列表对齐归档行 hover
+**Branch**: `main`
+
+### Summary
+
+把面板「最近更新」链接从与标签胶囊共用的规则里拆出，单独设 500/次墨色、hover 700/墨色、去下划线，作用域仅 #panel-wrapper。
+
+### Main Changes
+
+- vendor/patches/patch.css +14/-1：拆分 #panel-wrapper .post-content a 与 .post-tag；新增 hover 规则
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7e9030e` | style: 侧栏面板列表对齐归档行 hover 手感 [task:11-02-panel-list-hover] |
+
+### Testing
+
+- [OK] 面板链接常态 500/#33373d、hover 700/#111418、无下划线；胶囊不变；暗色 #c7ccd3/#e6e9ec；归档回归正常；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
