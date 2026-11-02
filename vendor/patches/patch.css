@@ -1395,74 +1395,21 @@ html[data-mode="dark"] .post-meta-line {
   }
 }
 
-/* 内容整块右移：让侧栏右侧留白与屏幕右侧留白相等（居中于侧栏右侧区域）
-   单位：CSS 像素；2047 宽下从 56 移到 195.5，右移 139.5 */
-@media all and (min-width: 1650px) {
+/* 三段留白统一：侧栏-内容、内容-右栏、右栏-屏幕右缘，三处相等。
+   gap 在 1200–1768px 固定 56px，之后随视口线性增长；
+   容器宽度显式扣除两侧 gap，不再依赖 flex 收缩吸收多出的外边距。 */
+@media all and (min-width: 1200px) {
   #main-wrapper > .container {
-    margin-left: max(56px, calc((100vw - 300px - 1356px) / 2)) !important;
-    margin-right: max(56px, calc((100vw - 300px - 1356px) / 2)) !important;
-  }
-}
-
-@media all and (min-width: 1200px) and (max-width: 1649.98px) {
-  #main-wrapper > .container {
-    margin-left: max(56px, calc((100vw - 260px - 1356px) / 2)) !important;
-    margin-right: max(56px, calc((100vw - 260px - 1356px) / 2)) !important;
-  }
-}
-
-/* 右侧留白与左侧留白对齐：内容与右栏之间的间隔，改成和侧栏到内容的间隔相同 */
-@media all and (min-width: 1650px) {
-  #panel-wrapper {
-    margin-left: max(56px, calc((100vw - 300px - 1356px) / 2)) !important;
-  }
-}
-
-@media all and (min-width: 1200px) and (max-width: 1649.98px) {
-  #panel-wrapper {
-    margin-left: max(56px, calc((100vw - 260px - 1356px) / 2)) !important;
-  }
-}
-
-/* 容器改为内容自适应宽度：内容保持 1060，间距加大后整块向右延伸 */
-@media all and (min-width: 1650px) {
-  #main-wrapper > .container {
-    width: auto !important;
-    margin-right: 0 !important;
-  }
-}
-
-@media all and (min-width: 1200px) and (max-width: 1649.98px) {
-  #main-wrapper > .container {
-    width: auto !important;
-    margin-right: 0 !important;
-  }
-}
-
-/* 三段留白统一：侧栏-内容、内容-右栏、右栏-屏幕右缘，三处相等 */
-@media all and (min-width: 1650px) {
-  #main-wrapper > .container {
-    width: 100% !important;
+    --layout-gap: max(56px, calc((100vw - 1600px) / 3));
+    width: calc(100% - var(--layout-gap) * 2) !important;
     max-width: none !important;
-    margin-left: calc((100vw - 1600px) / 3) !important;
-    margin-right: calc((100vw - 1600px) / 3) !important;
+    margin-left: var(--layout-gap) !important;
+    margin-right: var(--layout-gap) !important;
   }
 
+  /* 右栏与主栏之间沿用同一个 gap（panel 在 container 内，继承变量） */
   #panel-wrapper {
-    margin-left: calc((100vw - 1600px) / 3) !important;
-  }
-}
-
-@media all and (min-width: 1200px) and (max-width: 1649.98px) {
-  #main-wrapper > .container {
-    width: 100% !important;
-    max-width: none !important;
-    margin-left: max(56px, calc((100vw - 1560px) / 3)) !important;
-    margin-right: max(56px, calc((100vw - 1560px) / 3)) !important;
-  }
-
-  #panel-wrapper {
-    margin-left: max(56px, calc((100vw - 1560px) / 3)) !important;
+    margin-left: var(--layout-gap, max(56px, calc((100vw - 1600px) / 3))) !important;
   }
 }
 
