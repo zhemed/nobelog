@@ -1750,3 +1750,37 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Next Steps
 
 - 面板与页脚仍是次要灰（原非蓝色链接），如需统一为墨色需另议；hover 颜色沿用主题行为
+
+
+## Session 51: 移除链接 hover 下划线
+<!-- trellis-session: v=2 fp=8e3cc4b660c15db4 -->
+
+**Date**: 2026-11-02
+**Task**: 移除链接 hover 下划线
+**Branch**: `main`
+
+### Summary
+
+用户不需要链接级 hover 反馈：删掉上一任务加的 hover 下划线，并压过 github-markdown 自带的 a:hover 下划线；保留整行/整卡片的块级高亮。
+
+### Main Changes
+
+- vendor/patches/patch.css +5/-13：删除五组 hover 下划线选择器，保留 .markdown-body a 墨色覆盖，新增 a:hover 的 text-decoration:none
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `aea6227` | style: 移除链接 hover 下划线反馈 [task:11-02-link-hover-none] |
+
+### Testing
+
+- [OK] 归档/面板/正文链接 hover 实测 decoration none 且颜色不变；归档行高亮 #eef1f5 保留；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 正文链接仍有非 hover 的 1px 底部细线（主题默认），是否一并去掉需确认——去掉后正文链接将不可辨识
