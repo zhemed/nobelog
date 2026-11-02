@@ -1666,7 +1666,8 @@ footer {
   transition: color 0.2s ease-in-out;
 }
 
-#panel-wrapper .post-content a:hover {
+/* 由整行驱动，避免只有文字命中时加粗、行内空白只出底色 */
+#panel-wrapper .post-content li:hover a {
   font-weight: 700 !important;
   color: var(--ink) !important;
 }
