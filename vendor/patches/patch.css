@@ -1789,6 +1789,15 @@ footer a.site-title {
   font-weight: 400 !important;
 }
 
+/* 图标不能套文字字重：fas(solid) 需要 900 才会命中实心字体，
+   否则退回 Regular 字体、缺字形渲染成方块（如置顶图钉） */
+.post-meta i.fas,
+.post-meta i.fa-solid,
+#post-list .card .card-body .post-meta i.fas,
+#post-list .card .card-body .post-meta i.fa-solid {
+  font-weight: 900 !important;
+}
+
 /* 目录：非高亮项中灰、高亮项主文字色 */
 #panel-wrapper .toc-link,
 .toc-link {
