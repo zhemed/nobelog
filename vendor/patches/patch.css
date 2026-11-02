@@ -952,7 +952,7 @@ html:not([data-mode]), html[data-mode="light"] {
   --text-color: var(--ink-body);
   --text-muted-color: var(--ink-muted);
   --heading-color: var(--ink);
-  --link-color: var(--accent);
+  --link-color: var(--ink);
   --toc-highlight: var(--accent);
   --brand-line: rgba(158, 61, 63, 0.55);
   --brand-hover: #eef1f5;
@@ -980,7 +980,7 @@ html[data-mode="dark"] {
   --text-color: var(--ink-body);
   --text-muted-color: var(--ink-muted);
   --heading-color: var(--ink);
-  --link-color: var(--accent);
+  --link-color: var(--ink);
   --toc-highlight: var(--accent);
   --brand-line: rgba(214, 144, 144, 0.45);
   --brand-hover: #1d232a;
@@ -1091,6 +1091,24 @@ footer {
 
 a {
   -webkit-user-drag: none;
+}
+
+/* 链接改为墨色后与正文同色，hover 用下划线保留可点击提示 */
+.markdown-body a,
+#archives a,
+#page-tag a,
+#panel-wrapper .post-content a,
+footer a {
+  color: var(--link-color);
+}
+
+.markdown-body a:hover,
+#archives a:hover,
+#page-tag a:hover,
+#panel-wrapper .post-content a:hover,
+footer a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 /* 标题与副标题保持不可选中（其余文字可选中） */
