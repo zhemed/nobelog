@@ -1908,3 +1908,33 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Status
 
 [OK] **Completed**
+
+
+## Session 56: 标签胶囊 hover 不再变蓝
+<!-- trellis-session: v=2 fp=720aadc320952210 -->
+
+**Date**: 2026-11-02
+**Task**: 标签胶囊 hover 不再变蓝
+**Branch**: `main`
+
+### Summary
+
+胶囊带 Bootstrap btn 类，hover 被涂成亮蓝（背景 #0d6efd、边框 #007bff）。新增 hover/focus/active 覆盖为浅灰底+墨色字+站点边框色，特异度压过 :not(.disabled) 规则。
+
+### Main Changes
+
+- vendor/patches/patch.css +14 行：.post-tag 交互态覆盖，含 #panel-wrapper 变体
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9b5ded0` | fix: 标签胶囊 hover 不再变蓝 [task:11-02-tag-chip-hover-blue] |
+
+### Testing
+
+- [OK] 面板胶囊 hover 由 rgb(13,110,253)/灰 变为 rgb(238,241,245)/rgb(17,20,24)，边框 rgb(233,236,239)；默认态不变；文章页无 btn 类胶囊不受影响；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
