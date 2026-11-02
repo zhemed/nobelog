@@ -99,3 +99,33 @@
 ### Next Steps
 
 - 模板变化使静态产物与旧 public 基线不再逐字节一致；如需保持基线，需要重建基准目录
+
+
+## Session 62: 正文行内链接恢复强调蓝
+<!-- trellis-session: v=2 fp=484ea5d92c4548d2 -->
+
+**Date**: 2026-11-02
+**Task**: 正文行内链接恢复强调蓝
+**Branch**: `main`
+
+### Summary
+
+全站链接统一墨色后，正文行内链接失去可辨识度；把 .markdown-body a 恢复为 --accent（亮 #3b5b7a / 暗 #8fb3d9），导航类链接保持墨色。
+
+### Main Changes
+
+- vendor/patches/patch.css +3/-3：.markdown-body a 颜色由 --link-color 改为 --accent
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ffe7033` | fix: 正文行内链接恢复强调蓝 [task:11-02-inline-link-accent] |
+
+### Testing
+
+- [OK] 正文行内链接亮色 rgb(59,91,122)、暗色 rgb(143,179,217)；面包屑/目录/归档仍墨色；无下划线；产物无新增结构性差异；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
