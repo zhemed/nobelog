@@ -16,3 +16,7 @@ dist/
 
 # 发布用已下线域名清单（含真实域名，不入库）
 tools/banned-domains.txt
+
+# 本地环境：项目内 Trellis CLI（0.6.17）与 DSH 会话日志，不入库
+.tools/
+.dsh/notes/
