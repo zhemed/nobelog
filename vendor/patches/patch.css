@@ -456,6 +456,31 @@ main h1 {
   background: none;
 }
 
+/* 标签索引页：主题默认 .tag 是 3rem 行高 + 外阴影 + Oswald 计数，视觉偏重；
+   统一到侧栏「热门标签」的口径，计数保留但与中文基线对齐 */
+#tags .tag {
+  display: inline-flex;
+  align-items: baseline;
+  margin: 0 0.35rem 0.5rem 0;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.05rem;
+  color: var(--text-muted-color);
+  /* 主题的 .tag 边框带 !important，这里必须同权覆盖才能统一到 --btn-border-color */
+  border: 1px solid var(--btn-border-color) !important;
+  border-radius: 0.8rem;
+  box-shadow: none;
+}
+
+#tags .tag span {
+  margin-left: 0.4em;
+  font-family: inherit;
+  font-size: 0.85em;
+  line-height: inherit;
+  color: var(--text-muted-color);
+}
+
 /* 授权链接 / 页脚链接：旧版加粗并继承文字色 */
 .post-tail-wrapper .license-wrapper > a,
 footer a {
