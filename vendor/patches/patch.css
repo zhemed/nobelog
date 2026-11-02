@@ -481,6 +481,37 @@ main h1 {
   color: var(--text-muted-color);
 }
 
+/* 归档页：主题的斑马纹渐变 + Lato 日期让整列表像一块脏阴影；
+   去掉静态底、统一字体，并把侧栏导航的 hover 高亮搬过来 */
+#archives {
+  letter-spacing: normal;
+}
+
+#archives ul li,
+#archives ul li:nth-child(odd) {
+  background-image: none !important;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s ease-in-out;
+}
+
+#archives ul li:hover {
+  background-color: var(--brand-hover) !important;
+}
+
+#archives .date.day {
+  font-family: inherit;
+}
+
+/* 分类卡片：去掉 Bootstrap 默认的 3% 灰头，hover 时与侧栏一致的浅灰 */
+.categories .card-header {
+  background-color: transparent !important;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.categories.card:hover .card-header {
+  background-color: var(--brand-hover) !important;
+}
+
 /* 授权链接 / 页脚链接：旧版加粗并继承文字色 */
 .post-tail-wrapper .license-wrapper > a,
 footer a {
