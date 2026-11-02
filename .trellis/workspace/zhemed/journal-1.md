@@ -1682,3 +1682,37 @@ A/B 两面只读审核：Node.js 三层均不构成依赖（构建链 cargo+bash
 ### Status
 
 [OK] **Completed**
+
+
+## Session 49: 归档与分类改为悬停高亮并统一字体
+<!-- trellis-session: v=2 fp=1bced25f949a31a3 -->
+
+**Date**: 2026-11-02
+**Task**: 归档与分类改为悬停高亮并统一字体
+**Branch**: `main`
+
+### Summary
+
+归档页的静态斑马纹渐变、分类卡片的 Bootstrap 灰头都改成随鼠标出现的浅灰高亮，与侧栏导航一致；同时去掉归档日期的 Lato 与整块字距。
+
+### Main Changes
+
+- vendor/patches/patch.css +31 行：#archives 去渐变、行 hover --brand-hover、字距 normal、.date.day 继承字体；.categories .card-header 透明、卡片 hover 时高亮
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1113df7` | style: 归档与分类列表改为悬停高亮并统一字体 [task:11-02-list-hover-consistency] |
+
+### Testing
+
+- [OK] light/dark 四组实测：归档 hover #eef1f5 / #1d232a，分类 hover 同色；日期字体 -apple-system；字距 normal；HTML 产物不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 如希望卡片 hover 再加轻微浮起阴影，可在此规则上叠加 box-shadow；1200 以下断点未专门验证
