@@ -1105,8 +1105,18 @@ footer {
   color: var(--ink-muted) !important;
   font-weight: 400 !important;
 }
+#toc-wrapper .toc-link {
+  position: relative; /* 让 ::before 以条目为定位参照，而不是整列 */
+}
 #toc-wrapper .toc-link.is-active-link::before {
-  display: none !important;
+  display: inline-block !important;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 1rem;
+  left: 0.25rem;
+  border-radius: 1px;
+  background-color: var(--ink) !important;
 }
 #toc-wrapper .toc-link:hover {
   background-color: var(--brand-hover);
