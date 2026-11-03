@@ -223,3 +223,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Next Steps
 
 - 2555 下主栏与右栏间隔达 843px，如觉得空可考虑提高主栏 1060 上限
+
+
+## Session 66: 回滚超宽屏布局改动
+<!-- trellis-session: v=2 fp=5f9667a2063a290c -->
+
+**Date**: 2026-11-03
+**Task**: 回滚超宽屏布局改动
+**Branch**: `main`
+
+### Summary
+
+撤销 8285a70（≥1650 内容贴左、右栏贴右），恢复三段留白均分；revert 因任务文件移动冲突，改为手工移除 18 行 CSS，保留其它改动。
+
+### Main Changes
+
+- vendor/patches/patch.css −18 行：删除 @media (min-width:1650px) 规则块
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fa2387d` | revert: 回滚超宽屏布局改动 [task:11-03-revert-wide-layout] |
+
+### Testing
+
+- [OK] 2555 左右留白各 318、1920 各 107，均分恢复；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
