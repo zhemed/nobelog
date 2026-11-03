@@ -663,3 +663,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 80: 左侧留白加宽，与中间间隔等宽
+<!-- trellis-session: v=2 fp=b812e36507f01464 -->
+
+**Date**: 2026-11-03
+**Task**: 左侧留白加宽，与中间间隔等宽
+**Branch**: `main`
+
+### Summary
+
+容器占满侧栏右侧宽度，主栏与右栏各用 auto 外边距平分剩余：左、中两处留白等宽，右栏仍贴屏幕右缘，页脚与正文列对齐。
+
+### Main Changes
+
+- vendor/patches/patch.css：≥1650 块（容器 100%、主栏 min(1450,100%-352) + margin-left auto、右栏 margin-left auto）、页脚宽度与偏移
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4bc9384` | style: 左侧留白加宽，与中间间隔等宽 [task:11-03-equal-gaps] |
+
+### Testing
+
+- [OK] 1920 左56/中56/右0；2559 左285/中285/右0；页脚与内容列对齐；无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
