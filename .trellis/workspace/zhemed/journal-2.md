@@ -933,3 +933,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 89: 正文图片居中
+<!-- trellis-session: v=2 fp=425adb7081677a14 -->
+
+**Date**: 2026-11-03
+**Task**: 正文图片居中
+**Branch**: `main`
+
+### Summary
+
+正文图片默认靠左；改为 img 与 a.img-link 一起居中，1920 下左右各 67，手机满宽。
+
+### Main Changes
+
+- vendor/patches/patch.css：新增图片与图片链接的居中规则
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d07b084` | chore(task): archive 11-03-center-article-images |
+
+### Testing
+
+- [OK] 1920 图片 960、左右 67/67；390 满宽 334；无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
