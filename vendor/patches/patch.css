@@ -1564,9 +1564,9 @@ html[data-mode="dark"] .post-meta-line {
 @media all and (min-width: 1650px) {
   #main-wrapper > .container {
     width: calc(100% - 112px) !important;
-    max-width: 1457px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    max-width: none !important;
+    margin-left: 56px !important;
+    margin-right: 56px !important;
   }
 
   #main-wrapper .row.flex-grow-1 {
