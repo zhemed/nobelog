@@ -198,10 +198,11 @@ cd .. && cargo run --release --manifest-path rust/Cargo.toml -- build --self-ass
 1. **版本同步**：`rust/Cargo.toml` 与 `rust/Cargo.lock`（`name = "nobelog"` 那一项）两处一起改成新版本号
    （`package.json` 已于 2026-10-21 删除，不再是版本源）。
 2. **门禁**：`cd rust && cargo fmt --check && cargo clippy --all-targets && cargo test`。
-3. **打包**：仓库根 `SITE_URL=https://<正式域名> VERSION=<x.y.z> tools/package.sh` → `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`；
+3. **打包**：仓库根 `VERSION=<x.y.z> tools/package.sh` → `dist/nobelog-<version>-linux-x86_64.tar.gz` + `SHA256SUMS`；
    `(cd dist && sha256sum -c SHA256SUMS)`，并解包确认 `./nobelog --version` 为新版本。
-   `SITE_URL` 缺失、非 https 或 `VERSION` 与 `rust/Cargo.toml` 不一致时脚本直接失败。没有正式域名时可用
-   `https://example.com` 打示例包，并在 Release notes 注明静态部署需自行用正式域名重建。
+   **`SITE_URL` 不传时默认 `https://example.com` 占位**（RFC 2606 保留域名），发布包因此与具体站点解耦，
+   任何人拿到包都能部署；部署方用自己的域名重新构建即可。仍会拒绝 http、本机地址与已下线域名，
+   `VERSION` 与 `rust/Cargo.toml` 不一致时直接失败。
 4. **提交与 tag**：提交消息带任务锚点；打 annotated tag `v<x.y.z>`，message 用 `<x.y.z>：<一句话主题>`；
    `git push origin main && git push origin v<x.y.z>`。
 5. **GitHub Release（默认动作）**：用 `gh` 建 release 并附二进制与校验文件：

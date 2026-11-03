@@ -3,9 +3,9 @@
 # 只放运行所需文件，不含安装脚本；部署方式由使用者决定。
 #
 # 包内的 public/ 是打包时用 SITE_URL 重建的静态产物：canonical、og:url、RSS、sitemap、
-# robots 里的绝对地址全部来自这个值，因此必须显式给正式 https 域名，不允许空值、
-# http、本机地址或已下线域名。VERSION 必须与 rust/Cargo.toml 的版本一致，避免
-# 包名与二进制 --version 脱节。
+# robots 里的绝对地址全部来自这个值。默认用 https://example.com 占位（RFC 2606 保留域名），
+# 这样发布包与具体站点解耦、任何人都能直接部署；部署方用真实域名设置 SITE_URL 重新构建即可。
+# 仍拒绝 http、本机地址与已下线域名。VERSION 必须与 rust/Cargo.toml 的版本一致。
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -13,11 +13,10 @@ VERSION="${VERSION:-$(git describe --tags --always --dirty | sed 's/^v//')}"
 NAME="nobelog-$VERSION-linux-x86_64"
 OUT="${OUT:-dist}"
 
-SITE_URL="${SITE_URL:-}"
-if [ -z "$SITE_URL" ]; then
-  echo "错误：必须显式设置 SITE_URL，例如 SITE_URL=https://blog.example.com VERSION=$VERSION $0" >&2
-  echo "      包内静态产物的 canonical / RSS / sitemap / robots 会使用该值。" >&2
-  exit 1
+SITE_URL="${SITE_URL:-https://example.com}"
+if [ "$SITE_URL" = "https://example.com" ]; then
+  echo "提示：未设置 SITE_URL，使用占位域名 https://example.com 打包。" >&2
+  echo "      部署方应在自己的域名下重新构建：SITE_URL=https://<你的域名> VERSION=$VERSION $0" >&2
 fi
 case "$SITE_URL" in
   https://*) ;;

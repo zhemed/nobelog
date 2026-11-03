@@ -52,8 +52,9 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 `X-Forwarded-Proto` 还原 https。`X-Forwarded-Host` 与其它场景的转发头仍需显式设置 `NOBELOG_TRUST_FORWARDED=1` 后才采信。
 静态构建不参与请求推断，直接回退到默认地址。
 
-发布包用 `SITE_URL=https://<domain> VERSION=<x.y.z> tools/package.sh` 打包；脚本会拒绝空值、http、本机地址与已下线域名，
-并用 `SITE_URL` 重建包内 `public/` 的静态产物，因此包内绝对地址就是打包时传入的域名。
+发布包用 `SITE_URL=https://<domain> VERSION=<x.y.z> tools/package.sh` 打包，并用 `SITE_URL` 重建包内 `public/`
+的静态产物。**不传 `SITE_URL` 时默认用占位域名 `https://example.com`**，发布包与具体站点解耦，其他人可以直接部署；
+部署方拿到包后用自己的域名重新构建即可。脚本仍会拒绝 http、本机地址与已下线域名。
 
 ## 数据
 
