@@ -603,3 +603,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Next Steps
 
 - 靠右属于试验版，用户对比后再定是否保留
+
+
+## Session 78: 两侧留白相等，版心居中
+<!-- trellis-session: v=2 fp=d389fc88e45d4317 -->
+
+**Date**: 2026-11-03
+**Task**: 两侧留白相等，版心居中
+**Branch**: `main`
+
+### Summary
+
+靠右试验导致左742/右56偏侧；容器右外边距改回 auto，两侧均分：1920 各82，2558 各401。
+
+### Main Changes
+
+- vendor/patches/patch.css +1/-1：margin-right auto
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3e11493` | style: 两侧留白相等，版心居中 [task:11-03-sym-margins] |
+
+### Testing
+
+- [OK] 1920 左82/右82；2558 左401/右401；1264 不变；页脚仍与正文列同宽；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
