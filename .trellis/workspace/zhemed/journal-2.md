@@ -723,3 +723,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 82: 面包屑跟随内容列左缘
+<!-- trellis-session: v=2 fp=227637847c4e041a -->
+
+**Date**: 2026-11-03
+**Task**: 面包屑跟随内容列左缘
+**Branch**: `main`
+
+### Summary
+
+内容列按比例后，面包屑与内容左缘错开；给 #topbar 加同一份留白公式的 padding-left，2048/2560 均对齐。
+
+### Main Changes
+
+- vendor/patches/patch.css：≥1650 块新增 #topbar padding-left
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f9185af` | chore(task): archive 11-03-breadcrumb-align |
+
+### Testing
+
+- [OK] 2048 面包屑 460 = 内容 460；2560 585 = 585；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
