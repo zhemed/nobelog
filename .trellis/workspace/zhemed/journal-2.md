@@ -693,3 +693,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 81: 内容宽度按比例（适配 125% 缩放）
+<!-- trellis-session: v=2 fp=f1536bdec826dc28 -->
+
+**Date**: 2026-11-03
+**Task**: 内容宽度按比例（适配 125% 缩放）
+**Branch**: `main`
+
+### Summary
+
+125% 缩放下实际 CSS 宽 2048；内容宽改为 min(1450,68%)，左右留白均分：2048 → 160/160，2560 → 285/285，右栏仍贴右缘。
+
+### Main Changes
+
+- vendor/patches/patch.css：主栏 width 与页脚 width/max-width/margin-left
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c196a88` | style: 内容宽度改为按比例，适配 125% 缩放 [task:11-03-proportional-width] |
+
+### Testing
+
+- [OK] 2048 内容1189/留白160/右缘0；2560 内容1450/留白285/右缘0；页脚对齐；无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
