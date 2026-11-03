@@ -509,3 +509,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Next Steps
 
 - 用户截图仍显示旧样式，需强刷后确认
+
+
+## Session 75: 页脚对齐内容与侧栏两端
+<!-- trellis-session: v=2 fp=8696c9cdd3ea0f99 -->
+
+**Date**: 2026-11-03
+**Task**: 页脚对齐内容与侧栏两端
+**Branch**: `main`
+
+### Summary
+
+页脚因 #tail-wrapper 是 col-xl-9 只有 75% 宽而缩在中间；≥1200 改为占满容器宽、左右内边距 28px，两端与内容/侧栏对齐。
+
+### Main Changes
+
+- vendor/patches/patch.css +17 行：≥1200 的 #tail-wrapper 与 footer 内边距
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `03ba77b` | fix: 页脚对齐内容与侧栏两端 [task:11-03-footer-align] |
+
+### Testing
+
+- [OK] 1920 页脚 [356,1864]，左文字 384、右文字止于 1836；1264 页脚 [316,1208]；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
