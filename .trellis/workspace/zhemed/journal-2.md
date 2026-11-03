@@ -993,3 +993,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 91: 侧栏按比例、内容收窄
+<!-- trellis-session: v=2 fp=3d202b82d0782190 -->
+
+**Date**: 2026-11-03
+**Task**: 侧栏按比例、内容收窄
+**Branch**: `main`
+
+### Summary
+
+宽屏块统一用四个变量推导：侧栏 clamp(300,16.5vw,360)、右栏 clamp(240,11.7vw,300)、内容 62%、留白均分；页脚/面包屑同步。
+
+### Main Changes
+
+- vendor/patches/patch.css：重写 ≥1650 块
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6594dce` | chore(task): archive 11-03-side-content-balance |
+
+### Testing
+
+- [OK] 1920 侧317/内994/留185；2048 侧338/内1060/留205；2560 侧360/内1364/留268；对齐无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
