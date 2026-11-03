@@ -628,10 +628,11 @@ footer p:last-child::before {
 /* 页脚横向对齐：主题里 #tail-wrapper 是 col-xl-9（只有内容区 75% 宽），
    页脚因此缩在中间。≥1200 时让它占满容器宽，左右内边距与正文一致。 */
 @media all and (min-width: 1200px) {
+  /* 页脚对齐正文列：容器宽扣除右侧栏 240 + 间隔 56 */
   #tail-wrapper {
-    flex: 0 0 100% !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    flex: 0 0 auto !important;
+    width: calc(100% - 296px) !important;
+    max-width: calc(100% - 296px) !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
