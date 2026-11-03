@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 69
+- **Total Sessions**: 70
 - **Last Active**: 2026-11-03
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~345 | Active |
+| `journal-2.md` | ~379 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 70 | 2026-11-03 | 主栏上限放宽到 1320（≥1650） | `9e61327` | `main` |
 | 69 | 2026-11-03 | 恢复右侧栏贴右缘 | `00e4ea4` | `main` |
 | 68 | 2026-11-03 | 回滚右侧栏贴右缘改动 | `7e0e5c9` | `main` |
 | 67 | 2026-11-03 | 右侧栏贴屏幕右缘（内容位置不变） | `4293bb3` | `main` |

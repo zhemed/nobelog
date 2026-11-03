@@ -343,3 +343,37 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 70: 主栏上限放宽到 1320（≥1650）
+<!-- trellis-session: v=2 fp=8b9cade5bcb632f9 -->
+
+**Date**: 2026-11-03
+**Task**: 主栏上限放宽到 1320（≥1650）
+**Branch**: `main`
+
+### Summary
+
+超宽屏主栏从 1060 提到 1320，右栏继续贴右，中间空白 581→323；1920 下主栏随空间增长到 1161。
+
+### Main Changes
+
+- vendor/patches/patch.css +5 行：@media (min-width:1650px) 内追加 main max-width:1320
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9e61327` | style: ≥1650 主栏上限放宽到 1320 [task:11-03-widen-main-1320] |
+
+### Testing
+
+- [OK] 2559：主栏 1320、间隔 323、右缘 56；1920：主栏 1161、间隔 56；1264 不变；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 验证截图统一 1264×809，不再混用其它分辨率
