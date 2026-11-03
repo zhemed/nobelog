@@ -1568,6 +1568,11 @@ html[data-mode="dark"] .post-meta-line {
     margin-right: 56px !important;
   }
 
+  /* 超宽屏把主栏上限从 1060 提到 1320，收敛与右栏之间的空白 */
+  #main-wrapper .row.flex-grow-1 > main {
+    max-width: 1320px !important;
+  }
+
   #main-wrapper .row.flex-grow-1 {
     justify-content: space-between;
   }
