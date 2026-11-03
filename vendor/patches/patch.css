@@ -1614,6 +1614,11 @@ html[data-mode="dark"] .post-meta-line {
   #main-wrapper {
     overflow-x: clip;
   }
+
+  /* 面包屑与内容列左缘对齐（同一份留白公式） */
+  #topbar-wrapper #topbar {
+    padding-left: calc((100% - min(1450px, 68%) - 240px) / 2) !important;
+  }
 }
 
 
