@@ -1584,7 +1584,7 @@ html[data-mode="dark"] .post-meta-line {
     width: calc(100% - 112px) !important;
     max-width: 1457px !important;
     margin-left: auto !important;
-    margin-right: 56px !important;
+    margin-right: auto !important;
   }
 
   #main-wrapper .row.flex-grow-1 {
