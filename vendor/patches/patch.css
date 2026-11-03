@@ -631,8 +631,8 @@ footer p:last-child::before {
   /* 页脚对齐正文列：容器宽扣除右侧栏 240 + 间隔 56 */
   #tail-wrapper {
     flex: 0 0 auto !important;
-    width: calc(100% - 296px) !important;
-    max-width: calc(100% - 296px) !important;
+    width: calc(100% - 240px - max(56px, (100vw - 1990px) / 3)) !important;
+    max-width: calc(100% - 240px - max(56px, (100vw - 1990px) / 3)) !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -1580,23 +1580,34 @@ html[data-mode="dark"] .post-meta-line {
    容器宽度封顶 1457（主栏 1161 + 间隔 56 + 右栏 240），
    两侧用 auto 外边距均分剩余空间。 */
 @media all and (min-width: 1650px) {
+  /* 三处留白统一起点：gap 变量 */
   #main-wrapper > .container {
-    width: calc(100% - 112px) !important;
-    max-width: 1457px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    --g: max(56px, calc((100vw - 1990px) / 3));
+    width: calc(100% - var(--g) * 2) !important;
+    max-width: none !important;
+    margin-left: var(--g) !important;
+    margin-right: var(--g) !important;
   }
 
   #main-wrapper .row.flex-grow-1 {
-    justify-content: flex-start !important;
+    justify-content: space-between !important;
   }
 
+  /* 内容宽度锁定为容器宽 − gap − 右栏，右栏右移时内容不被撑开 */
   #main-wrapper .row.flex-grow-1 > main {
+    flex: 0 0 auto !important;
+    width: calc(100% - var(--g) - 240px) !important;
     max-width: none !important;
   }
 
   #panel-wrapper {
-    margin-left: 56px !important;
+    margin-left: var(--g, 56px) !important;
+    margin-right: calc(-1 * var(--g, 56px)) !important;
+  }
+
+  /* 右栏贴到窗口右缘后与滚动条产生的 6px 横向溢出，裁掉即可 */
+  #main-wrapper {
+    overflow-x: clip;
   }
 }
 
