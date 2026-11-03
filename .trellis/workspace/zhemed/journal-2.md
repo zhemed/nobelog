@@ -189,3 +189,37 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 65: 超宽屏内容贴左、右栏贴右
+<!-- trellis-session: v=2 fp=e54b07db3e2f6eff -->
+
+**Date**: 2026-11-03
+**Task**: 超宽屏内容贴左、右栏贴右
+**Branch**: `main`
+
+### Summary
+
+≥1650px 改为容器左右各 56px、行内 space-between：内容贴侧栏、右栏贴屏幕右缘，多余空间落在两者之间；主栏保持 1060 上限。
+
+### Main Changes
+
+- vendor/patches/patch.css +19 行：新增 @media (min-width:1650px) 容器/行/面板规则
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8285a70` | style: 超宽屏内容贴左、右栏贴右 [task:11-03-wide-layout-edges] |
+
+### Testing
+
+- [OK] 2555/1920/1650/1264 四档实测：容器左缘 356、右栏右缘=屏宽−56、主栏≤1060、无横向溢出；仅 CSS 哈希变化；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 2555 下主栏与右栏间隔达 843px，如觉得空可考虑提高主栏 1060 上限
