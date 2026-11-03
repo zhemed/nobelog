@@ -411,3 +411,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Next Steps
 
 - 字号不随屏宽放大，超宽屏仍是定字号；如需整体缩放需浏览器缩放而非 CSS
+
+
+## Session 72: 回滚比例流体布局
+<!-- trellis-session: v=2 fp=eaa36fe8c13508a9 -->
+
+**Date**: 2026-11-03
+**Task**: 回滚比例流体布局
+**Branch**: `main`
+
+### Summary
+
+比例流体方案不符合预期，恢复到 2834047 之前：三段留白 + ≥1650 右栏贴右 + 主栏 1320。
+
+### Main Changes
+
+- vendor/patches/patch.css 恢复到 2834047^
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b0ed524` | revert: 回滚比例流体布局 [task:11-03-revert-fluid-layout] |
+
+### Testing
+
+- [OK] 1264 几何与之前一致；2559 容器 [620,2503]、主栏 1320、右栏 [2263,2503]；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**

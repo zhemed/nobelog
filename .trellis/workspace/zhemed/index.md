@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 71
+- **Total Sessions**: 72
 - **Last Active**: 2026-11-03
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~413 | Active |
+| `journal-2.md` | ~443 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 72 | 2026-11-03 | 回滚比例流体布局 | `b0ed524` | `main` |
 | 71 | 2026-11-03 | 布局改为比例流体（1264↔1920 等比，封顶居中） | `2834047` | `main` |
 | 70 | 2026-11-03 | 主栏上限放宽到 1320（≥1650） | `9e61327` | `main` |
 | 69 | 2026-11-03 | 恢复右侧栏贴右缘 | `00e4ea4` | `main` |
