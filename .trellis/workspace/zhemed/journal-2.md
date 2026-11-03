@@ -283,3 +283,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 68: 回滚右侧栏贴右缘改动
+<!-- trellis-session: v=2 fp=e9da69ce4b5b8cbd -->
+
+**Date**: 2026-11-03
+**Task**: 回滚右侧栏贴右缘改动
+**Branch**: `main`
+
+### Summary
+
+按用户要求恢复三段留白均分布局，撤销 4293bb3，仅删除其新增的 ≥1650px 规则块。
+
+### Main Changes
+
+- vendor/patches/patch.css −18 行
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7e0e5c9` | revert: 回滚右侧栏贴右缘改动 [task:11-03-revert-panel-edge] |
+
+### Testing
+
+- [OK] 2555 左右留白各 318 相等；1264 布局与之前一致；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
