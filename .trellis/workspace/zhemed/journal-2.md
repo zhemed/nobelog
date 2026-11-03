@@ -377,3 +377,37 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Next Steps
 
 - 验证截图统一 1264×809，不再混用其它分辨率
+
+
+## Session 71: 布局改为比例流体（1264↔1920 等比，封顶居中）
+<!-- trellis-session: v=2 fp=c2412c3652aaca4a -->
+
+**Date**: 2026-11-03
+**Task**: 布局改为比例流体（1264↔1920 等比，封顶居中）
+**Branch**: `main`
+
+### Summary
+
+用 clamp+vw 把侧栏/间隔/右栏按 1264 基准等比放大到 1920，主栏吃剩余；≥1921 封顶并按视口居中。替换原三段留白公式与 ≥1650 补丁。
+
+### Main Changes
+
+- vendor/patches/patch.css +50/-24：删除两段旧布局块，新增 ≥1264 流体块与 ≥1921 居中块
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2834047` | style: 布局改为比例流体（1264↔1920 等比，封顶居中）[task:11-03-fluid-layout] |
+
+### Testing
+
+- [OK] 1264 截图 sha256 与改动前一致；1440 侧栏296/间隔64、1920 侧栏395/间隔85/主栏906、2559 封顶居中；无横向溢出；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 字号不随屏宽放大，超宽屏仍是定字号；如需整体缩放需浏览器缩放而非 CSS
