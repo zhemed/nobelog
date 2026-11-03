@@ -569,3 +569,37 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 77: 大屏版式试靠右
+<!-- trellis-session: v=2 fp=657a271be061810a -->
+
+**Date**: 2026-11-03
+**Task**: 大屏版式试靠右
+**Branch**: `main`
+
+### Summary
+
+内容块改为贴右：容器封顶 1457、右边距 56、左边距 auto，空白移到侧栏与内容之间（2555 下 742）。
+
+### Main Changes
+
+- vendor/patches/patch.css +2/-2：≥1650 容器 max-width 1457 + margin auto/56
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3a8fef3` | style: 大屏版式试靠右（空白移到左侧）[task:11-03-align-right-trial] |
+
+### Testing
+
+- [OK] 1920 容器[407,1864]；2555 容器[1042,2499] 左侧空白 742；1264 不变；无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 靠右属于试验版，用户对比后再定是否保留
