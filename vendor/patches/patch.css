@@ -634,7 +634,7 @@ footer p:last-child::before {
     width: min(1450px, 68%) !important;
     max-width: min(1450px, 68%) !important;
     /* 与主栏同一起点：左边留白 = (可用宽 − 内容 − 右栏) / 2 */
-    margin-left: calc((100% - min(1450px, 68%) - 240px) / 2) !important;
+    margin-left: calc((100% - min(1450px, 68%) - clamp(240px, 11.7vw, 300px)) / 2) !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -1603,9 +1603,9 @@ html[data-mode="dark"] .post-meta-line {
   }
 
   #panel-wrapper {
-    flex: 0 0 240px !important;
-    width: 240px !important;
-    max-width: 240px !important;
+    flex: 0 0 clamp(240px, 11.7vw, 300px) !important;
+    width: clamp(240px, 11.7vw, 300px) !important;
+    max-width: clamp(240px, 11.7vw, 300px) !important;
     margin-left: auto !important;
     margin-right: 0 !important;
   }
@@ -1617,7 +1617,7 @@ html[data-mode="dark"] .post-meta-line {
 
   /* 面包屑与内容列左缘对齐（同一份留白公式） */
   #topbar-wrapper #topbar {
-    padding-left: calc((100% - min(1450px, 68%) - 240px) / 2) !important;
+    padding-left: calc((100% - min(1450px, 68%) - clamp(240px, 11.7vw, 300px)) / 2) !important;
   }
 }
 
