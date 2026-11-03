@@ -1303,17 +1303,25 @@ body.lightbox-open {
   cursor: grab;
 }
 
-/* 手机端：分享与许可两行都靠右 */
-@media all and (max-width: 576px) {
+/* 手机端：许可协议与分享同处一行——协议靠左、分享靠右（与桌面版一致） */
+@media all and (max-width: 849px) {
   .post-tail-bottom {
-    justify-content: flex-end !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 0.75rem;
   }
   .post-tail-bottom .license-wrapper {
-    width: 100% !important;
-    text-align: right;
+    order: 1;
+    width: auto !important;
+    flex: 0 1 auto !important;
+    text-align: left !important;
   }
   .post-tail-bottom .share-wrapper {
-    width: 100% !important;
+    order: 2;
+    width: auto !important;
+    flex: 0 0 auto !important;
     display: flex;
     justify-content: flex-end;
     align-items: center;
