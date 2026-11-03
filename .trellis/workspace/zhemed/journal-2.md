@@ -873,3 +873,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 87: 手机端许可与分享垂直对齐
+<!-- trellis-session: v=2 fp=673190387ef2563f -->
+
+**Date**: 2026-11-03
+**Task**: 手机端许可与分享垂直对齐
+**Branch**: `main`
+
+### Summary
+
+许可行被主题的 1rem 上边距顶低 16px；在手机上归零后与分享图标中线对齐。
+
+### Main Changes
+
+- vendor/patches/patch.css：≤849 块内许可行 margin-top:0
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4cba2c1` | fix: 手机端许可行与分享图标垂直对齐 [task:11-03-mobile-tail-row] |
+
+### Testing
+
+- [OK] 390 下许可高 19、分享高 34，中线偏差 0；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
