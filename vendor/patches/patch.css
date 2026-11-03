@@ -631,10 +631,10 @@ footer p:last-child::before {
   /* 页脚对齐正文列：容器宽扣除右侧栏 240 + 间隔 56 */
   #tail-wrapper {
     flex: 0 0 auto !important;
-    width: min(1450px, 68%) !important;
-    max-width: min(1450px, 68%) !important;
+    width: min(1450px, 62%) !important;
+    max-width: min(1450px, 62%) !important;
     /* 与主栏同一起点：左边留白 = (可用宽 − 内容 − 右栏) / 2 */
-    margin-left: calc((100% - min(1450px, 68%) - clamp(240px, 11.7vw, 300px)) / 2) !important;
+    margin-left: calc((100% - min(1450px, 62%) - clamp(240px, 11.7vw, 300px)) / 2) !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -1607,8 +1607,37 @@ html[data-mode="dark"] .post-meta-line {
    容器宽度封顶 1457（主栏 1161 + 间隔 56 + 右栏 240），
    两侧用 auto 外边距均分剩余空间。 */
 @media all and (min-width: 1650px) {
-  /* 两道留白等宽：容器占满侧栏右侧全部空间，
-     主栏与右栏各用一份 auto 外边距平分剩余，右栏因此也贴住屏幕右缘。 */
+  /* 尺寸统一由三个变量推导，避免各处公式各算一套：
+     --sb 侧栏、--pn 右栏按视口比例；--ct 内容取剩余区域 62%（上限 1450）；
+     --gp 两处留白 = （剩余 - 内容 - 右栏）/ 2，天然等宽。 */
+  :root {
+    --sb: clamp(300px, 16.5vw, 360px);
+    --pn: clamp(240px, 11.7vw, 300px);
+    --ct: min(1450px, calc((100vw - var(--sb)) * 0.62));
+    --gp: calc(((100vw - var(--sb)) - var(--ct) - var(--pn)) / 2);
+  }
+
+  #sidebar {
+    width: var(--sb) !important;
+  }
+
+  #main-wrapper {
+    margin-left: var(--sb) !important;
+    overflow-x: clip;
+  }
+
+  #topbar-wrapper {
+    left: var(--sb) !important;
+  }
+
+  #topbar-wrapper #topbar {
+    padding-left: var(--gp) !important;
+  }
+
+  footer {
+    margin-left: 0 !important;
+  }
+
   #main-wrapper > .container {
     width: 100% !important;
     max-width: none !important;
@@ -1622,27 +1651,26 @@ html[data-mode="dark"] .post-meta-line {
 
   #main-wrapper .row.flex-grow-1 > main {
     flex: 0 0 auto !important;
-    width: min(1450px, 68%) !important;
+    width: var(--ct) !important;
     max-width: none !important;
-    margin-left: auto !important;
+    margin-left: var(--gp) !important;
   }
 
   #panel-wrapper {
-    flex: 0 0 clamp(240px, 11.7vw, 300px) !important;
-    width: clamp(240px, 11.7vw, 300px) !important;
-    max-width: clamp(240px, 11.7vw, 300px) !important;
-    margin-left: auto !important;
+    flex: 0 0 var(--pn) !important;
+    width: var(--pn) !important;
+    max-width: var(--pn) !important;
+    margin-left: var(--gp) !important;
     margin-right: 0 !important;
   }
 
-  /* 右栏贴到窗口右缘后与滚动条产生的 6px 横向溢出，裁掉即可 */
-  #main-wrapper {
-    overflow-x: clip;
-  }
-
-  /* 面包屑与内容列左缘对齐（同一份留白公式） */
-  #topbar-wrapper #topbar {
-    padding-left: calc((100% - min(1450px, 68%) - clamp(240px, 11.7vw, 300px)) / 2) !important;
+  #tail-wrapper {
+    flex: 0 0 auto !important;
+    width: var(--ct) !important;
+    max-width: var(--ct) !important;
+    margin-left: var(--gp) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
 
