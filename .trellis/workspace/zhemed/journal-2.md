@@ -633,3 +633,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 79: 右栏贴屏幕右缘（内容不动）
+<!-- trellis-session: v=2 fp=d8b7be69faabe1aa -->
+
+**Date**: 2026-11-03
+**Task**: 右栏贴屏幕右缘（内容不动）
+**Branch**: `main`
+
+### Summary
+
+按指令只把右栏推到屏幕右缘（右缘间隔 0），内容位置与宽度锁定不变；6px 横向溢出用 overflow-x: clip 裁掉。
+
+### Main Changes
+
+- vendor/patches/patch.css：右栏负右边距 + 行 space-between；内容 flex 固定宽；页脚同步；main-wrapper overflow-x: clip
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `92d7cef` | style: 右栏贴屏幕右缘，内容位置与宽度不动 [task:11-03-anchor-edges] |
+
+### Testing
+
+- [OK] 1920 内容[356,1568]不变、右栏[1680,1920]、右缘0、溢出0；2559 内容[490,1940]不变、右栏[2319,2559]、右缘0、溢出0；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
