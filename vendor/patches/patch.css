@@ -1303,6 +1303,23 @@ body.lightbox-open {
   cursor: grab;
 }
 
+/* 正文图片在内容列里居中（只改对齐，不动尺寸）
+   图片被 a.img-link 包着，a 是 inline-flex 只跟图片同宽，所以要连 a 一起居中 */
+.markdown-body img,
+.post-content img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.markdown-body a.img-link,
+.post-content a.img-link {
+  display: block;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* 手机端：许可协议与分享同处一行——协议靠左、分享靠右（与桌面版一致） */
 @media all and (max-width: 849px) {
   .post-tail-bottom {
