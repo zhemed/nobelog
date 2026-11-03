@@ -1308,16 +1308,14 @@ body.lightbox-open {
 .markdown-body img,
 .post-content img {
   display: block;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  height: auto;
 }
 
 .markdown-body a.img-link,
 .post-content a.img-link {
   display: block;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
 }
 
 /* 手机端：许可协议与分享同处一行——协议靠左、分享靠右（与桌面版一致） */
