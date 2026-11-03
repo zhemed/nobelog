@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 83
+- **Total Sessions**: 84
 - **Last Active**: 2026-11-03
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~785 | Active |
+| `journal-2.md` | ~815 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 84 | 2026-11-03 | 右侧栏宽度改为按比例 | `7d72897` | `main` |
 | 83 | 2026-11-03 | 发版 0.0.32（打包默认 example.com） | `bc58bfc` | `main` |
 | 82 | 2026-11-03 | 面包屑跟随内容列左缘 | `f9185af` | `main` |
 | 81 | 2026-11-03 | 内容宽度按比例（适配 125% 缩放） | `c196a88` | `main` |

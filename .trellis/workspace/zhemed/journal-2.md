@@ -783,3 +783,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 84: 右侧栏宽度改为按比例
+<!-- trellis-session: v=2 fp=75b9b9e19d3c3838 -->
+
+**Date**: 2026-11-03
+**Task**: 右侧栏宽度改为按比例
+**Branch**: `main`
+
+### Summary
+
+面板 240 → clamp(240,11.7vw,300)，2560 下 300、标签不再折行；页脚与面包屑公式同步。
+
+### Main Changes
+
+- vendor/patches/patch.css：面板宽度与两处留白公式
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7d72897` | chore(task): archive 11-03-panel-width-proportional |
+
+### Testing
+
+- [OK] 1920 面板 240、留白 139；2560 面板 300、留白 255、标签单行；无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
