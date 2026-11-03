@@ -1540,45 +1540,71 @@ html[data-mode="dark"] .post-meta-line {
   }
 }
 
-/* 三段留白统一：侧栏-内容、内容-右栏、右栏-屏幕右缘，三处相等。
-   gap 在 1200–1768px 固定 56px，之后随视口线性增长；
-   容器宽度显式扣除两侧 gap，不再依赖 flex 收缩吸收多出的外边距。 */
-@media all and (min-width: 1200px) {
+/* 比例流体：1264–1920 按 1264 的构成等比放大（侧栏 260 / 间隔 56 / 右栏 240
+   → 1920 时 395 / 85 / 365），主栏吃剩余宽度；超过 1920 尺寸封顶，
+   整个版心等比保持 1920 的构图并居中。字号不随屏宽放大。 */
+@media all and (min-width: 1264px) {
+  :root {
+    --f-sidebar: clamp(260px, calc(260 * 100vw / 1264), 395px);
+    --f-gap: clamp(56px, calc(56 * 100vw / 1264), 85px);
+    --f-panel: clamp(240px, calc(240 * 100vw / 1264), 365px);
+  }
+
+  #sidebar {
+    width: var(--f-sidebar) !important;
+  }
+
+  #main-wrapper {
+    margin-left: var(--f-sidebar) !important;
+  }
+
   #main-wrapper > .container {
-    --layout-gap: max(56px, calc((100vw - 1600px) / 3));
-    width: calc(100% - var(--layout-gap) * 2) !important;
+    width: calc(100% - var(--f-gap) * 2) !important;
     max-width: none !important;
-    margin-left: var(--layout-gap) !important;
-    margin-right: var(--layout-gap) !important;
-  }
-
-  /* 右栏与主栏之间沿用同一个 gap（panel 在 container 内，继承变量） */
-  #panel-wrapper {
-    margin-left: var(--layout-gap, max(56px, calc((100vw - 1600px) / 3))) !important;
-  }
-}
-
-/* ≥1650：左栏已贴窗口左缘，右栏也应贴右缘。
-   内容块左侧留白与位置保持不变；容器右边界收到屏宽 −56px，
-   多余空间用 space-between 落到主栏与右栏之间。 */
-@media all and (min-width: 1650px) {
-  #main-wrapper > .container {
-    width: calc(100% - var(--layout-gap) - 56px) !important;
-    margin-left: var(--layout-gap) !important;
-    margin-right: 56px !important;
-  }
-
-  /* 超宽屏把主栏上限从 1060 提到 1320，收敛与右栏之间的空白 */
-  #main-wrapper .row.flex-grow-1 > main {
-    max-width: 1320px !important;
+    margin-left: var(--f-gap) !important;
+    margin-right: var(--f-gap) !important;
   }
 
   #main-wrapper .row.flex-grow-1 {
-    justify-content: space-between;
+    justify-content: flex-start !important;
+  }
+
+  #main-wrapper .row.flex-grow-1 > main {
+    max-width: none !important;
   }
 
   #panel-wrapper {
-    margin-left: 56px !important;
+    flex: 0 0 var(--f-panel) !important;
+    width: var(--f-panel) !important;
+    max-width: var(--f-panel) !important;
+    margin-left: var(--f-gap) !important;
+  }
+}
+
+/* ≥1921：尺寸停在 1920 的值，整块（侧栏 + 内容 + 右栏）水平居中 */
+@media all and (min-width: 1921px) {
+  #sidebar {
+    left: calc((100vw - 1920px) / 2) !important;
+  }
+
+  #main-wrapper {
+    width: 1525px !important;
+    max-width: 1525px !important;
+    margin-left: calc((100vw - 1920px) / 2 + 395px) !important;
+  }
+
+  #main-wrapper > .container {
+    width: 1355px !important;
+    margin-left: 85px !important;
+    margin-right: 0 !important;
+  }
+
+  #main-wrapper .row.flex-grow-1 > main {
+    max-width: 905px !important;
+  }
+
+  #panel-wrapper {
+    margin-left: 85px !important;
   }
 }
 
