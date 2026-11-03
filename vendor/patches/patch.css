@@ -1558,23 +1558,23 @@ html[data-mode="dark"] .post-meta-line {
   }
 }
 
-/* ≥1650：左栏已贴窗口左缘，右栏也应贴右缘。
-   内容块左侧留白与位置保持不变；容器右边界收到屏宽 −56px，
-   多余空间用 space-between 落到主栏与右栏之间。 */
+/* ≥1650：内容 + 右栏作为一个整体，在侧栏右侧区域水平居中。
+   容器宽度封顶 1457（主栏 1161 + 间隔 56 + 右栏 240），
+   两侧用 auto 外边距均分剩余空间。 */
 @media all and (min-width: 1650px) {
   #main-wrapper > .container {
-    width: calc(100% - var(--layout-gap) - 56px) !important;
-    margin-left: var(--layout-gap) !important;
-    margin-right: 56px !important;
-  }
-
-  /* 超宽屏把主栏上限从 1060 提到 1320，收敛与右栏之间的空白 */
-  #main-wrapper .row.flex-grow-1 > main {
-    max-width: 1320px !important;
+    width: calc(100% - 112px) !important;
+    max-width: 1457px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   #main-wrapper .row.flex-grow-1 {
-    justify-content: space-between;
+    justify-content: flex-start !important;
+  }
+
+  #main-wrapper .row.flex-grow-1 > main {
+    max-width: none !important;
   }
 
   #panel-wrapper {
