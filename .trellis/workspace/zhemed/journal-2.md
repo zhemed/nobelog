@@ -903,3 +903,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 88: 发版 0.0.33
+<!-- trellis-session: v=2 fp=f73b17b7db31c115 -->
+
+**Date**: 2026-11-03
+**Task**: 发版 0.0.33
+**Branch**: `main`
+
+### Summary
+
+0.0.32 之后：右侧栏比例宽度、撤回右对齐、手机端许可与分享单行对齐；打包/tag/push/gh release/重启线上完成。
+
+### Main Changes
+
+- Cargo.toml / Cargo.lock 版本 0.0.33
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0b2243f` | chore: 发版 0.0.33 [task:11-03-release-0033] |
+
+### Testing
+
+- [OK] fmt/clippy/test(98)；包 sha256 通过；解包 --version=0.0.33；Release 2 附件；线上 200
+
+### Status
+
+[OK] **Completed**
