@@ -1317,6 +1317,8 @@ body.lightbox-open {
     width: auto !important;
     flex: 0 1 auto !important;
     text-align: left !important;
+    /* 主题给许可行加了 1rem 上边距，单行排列时会把文字顶低 */
+    margin-top: 0 !important;
   }
   .post-tail-bottom .share-wrapper {
     order: 2;
