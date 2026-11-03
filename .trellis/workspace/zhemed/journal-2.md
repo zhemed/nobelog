@@ -813,3 +813,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 85: 撤回右栏右对齐
+<!-- trellis-session: v=2 fp=61e13dd5748d9129 -->
+
+**Date**: 2026-11-03
+**Task**: 撤回右栏右对齐
+**Branch**: `main`
+
+### Summary
+
+右对齐试验被否决，删除 4 条 text-align:right；保留面板 clamp 比例宽度，标签单行。
+
+### Main Changes
+
+- vendor/patches/patch.css：删除右栏右对齐规则
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cf04af7` | chore(task): archive 11-03-revert-panel-align |
+
+### Testing
+
+- [OK] 2560 右侧栏 300、左对齐、标签单行；无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
