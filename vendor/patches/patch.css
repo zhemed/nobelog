@@ -1558,6 +1558,25 @@ html[data-mode="dark"] .post-meta-line {
   }
 }
 
+/* ≥1650：不再均分留白。内容贴侧栏 56px，右栏贴屏幕右缘 56px，
+   多出的空间全部落在主栏与右栏之间（主栏仍受 1060 上限约束）。 */
+@media all and (min-width: 1650px) {
+  #main-wrapper > .container {
+    --layout-gap: 56px;
+    width: calc(100% - 112px) !important;
+    margin-left: 56px !important;
+    margin-right: 56px !important;
+  }
+
+  #main-wrapper .row.flex-grow-1 {
+    justify-content: space-between;
+  }
+
+  #panel-wrapper {
+    margin-left: 56px !important;
+  }
+}
+
 /* 红色短线还给你：恢复原版尺寸 2.25rem×1px 与红色渐变，只保留在新位置 */
 #sidebar .profile-wrapper::after {
   content: "";
