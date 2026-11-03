@@ -441,3 +441,37 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 73: 内容块整体居中、两侧留白相等
+<!-- trellis-session: v=2 fp=f427b45ea7fd07c2 -->
+
+**Date**: 2026-11-03
+**Task**: 内容块整体居中、两侧留白相等
+**Branch**: `main`
+
+### Summary
+
+≥1650 容器宽度封顶 1457 并用 auto 居中，主栏吃满（1161），右栏紧随 56：1920 左右各 82、2560 左右各 399，完全对称。
+
+### Main Changes
+
+- vendor/patches/patch.css：替换 ≥1650 块（居中容器 + 主栏取消上限 + 右栏 56）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f3cf94f` | style: 内容块整体居中、两侧留白相等 [task:11-03-center-block] |
+
+### Testing
+
+- [OK] 1920 容器[382,1457]、左82/右82；2554 左399/右399；1440 与 1264 不变；无溢出；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 设计基准改为 1920×1080；后续截图统一用它
