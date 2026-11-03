@@ -753,3 +753,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 83: 发版 0.0.32（打包默认 example.com）
+<!-- trellis-session: v=2 fp=d1ffa460c59b5dd3 -->
+
+**Date**: 2026-11-03
+**Task**: 发版 0.0.32（打包默认 example.com）
+**Branch**: `main`
+
+### Summary
+
+改发版规则：package.sh 默认 https://example.com 占位，发布包与站点解耦；版本升到 0.0.32，打包/tag/push/gh release/重启线上完成。
+
+### Main Changes
+
+- tools/package.sh、README、spec 发版流程、Cargo.toml 与 Cargo.lock 版本号
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bc58bfc` | chore: 发版 0.0.32，打包默认 example.com 占位 [task:11-03-release-0032] |
+
+### Testing
+
+- [OK] fmt/clippy/test(98) 全绿；dist 包 sha256 通过；解包 --version=0.0.32；包内绝对地址为 example.com；Release 2 个附件；线上 200
+
+### Status
+
+[OK] **Completed**
