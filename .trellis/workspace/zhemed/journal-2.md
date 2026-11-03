@@ -253,3 +253,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 67: 右侧栏贴屏幕右缘（内容位置不变）
+<!-- trellis-session: v=2 fp=7197684eb6cb9cd4 -->
+
+**Date**: 2026-11-03
+**Task**: 右侧栏贴屏幕右缘（内容位置不变）
+**Branch**: `main`
+
+### Summary
+
+超宽屏下左侧栏贴左缘而右栏距右缘 318px；把容器右边界收到屏宽−56、行内 space-between，把右栏推到右缘，同时保持内容块左留白与主栏位置不变。
+
+### Main Changes
+
+- vendor/patches/patch.css +19 行：新增 @media (min-width:1650px) 容器右边界/space-between/面板最小间隔
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4293bb3` | style: 右侧栏贴屏幕右缘，内容位置不变 [task:11-03-panel-edge-right] |
+
+### Testing
+
+- [OK] 2555：容器 [618,1881,2499]、右栏 [2259,2499]、左留白 318 不变、右缘 56；1920：左 107/右 56；1650/1264 正常；无溢出；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
