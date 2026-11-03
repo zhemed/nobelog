@@ -963,3 +963,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 90: 正文图片撑满内容列
+<!-- trellis-session: v=2 fp=b8aba58b712cba09 -->
+
+**Date**: 2026-11-03
+**Task**: 正文图片撑满内容列
+**Branch**: `main`
+
+### Summary
+
+图片由居中改为 100% 撑满内容列；1920 放大 1.14×、2560 放大 1.5×、手机缩小，用户确认采用。
+
+### Main Changes
+
+- vendor/patches/patch.css：img 与 a.img-link 宽度 100%
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4d64a98` | chore(task): archive 11-03-image-fill |
+
+### Testing
+
+- [OK] 1920 1094/1.14×；2560 1442/1.5×；390 334；无溢出；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
