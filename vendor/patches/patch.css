@@ -1558,24 +1558,6 @@ html[data-mode="dark"] .post-meta-line {
   }
 }
 
-/* ≥1650：左栏已贴窗口左缘，右栏也应贴右缘。
-   内容块左侧留白与位置保持不变；容器右边界收到屏宽 −56px，
-   多余空间用 space-between 落到主栏与右栏之间。 */
-@media all and (min-width: 1650px) {
-  #main-wrapper > .container {
-    width: calc(100% - var(--layout-gap) - 56px) !important;
-    margin-left: var(--layout-gap) !important;
-    margin-right: 56px !important;
-  }
-
-  #main-wrapper .row.flex-grow-1 {
-    justify-content: space-between;
-  }
-
-  #panel-wrapper {
-    margin-left: 56px !important;
-  }
-}
 
 
 /* 红色短线还给你：恢复原版尺寸 2.25rem×1px 与红色渐变，只保留在新位置 */
