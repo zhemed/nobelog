@@ -539,3 +539,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 76: 页脚改为与正文列同宽
+<!-- trellis-session: v=2 fp=f283be0dcf0b5816 -->
+
+**Date**: 2026-11-03
+**Task**: 页脚改为与正文列同宽
+**Branch**: `main`
+
+### Summary
+
+纠正上一版：页脚不应延伸到侧栏右边，而应与正文列同宽（容器宽 − 296）。1920 页脚 [356,1568]、1264 [316,912]。
+
+### Main Changes
+
+- vendor/patches/patch.css +4/-3：#tail-wrapper 宽度 calc(100% - 296px)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `77c9740` | fix: 页脚改为与正文列同宽 [task:11-03-footer-content-width] |
+
+### Testing
+
+- [OK] 1920 页脚与正文列等宽 [356,1568]，右文字止于 1540；1264 同宽 [316,912]；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
