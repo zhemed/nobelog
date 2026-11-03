@@ -631,10 +631,10 @@ footer p:last-child::before {
   /* 页脚对齐正文列：容器宽扣除右侧栏 240 + 间隔 56 */
   #tail-wrapper {
     flex: 0 0 auto !important;
-    width: min(1450px, calc(100% - 352px)) !important;
-    max-width: min(1450px, calc(100% - 352px)) !important;
+    width: min(1450px, 68%) !important;
+    max-width: min(1450px, 68%) !important;
     /* 与主栏同一起点：左边留白 = (可用宽 − 内容 − 右栏) / 2 */
-    margin-left: calc((100% - min(1450px, 100% - 352px) - 240px) / 2) !important;
+    margin-left: calc((100% - min(1450px, 68%) - 240px) / 2) !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -1597,7 +1597,7 @@ html[data-mode="dark"] .post-meta-line {
 
   #main-wrapper .row.flex-grow-1 > main {
     flex: 0 0 auto !important;
-    width: min(1450px, calc(100% - 352px)) !important;
+    width: min(1450px, 68%) !important;
     max-width: none !important;
     margin-left: auto !important;
   }
