@@ -313,3 +313,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 69: 恢复右侧栏贴右缘
+<!-- trellis-session: v=2 fp=978342086e0c4441 -->
+
+**Date**: 2026-11-03
+**Task**: 恢复右侧栏贴右缘
+**Branch**: `main`
+
+### Summary
+
+澄清后重新应用 4293bb3：≥1650 内容位置不变，容器右边界收至屏宽−56，space-between 把右栏推到右缘。
+
+### Main Changes
+
+- vendor/patches/patch.css +19 行：@media (min-width:1650px) 容器/行/面板规则
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `00e4ea4` | style: 恢复右侧栏贴右缘 [task:11-03-restore-panel-edge] |
+
+### Testing
+
+- [OK] 2555：容器 [618,1881,2499]、右栏 [2259,2499]、左留白 318、右缘 56；1264 不变；无溢出；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
