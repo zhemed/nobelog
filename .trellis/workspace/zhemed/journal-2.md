@@ -843,3 +843,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 86: 手机端许可与分享排成一行
+<!-- trellis-session: v=2 fp=898893c5f0ca764e -->
+
+**Date**: 2026-11-03
+**Task**: 手机端许可与分享排成一行
+**Branch**: `main`
+
+### Summary
+
+手机端尾部署名区从两行右对齐改为单行：许可左、分享右；849px 以下生效，过窄自动换行。
+
+### Main Changes
+
+- vendor/patches/patch.css：把 ≤576 的两行右对齐块换成 ≤849 的单行块
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4c4a8cb` | chore(task): archive 11-03-mobile-tail-row |
+
+### Testing
+
+- [OK] 390：许可[28,130]/分享[202,160] 同行；360：同行间距14；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
