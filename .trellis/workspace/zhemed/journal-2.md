@@ -475,3 +475,37 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Next Steps
 
 - 设计基准改为 1920×1080；后续截图统一用它
+
+
+## Session 74: 大屏内容撑满（左右各 56）
+<!-- trellis-session: v=2 fp=2d107381abea828b -->
+
+**Date**: 2026-11-03
+**Task**: 大屏内容撑满（左右各 56）
+**Branch**: `main`
+
+### Summary
+
+取消大屏容器封顶，内容撑满：1920 主栏 1212、2555 主栏 1847，左右各 56，右侧空白消除。
+
+### Main Changes
+
+- vendor/patches/patch.css ≥1650 块：容器 width calc(100%-112) + margin 56，max-width none
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `385e4a6` | style: 大屏内容撑满，左右各留 56 [task:11-03-fill-wide] |
+
+### Testing
+
+- [OK] 1920 主栏1212/左右56；2555 主栏1847/左右56；无溢出；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 用户截图仍显示旧样式，需强刷后确认
