@@ -625,6 +625,23 @@ footer p:last-child::before {
   }
 }
 
+/* 页脚横向对齐：主题里 #tail-wrapper 是 col-xl-9（只有内容区 75% 宽），
+   页脚因此缩在中间。≥1200 时让它占满容器宽，左右内边距与正文一致。 */
+@media all and (min-width: 1200px) {
+  #tail-wrapper {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  #tail-wrapper > footer {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+}
+
 /* 回到顶部按钮：官方新版 3rem，旧版 2.75rem，位置也不同 */
 #back-to-top {
   width: 2.75rem;
