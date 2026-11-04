@@ -1023,3 +1023,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 92: 侧栏标题放大、与导航拉开距离
+<!-- trellis-session: v=2 fp=e6f98875deab63e1 -->
+
+**Date**: 2026-11-04
+**Task**: 侧栏标题放大、与导航拉开距离
+**Branch**: `main`
+
+### Summary
+
+对照 Chirpy 参考：站点标题 25→28px，标题块到导航 51→91px。
+
+### Main Changes
+
+- vendor/patches/patch.css：#sidebar .site-title/.site-subtitle/.profile-wrapper
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bb03851` | style: 侧栏标题放大、与导航拉开距离 [task:11-04-sidebar-title-scale] |
+
+### Testing
+
+- [OK] 2048 下标题 28px、间隔 91px；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
