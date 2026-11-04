@@ -1075,6 +1075,22 @@ footer {
   background-color: transparent !important;
 }
 
+/* github-markdown 自带 @media (prefers-color-scheme: dark)：浏览者系统是深色时，
+   它会把正文变量刷成浅色（--fgColor-default: #f0f6fc），而本站默认白底 → 白底白字。
+   这里显式声明浅色态取值，覆盖那段媒体查询；深色态仍由 html[data-mode="dark"] 接管。 */
+html:not([data-mode]) .markdown-body,
+html[data-mode="light"] .markdown-body {
+  color-scheme: light;
+  --fgColor-default: var(--text-color);
+  --fgColor-muted: var(--text-muted-color);
+  --bgColor-default: transparent;
+  --bgColor-muted: #f6f8fa;
+  --bgColor-neutral-muted: #656c7633;
+  --borderColor-default: #d1d9e0;
+  --borderColor-muted: #d1d9e0b3;
+  color: var(--text-color) !important;
+}
+
 /* ==========================================================================
    品牌块：金字塔式两行标题（居中、同级标题）
    ========================================================================== */

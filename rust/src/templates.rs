@@ -738,7 +738,8 @@ fn pagination<F: Fn(usize) -> String>(current: usize, total: usize, href_for: F)
 /* ------------------------------------------------------------ 外壳 */
 
 /// 首屏前恢复亮暗模式；单独成常量，避免在 format 模板里处理花括号。
-const EARLY_SCRIPT: &str = r#"  <script>/* 首屏前恢复亮暗模式（只认用户显式选择；未选过就不写 data-mode，交给 CSS 的 prefers-color-scheme 跟随系统） */try{var m=localStorage.getItem("nobelog-mode");if(m==="dark"||m==="light")document.documentElement.setAttribute("data-mode",m)}catch(e){}</script>"#;
+const EARLY_SCRIPT: &str = r#"  <script>/* 首屏前确定亮暗模式：显式选择优先；没选过就按系统深浅色落成 light/dark。
+     始终写入 data-mode，避免主题 CSS 的 prefers-color-scheme 分支与本站浅色板混搭（白底白字）。 */try{var m=localStorage.getItem("nobelog-mode");if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-mode",m)}catch(e){}</script>"#;
 
 fn render_layout(
     ctx: &Ctx,

@@ -26,10 +26,14 @@ function storedMode() {
   return "auto";
 }
 
+const darkQuery = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+
 function applyMode(mode) {
-  // auto 时不写 data-mode，让主题 CSS 的 prefers-color-scheme 规则接管
-  if (mode === "auto") doc.removeAttribute("data-mode");
-  else doc.setAttribute("data-mode", mode);
+  // auto 也落成具体值：始终写入 data-mode。
+  // 若删掉属性，主题 CSS 的 prefers-color-scheme 分支会接管，但它只改一部分变量，
+  // 会与本站浅色板混搭成“白底白字”（见 2026-11-05 修复）。
+  const resolved = mode === "auto" ? (darkQuery && darkQuery.matches ? "dark" : "light") : mode;
+  doc.setAttribute("data-mode", resolved);
   if (modeToggle) {
     modeToggle.title =
       mode === "dark" ? "暗色模式（点击：跟随系统）" : mode === "light" ? "亮色模式（点击：暗色）" : "跟随系统（点击：亮色）";
@@ -37,6 +41,10 @@ function applyMode(mode) {
 }
 
 applyMode(storedMode());
+
+darkQuery?.addEventListener?.("change", () => {
+  if (storedMode() === "auto") applyMode("auto");
+});
 
 modeToggle?.addEventListener("click", () => {
   const now = storedMode();
