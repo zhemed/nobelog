@@ -1113,3 +1113,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 95: 回滚侧栏标题/短杠/竖线加大
+<!-- trellis-session: v=2 fp=7b0c9dc48a385e9a -->
+
+**Date**: 2026-11-04
+**Task**: 回滚侧栏标题/短杠/竖线加大
+**Branch**: `main`
+
+### Summary
+
+回滚 828c487：标题 32→28px、短杠 48×3→36×1、竖线 2×156→1×124；导航放大那版保留。
+
+### Main Changes
+
+- vendor/patches/patch.css：三处数值回滚
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ee301b1` | revert: 回滚侧栏标题/短杠/竖线加大 [task:11-04-revert-sidebar-lines] |
+
+### Testing
+
+- [OK] 计算值 28px / 36×1 / 1×124，导航仍 17px；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
