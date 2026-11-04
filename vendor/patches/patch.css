@@ -1305,7 +1305,7 @@ body.lightbox-open {
 
 /* 侧栏标题：字号放大、与下方导航之间留出呼吸感 */
 #sidebar .site-title {
-  font-size: 1.75rem !important;
+  font-size: 2rem !important;
 }
 
 #sidebar .site-subtitle {
@@ -1531,8 +1531,8 @@ html[data-mode="dark"] .post-meta-line {
     position: absolute;
     right: 0;
     top: -14px;
-    width: 1px;
-    height: 124px;
+    width: 2px;
+    height: 156px;
     background: color-mix(in srgb, var(--ink) 9%, transparent);
   }
 }
@@ -1708,10 +1708,10 @@ html[data-mode="dark"] .post-meta-line {
 #sidebar .profile-wrapper::after {
   content: "";
   display: block;
-  width: 2.25rem;
-  height: 1px;
-  margin: 1.1rem auto 0;
-  border-radius: 0;
+  width: 3rem;
+  height: 3px;
+  margin: 1.35rem auto 0;
+  border-radius: 99px;
   background: linear-gradient(90deg, var(--brand-line), rgba(185, 199, 214, 0));
 }
 
