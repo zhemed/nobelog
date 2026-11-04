@@ -1293,3 +1293,33 @@ profile-wrapper 下边距 6.5→5rem，副标题到导航 123→99px。
 ### Status
 
 [OK] **Completed**
+
+
+## Session 101: 发版 0.0.36
+<!-- trellis-session: v=2 fp=d66fc3639f24a3fb -->
+
+**Date**: 2026-11-04
+**Task**: 发版 0.0.36
+**Branch**: `main`
+
+### Summary
+
+修复系统深色下白底白字：auto 解析成 light/dark 写 data-mode、覆盖 github-markdown 深色媒体查询；打包/tag/push/release/重启完成。
+
+### Main Changes
+
+- Cargo.toml / Cargo.lock 版本 0.0.36
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `6688cf9` | chore: 发版 0.0.36 [task:11-04-release-0036] |
+
+### Testing
+
+- [OK] fmt/clippy/test(98)；包 sha256 通过；解包 0.0.36；Release 2 附件；线上 200
+
+### Status
+
+[OK] **Completed**
