@@ -1233,3 +1233,33 @@ profile-wrapper 下边距 6.5→5rem，副标题到导航 123→99px。
 ### Status
 
 [OK] **Completed**
+
+
+## Session 99: 发版 0.0.35
+<!-- trellis-session: v=2 fp=3648503f7d5e1f13 -->
+
+**Date**: 2026-11-04
+**Task**: 发版 0.0.35
+**Branch**: `main`
+
+### Summary
+
+桌面侧栏导航上移（123→99px）、手机抽屉侧栏整体上移（标题84→36、导航282→198）；打包/tag/push/release/重启完成。
+
+### Main Changes
+
+- Cargo.toml / Cargo.lock 版本 0.0.35
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fad0e95` | chore: 发版 0.0.35 [task:11-04-release-0035] |
+
+### Testing
+
+- [OK] fmt/clippy/test(98)；包 sha256 通过；解包 0.0.35；Release 2 附件；线上 200
+
+### Status
+
+[OK] **Completed**
