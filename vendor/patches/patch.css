@@ -1303,6 +1303,19 @@ body.lightbox-open {
   cursor: grab;
 }
 
+/* 侧栏标题：字号放大、与下方导航之间留出呼吸感 */
+#sidebar .site-title {
+  font-size: 1.75rem !important;
+}
+
+#sidebar .site-subtitle {
+  font-size: 1rem !important;
+}
+
+#sidebar .profile-wrapper {
+  margin-bottom: 4.5rem !important;
+}
+
 /* 正文图片在内容列里居中（只改对齐，不动尺寸）
    图片被 a.img-link 包着，a 是 inline-flex 只跟图片同宽，所以要连 a 一起居中 */
 .markdown-body img,
