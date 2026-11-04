@@ -1173,3 +1173,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 97: 侧栏导航上移
+<!-- trellis-session: v=2 fp=696d645f22629ccd -->
+
+**Date**: 2026-11-04
+**Task**: 侧栏导航上移
+**Branch**: `main`
+
+### Summary
+
+profile-wrapper 下边距 6.5→5rem，副标题到导航 123→99px。
+
+### Main Changes
+
+- vendor/patches/patch.css：profile-wrapper margin-bottom
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bb71fff` | style: 侧栏导航上移 [task:11-04-nav-up] |
+
+### Testing
+
+- [OK] 2048 下间隔 99px；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
