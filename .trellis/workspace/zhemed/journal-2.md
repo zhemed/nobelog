@@ -1203,3 +1203,33 @@ profile-wrapper 下边距 6.5→5rem，副标题到导航 123→99px。
 ### Status
 
 [OK] **Completed**
+
+
+## Session 98: 手机端侧栏整体上移
+<!-- trellis-session: v=2 fp=3a595dc44ea520be -->
+
+**Date**: 2026-11-04
+**Task**: 手机端侧栏整体上移
+**Branch**: `main`
+
+### Summary
+
+≤849px 下标题块上移：标题 84→36、导航 282→198；桌面不变。
+
+### Main Changes
+
+- vendor/patches/patch.css：新增 ≤849px 的 profile-wrapper 间距覆盖
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `35a1ba4` | style: 手机端侧栏整体上移 [task:11-04-mobile-sidebar-up] |
+
+### Testing
+
+- [OK] 390 下标题 36、导航 198；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
