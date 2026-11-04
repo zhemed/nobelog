@@ -1053,3 +1053,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 93: 侧栏导航放大并下移
+<!-- trellis-session: v=2 fp=2818be1d459797f2 -->
+
+**Date**: 2026-11-04
+**Task**: 侧栏导航放大并下移
+**Branch**: `main`
+
+### Summary
+
+导航字号 16→17px、单项高 41→47、节距 45→55、标题到导航 91→123px。
+
+### Main Changes
+
+- vendor/patches/patch.css：nav-link 字号/内边距、nav-item 间距、profile-wrapper 下边距
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4dac8e8` | style: 侧栏导航放大并下移 [task:11-04-nav-scale] |
+
+### Testing
+
+- [OK] 2048 下数值符合预期；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
