@@ -1263,3 +1263,33 @@ profile-wrapper 下边距 6.5→5rem，副标题到导航 123→99px。
 ### Status
 
 [OK] **Completed**
+
+
+## Session 100: 修复系统深色下白底白字
+<!-- trellis-session: v=2 fp=6fe03dc17fe17022 -->
+
+**Date**: 2026-11-04
+**Task**: 修复系统深色下白底白字
+**Branch**: `main`
+
+### Summary
+
+根因：主题与 github-markdown 的 prefers-color-scheme:dark 分支在 auto 档位接管，只改部分变量，与浅色板混搭。修复：auto 解析为 light/dark 写 data-mode + 浅色态覆盖 github 变量。
+
+### Main Changes
+
+- rust/client/main.js、rust/src/templates.rs（EARLY_SCRIPT）、vendor/patches/patch.css
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9badfef` | fix: 系统深色下白底白字 [task:11-04-dark-mode-leak] |
+
+### Testing
+
+- [OK] 系统深色→dark 深底浅字；系统浅色→light 白底深字；系统深色+手动浅色→浅色正常；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
