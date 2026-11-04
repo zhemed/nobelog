@@ -1143,3 +1143,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 96: 发版 0.0.34
+<!-- trellis-session: v=2 fp=d4b53b1fddb05a4e -->
+
+**Date**: 2026-11-04
+**Task**: 发版 0.0.34
+**Branch**: `main`
+
+### Summary
+
+按比例版式（侧栏 16.5vw/右栏 11.7vw/正文 62%）、正文图片撑满、侧栏标题与导航加大；打包/tag/push/gh release/重启完成。
+
+### Main Changes
+
+- Cargo.toml / Cargo.lock 版本 0.0.34
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c4c3d4c` | chore: 发版 0.0.34 [task:11-04-release-0034] |
+
+### Testing
+
+- [OK] fmt/clippy/test(98)；包 sha256 通过；解包 0.0.34；Release 2 附件；线上 200
+
+### Status
+
+[OK] **Completed**

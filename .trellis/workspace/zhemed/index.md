@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 95
+- **Total Sessions**: 96
 - **Last Active**: 2026-11-04
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~1145 | Active |
+| `journal-2.md` | ~1175 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 96 | 2026-11-04 | 发版 0.0.34 | `c4c3d4c` | `main` |
 | 95 | 2026-11-04 | 回滚侧栏标题/短杠/竖线加大 | `ee301b1` | `main` |
 | 94 | 2026-11-04 | 侧栏标题、短杠、竖线加大 | `828c487` | `main` |
 | 93 | 2026-11-04 | 侧栏导航放大并下移 | `4dac8e8` | `main` |
