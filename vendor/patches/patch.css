@@ -1316,6 +1316,15 @@ body.lightbox-open {
   margin-bottom: 5rem !important;
 }
 
+/* 手机端：抽屉里的标题块整体上移，别让标题占掉半屏 */
+@media all and (max-width: 849px) {
+  #sidebar .profile-wrapper {
+    margin-top: 1rem !important;
+    padding-top: 1.25rem !important;
+    margin-bottom: 2.75rem !important;
+  }
+}
+
 /* 侧栏导航：字号与行高放大一档，整体再往下挪 */
 #sidebar .nav-link {
   font-size: 1.0625rem !important;
