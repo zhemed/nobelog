@@ -1083,3 +1083,33 @@ meta 字重规则把 fas(solid) 压到 400，退回不含图钉字形的 Regular
 ### Status
 
 [OK] **Completed**
+
+
+## Session 94: 侧栏标题、短杠、竖线加大
+<!-- trellis-session: v=2 fp=840d0d0383d13794 -->
+
+**Date**: 2026-11-04
+**Task**: 侧栏标题、短杠、竖线加大
+**Branch**: `main`
+
+### Summary
+
+标题 28→32px；短杠 36×1→48×3；菜单右侧竖线 1×124→2×156。改的是末尾真正生效的那条短杠规则。
+
+### Main Changes
+
+- vendor/patches/patch.css：site-title 字号、profile-wrapper::after、ul.nav::after
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `828c487` | style: 侧栏标题、短杠、竖线都加大 [task:11-04-sidebar-lines-scale] |
+
+### Testing
+
+- [OK] 计算值 32px / 48×3 / 2×156；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
