@@ -36,6 +36,16 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profil
 注意：必须用 **rustup** 装的 Rust。发行版包（`apt install cargo rustc`）不会读取
 `rust-toolchain.toml`，会静默使用系统自带的旧版本。
 
+两种装法都行，行为一致：
+
+| 装法 | 入口（`cargo`/`rustc`） | 工具链本体 |
+| --- | --- | --- |
+| 默认（每用户） | `$HOME/.cargo/bin` | `$HOME/.rustup/toolchains/` |
+| 系统级（本机现况） | `/opt/rust/cargo/bin`，软链到 `/usr/local/bin` | 仍按 `$HOME/.rustup` 分用户存放 |
+
+也就是说：入口可以共享，工具链一定是**按用户各自下载**的 —— 换用户或换机器后第一次在仓库里
+跑 `cargo`，rustup 会照 `rust-toolchain.toml` 把 1.99.1 拉进那个用户的家目录，不会串版本。
+
 任何一步可用自检脚本确认：
 
 ```bash

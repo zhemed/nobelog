@@ -13,7 +13,7 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 
 > 用户 2026-10-21 授权清理：仓库已**删除** `package.json`（原 pnpm 别名），构建/运行一律用上面的
 > cargo 命令；本仓库不含任何 Node 生态文件。端口不在本规范里写死：文档统一用占位符 `<port>`。
-仓库根 `rust-toolchain.toml` 固定 `1.99.1` + `rustfmt` + `clippy`（`Cargo.toml` 的 `rust-version` 同步为 `1.99.1`）。新机器必须用 rustup 安装（发行版包不读 toolchain 文件）；`tools/check-rust.sh` 做版本自检，`tools/package.sh` 开头会先跑它，版本不符直接失败。
+仓库根 `rust-toolchain.toml` 固定 `1.99.1` + `rustfmt` + `clippy`（`Cargo.toml` 的 `rust-version` 同步为 `1.99.1`）。新机器必须用 rustup 安装（发行版包不读 toolchain 文件）；入口可以系统级（本机为 `/opt/rust` + `/usr/local/bin` 软链），但工具链按 `$HOME/.rustup` 分用户存放，首次进仓库跑 cargo 会按 toolchain 文件自动下载 1.99.1；`tools/check-rust.sh` 做版本自检，`tools/package.sh` 开头会先跑它，版本不符直接失败。
 
 三个子命令（`rust/src/main.rs`）：
 
