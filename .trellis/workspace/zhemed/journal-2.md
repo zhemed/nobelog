@@ -1443,3 +1443,33 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 106: 发版 0.0.37
+<!-- trellis-session: v=2 fp=cfcffc4ef9a75b2f -->
+
+**Date**: 2026-11-06
+**Task**: 发版 0.0.37
+**Branch**: `main`
+
+### Summary
+
+无功能变化：Rust 固定 1.99.1、工具链自检脚本、package.sh 走 PATH、README 工具链章节；打包/tag/push/release/重启完成。
+
+### Main Changes
+
+- Cargo.toml / Cargo.lock 版本 0.0.37
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `aae968b` | chore: 发版 0.0.37 [task:11-06-release-0037] |
+
+### Testing
+
+- [OK] fmt/clippy/test(98)；打包前自检 1.99.1；包 sha256 通过；Release 2 附件；线上 200
+
+### Status
+
+[OK] **Completed**
