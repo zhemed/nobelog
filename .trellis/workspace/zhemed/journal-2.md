@@ -1383,3 +1383,33 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 104: 写清工具链安装布局
+<!-- trellis-session: v=2 fp=8281757d71399d84 -->
+
+**Date**: 2026-11-06
+**Task**: 写清工具链安装布局
+**Branch**: `main`
+
+### Summary
+
+核实：入口系统级（/opt/rust + /usr/local/bin 软链），工具链按 /root/.rustup 分用户；README 与 spec 补对照表与自动下载说明。
+
+### Main Changes
+
+- README.md、.trellis/spec/frontend/build-serve-deploy.md
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c82a2b3` | docs: 写清工具链安装布局 [task:11-06-rust-layout-doc] |
+
+### Testing
+
+- [OK] rustup show 显示 /root/.rustup；模拟其他用户首次运行触发 1.99.1 自动下载
+
+### Status
+
+[OK] **Completed**
