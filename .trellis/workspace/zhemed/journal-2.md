@@ -1323,3 +1323,33 @@ profile-wrapper 下边距 6.5→5rem，副标题到导航 123→99px。
 ### Status
 
 [OK] **Completed**
+
+
+## Session 102: 锁定 Rust 1.99.1
+<!-- trellis-session: v=2 fp=fd40eee689fe3ea7 -->
+
+**Date**: 2026-11-06
+**Task**: 锁定 Rust 1.99.1
+**Branch**: `main`
+
+### Summary
+
+toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根目录 cargo --version 已是 1.99.1。
+
+### Main Changes
+
+- rust-toolchain.toml（移到根）、rust/Cargo.toml、spec
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4f64634` | chore: 锁定 Rust 1.99.1 [task:11-06-pin-rust-1-99-1] |
+
+### Testing
+
+- [OK] 根目录 cargo 1.99.1；fmt/clippy/test(98) 全绿
+
+### Status
+
+[OK] **Completed**
