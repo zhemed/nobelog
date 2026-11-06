@@ -1413,3 +1413,33 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 105: Rust 改为系统级共享安装
+<!-- trellis-session: v=2 fp=470970dcc16a1503 -->
+
+**Date**: 2026-11-06
+**Task**: Rust 改为系统级共享安装
+**Branch**: `main`
+
+### Summary
+
+/usr/local/bin 的 rust 入口改为包装脚本固定 RUSTUP_HOME=/opt/rust/rustup，加 /etc/profile.d，全机共用 1.99.1；文档同步。
+
+### Main Changes
+
+- 机器级：/usr/local/bin 包装脚本、/etc/profile.d/rust.sh；仓库：README、spec
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fd18786` | docs: Rust 改为系统级共享安装 [task:11-06-system-wide-rust] |
+
+### Testing
+
+- [OK] root/其他用户/登录 shell 均 1.99.1 且不落用户家目录；fmt/clippy/test(98)/build 全绿
+
+### Status
+
+[OK] **Completed**

@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 104
+- **Total Sessions**: 105
 - **Last Active**: 2026-11-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~1415 | Active |
+| `journal-2.md` | ~1445 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 105 | 2026-11-06 | Rust 改为系统级共享安装 | `fd18786` | `main` |
 | 104 | 2026-11-06 | 写清工具链安装布局 | `c82a2b3` | `main` |
 | 103 | 2026-11-06 | 新机器工具链自检与文档 | `4fa2bf5` | `main` |
 | 102 | 2026-11-06 | 锁定 Rust 1.99.1 | `4f64634` | `main` |
