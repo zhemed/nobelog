@@ -41,7 +41,12 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profil
 | 装法 | 入口（`cargo`/`rustc`） | 工具链本体 |
 | --- | --- | --- |
 | 默认（每用户） | `$HOME/.cargo/bin` | `$HOME/.rustup/toolchains/` |
-| 系统级（本机现况） | `/opt/rust/cargo/bin`，软链到 `/usr/local/bin` | 仍按 `$HOME/.rustup` 分用户存放 |
+| 系统级（本机现况） | `/usr/local/bin/*` 包装脚本 | **`/opt/rust/rustup`（全机共享）** |
+
+本机采用系统级方案：`/usr/local/bin/{cargo,rustc,rustup…}` 是包装脚本，会先把
+`RUSTUP_HOME` 固定为 `/opt/rust/rustup` 再转交给 `/opt/rust/cargo/bin/*`，因此**任何用户、
+任何进程**（含非登录 shell、同时不受 `~/.rustup` 影响）拿到的都是同一套 1.99.1。
+登录 shell 另有 `/etc/profile.d/rust.sh` 兜底。
 
 也就是说：入口可以共享，工具链一定是**按用户各自下载**的 —— 换用户或换机器后第一次在仓库里
 跑 `cargo`，rustup 会照 `rust-toolchain.toml` 把 1.99.1 拉进那个用户的家目录，不会串版本。
