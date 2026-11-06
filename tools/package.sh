@@ -9,6 +9,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# 工具链必须与仓库根 rust-toolchain.toml 一致，避免在别的机器上悄悄用错版本
+./tools/check-rust.sh
+
 VERSION="${VERSION:-$(git describe --tags --always --dirty | sed 's/^v//')}"
 NAME="nobelog-$VERSION-linux-x86_64"
 OUT="${OUT:-dist}"
@@ -66,7 +69,7 @@ fi
 echo "打包版本：$VERSION"
 echo "SITE_URL：$SITE_URL"
 
-/root/.cargo/bin/cargo build --release --locked --manifest-path rust/Cargo.toml
+cargo build --release --locked --manifest-path rust/Cargo.toml
 ./rust/target/release/nobelog build --self-assets --out public >/dev/null
 
 stage="$(mktemp -d)/$NAME"

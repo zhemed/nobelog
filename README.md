@@ -21,6 +21,27 @@ description: 一句话摘要
 
 单页放在 `content/pages/`（如 `about.md`）。
 
+## 工具链
+
+Rust 版本固定为 **1.99.1**，由仓库根的 `rust-toolchain.toml` 声明，`rust/Cargo.toml` 的
+`rust-version` 也在 1.99.1 —— 两处一致，不要单独改其中一处。
+
+**新机器首次准备（工具装在当前用户 HOME 下，不污染系统）：**
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+# 然后进入仓库执行任意 cargo 命令，rustup 会按 rust-toolchain.toml 自动装 1.99.1
+```
+
+注意：必须用 **rustup** 装的 Rust。发行版包（`apt install cargo rustc`）不会读取
+`rust-toolchain.toml`，会静默使用系统自带的旧版本。
+
+任何一步可用自检脚本确认：
+
+```bash
+./tools/check-rust.sh   # 期望输出：Rust 工具链 OK：rustc 1.99.1 / cargo 1.99.1
+```
+
 ## 本地运行
 
 ```bash
