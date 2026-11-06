@@ -1353,3 +1353,33 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 103: 新机器工具链自检与文档
+<!-- trellis-session: v=2 fp=d52015ceb674cf7e -->
+
+**Date**: 2026-11-06
+**Task**: 新机器工具链自检与文档
+**Branch**: `main`
+
+### Summary
+
+新增 tools/check-rust.sh 校验工具链；package.sh 去掉写死的 cargo 路径并前置自检；README 补 rustup 安装说明。
+
+### Main Changes
+
+- tools/check-rust.sh（新增）、tools/package.sh、README.md、spec
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4fa2bf5` | chore: 新机器工具链自检与文档 [task:11-06-rust-toolchain-guard] |
+
+### Testing
+
+- [OK] 自检通过；无 rustup 环境退出码 1 并给指引；打包脚本自检后正常继续
+
+### Status
+
+[OK] **Completed**
