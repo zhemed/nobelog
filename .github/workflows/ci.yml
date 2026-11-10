@@ -1,0 +1,66 @@
+# CI 门禁：push 到 main / PR / 手动触发时，跑与本地一致的质量基线。
+#
+# 设计取舍：
+# - 只用官方 action（actions/checkout、actions/cache），不引入第三方 action，供应链面最小。
+# - 不缓存 rust/target（体积大、命中率低）；~/.rustup 与 ~/.cargo 足够省下工具链与依赖下载。
+# - 仓库根 rust-toolchain.toml 固定 1.99.1，GitHub runner 自带 rustup，
+#   `rustup show` 会按它自动安装工具链（含 rustfmt/clippy 组件）。
+# - 不跑 `nobelog diff`：冻结基准 public/ 里首页卡片的相对日期（N 天前）随构建时刻漂移，
+#   每天都会红；fixture / 日期归一化留待后续任务。改渲染输出时本地仍需自跑 diff。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  quality:
+    name: 质量门禁
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 缓存 Rust 工具链与 Cargo 下载
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml', 'rust/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-
+
+      - name: 安装/确认工具链
+        run: rustup show
+
+      - name: 工具链版本自检
+        run: ./tools/check-rust.sh
+
+      - name: 格式检查
+        run: cargo fmt --manifest-path rust/Cargo.toml --check
+
+      - name: Clippy（warnings 视为错误）
+        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+
+      - name: 单元测试
+        run: cargo test --manifest-path rust/Cargo.toml --locked
+
+      - name: Release 构建
+        run: cargo build --manifest-path rust/Cargo.toml --release --locked
+
+      - name: 站点构建冒烟
+        run: SITE_URL=https://example.com ./rust/target/release/nobelog build --self-assets --out rust/dist

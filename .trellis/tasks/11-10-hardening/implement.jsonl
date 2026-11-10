@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "前端层总览与不可协商三条"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "质量门禁、提交规范、禁止事项"}
+{"file": ".trellis/spec/frontend/build-serve-deploy.md", "reason": "构建/服务/部署/验证清单"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "目录归属与可写性"}
