@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 108
+- **Total Sessions**: 109
 - **Last Active**: 2026-11-10
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~1548 | Active |
+| `journal-2.md` | ~1592 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 109 | 2026-11-10 | 加固：CI 门禁、基线还原与 panic 韧性 | `a78f088`, `b702200`, `51da8c3`, `ed15f05` | `main` |
 | 108 | 2026-11-10 | 接手项目：环境搭建、基线验证与本机部署 | `fb2f49d` | `main` |
 | 107 | 2026-11-10 | 补记：侧边栏方案 B 适配（11-01 遗留任务） | `d4df530`, `5b4f160` | `main` |
 | 106 | 2026-11-06 | 发版 0.0.37 | `aae968b` | `main` |

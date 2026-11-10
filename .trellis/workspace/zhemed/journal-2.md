@@ -1546,3 +1546,47 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 
 - 域名确定后给 systemd 单元补 SITE_URL 并重启
 - 等待用户指定下一项工作
+
+
+## Session 109: 加固：CI 门禁、基线还原与 panic 韧性
+<!-- trellis-session: v=2 fp=a3541d5e832175d1 -->
+
+**Date**: 2026-11-10
+**Task**: 加固：CI 门禁、基线还原与 panic 韧性
+**Branch**: `main`
+
+### Summary
+
+按 Lead 评估建议落地三项加固：新增 GitHub Actions CI 门禁（fmt/clippy -D warnings/test/build --locked/站点构建冒烟）；新增 tools/fetch-baseline.sh 从 GitHub Release 还原 public/ 冻结基线；release 移除 panic=abort 并挂 CatchPanicLayer，单请求 panic 返回 500 而不再整进程退出。verifier 独立复核 7 项全 PASS（含 release 二进制 panic 探针与动态重建探针）；门禁 98 测试全绿，diff 仅相对日期漂移。
+
+### Main Changes
+
+- CI：.github/workflows/ci.yml（push main/PR/手动；仅官方 checkout/cache；7 条门禁命令；不跑 diff）
+- 工具：tools/fetch-baseline.sh（默认 latest/可传 tag；sha256 + 包内 VERSION 校验；只写 public/，不执行 git）
+- 运行时：rust/Cargo.toml 删 panic=abort、tower-http 加 catch-panic；serve.rs 最外层 CatchPanicLayer（静态/动态共用）；Cargo.lock +1 行 tracing 依赖边
+- 文档：README CI 徽章与验证/基线小节；quality-guidelines 修正 panic 表述 + CI 门禁小节；build-serve-deploy 验证清单与 unwind+strip 说明；directory-structure 补两文件
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a78f088` | ci: 增加 GitHub Actions 门禁 [task:11-10-hardening] |
+| `b702200` | chore(tools): 增加基线还原脚本 [task:11-10-hardening] |
+| `51da8c3` | fix(serve): panic 不再 abort，handler 边界返回 500 [task:11-10-hardening] |
+| `ed15f05` | docs: 同步 CI/基线/panic 韧性说明 [task:11-10-hardening] |
+
+### Testing
+
+- [OK] [OK] verifier 独立复核 7 项全 PASS；无越界改动、无探针残留
+- [OK] [OK] fmt/clippy -D warnings/test(98)/build --release --locked/站点构建全绿；diff public rust/dist 41 同/1 不同（仅相对日期）
+- [OK] [OK] release 二进制探针：panic 请求 500、进程存活；动态重建 panic 走 JoinError 退避；fetch-baseline 实测还原 42 文件 sha256 OK
+- [OK] [OK] 二进制 6,222,264 → 6,659,792 字节（+7.03%）；--locked 重建一致
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 推送远端后观察 CI 首跑（本任务未推送，徽章首次 push 前 404）
+- 如需让本机 nobelog-local 服务用上新二进制，重建后重启（属部署动作，另行确认）
