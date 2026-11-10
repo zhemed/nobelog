@@ -19,12 +19,20 @@
 
 ## Acceptance Criteria
 
-- [ ] `ci.yml` 仅两处 `uses:` 版本变化（`git diff` 可证）。
-- [ ] `python3 -c "import yaml; yaml.safe_load(...)"` 通过；两个 action 的 major tag 在 GitHub 真实存在。
-- [ ] 推送后 CI run 全绿（`gh run watch --exit-status`），annotation 中不再有 Node20 deprecation。
-- [ ] 提交带任务锚点 `[task:11-10-ci-actions-update]`。
+- [x] `ci.yml` 仅两处 `uses:` 版本变化（`git diff` 可证）。
+- [x] `python3 -c "import yaml; yaml.safe_load(...)"` 通过；两个 action 的 major tag 在 GitHub 真实存在。
+- [x] 推送后 CI run 全绿（`gh run watch --exit-status`），annotation 中不再有 Node20 deprecation。
+- [x] 提交带任务锚点 `[task:11-10-ci-actions-update]`。
 
 ## Notes
 
 - 官方 action 的 v7/v6 均为 ESM 迁移，输入接口不变（checkout 无输入；cache 仍用 path/key/restore-keys），可直接替换。
 - 用户原话与边界见 `directive.md`。
+
+## 验证结果（2026-11-10，verifier 独立复核）
+
+- 验收结论：7 项全 PASS（含改动范围、CI YAML、action 真实存在性、门禁复跑），无 FAIL、无越界。
+- `git diff -U0 -- .github/workflows/ci.yml`：仅 :35 `checkout@v4→v7`、:38 `cache@v4→v6` 两行变化，其余行未动。
+- `gh api` 复核：`actions/checkout` latest v7.0.1、`actions/cache` latest v6.1.0；两者 action.yml 均为 `node24`（v4 为 node20），cache 输入接口不变。
+- 推送后 CI run [#42860166864](https://github.com/zhemed/nobelog/actions/runs/42860166864) `success`（2m25s，11 步全绿）；Node20 deprecation annotation 已消失，仅剩 runner 侧 `ubuntu-latest` 迁移提示（非本仓库可修）。
+- 提交：`ab6d0cb ci: 升级官方 actions 到 checkout v7 / cache v6 [task:11-10-ci-actions-update]`。
