@@ -1506,3 +1506,43 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 108: 接手项目：环境搭建、基线验证与本机部署
+<!-- trellis-session: v=2 fp=904ef5c9a8ce4db4 -->
+
+**Date**: 2026-11-10
+**Task**: 接手项目：环境搭建、基线验证与本机部署
+**Branch**: `main`
+
+### Summary
+
+新机器接手 nobelog：按 README 装系统级 Rust 1.99.1 与构建依赖，质量门禁全绿；从 v0.0.37 Release 包还原 public/ 冻结基线，重建产物 diff 仅首页相对日期漂移；归档 11-01 遗留任务；本机以 systemd 单元 nobelog-local.service 常驻动态服务（0.0.0.0:10086、开机自启），热更新与重启验证通过。
+
+### Main Changes
+
+- 机器级：/opt/rust（rustup+cargo）、/usr/local/bin 包装脚本、/etc/profile.d/rust.sh；apt 装 build-essential 与文泉驿中文字体
+- public/：从 GitHub Release v0.0.37 包还原冻结基线（sha256 校验通过），源码零改动
+- 任务：归档 11-01-sidebar-clean-adapt 并补记 journal
+- 部署：/etc/systemd/system/nobelog-local.service（--dynamic、0.0.0.0:10086、Restart=always、enabled）
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fb2f49d` | chore(task): archive 11-01-sidebar-clean-adapt |
+
+### Testing
+
+- [OK] [OK] cargo fmt --check / clippy --all-targets / test 98 通过 / build --release --locked 全绿
+- [OK] [OK] nobelog diff public rust/dist：41 相同 / 1 不同（首页 19→24 天前，环境日期漂移）
+- [OK] [OK] 冒烟 9 条路由 + 404 全对；gzip/ETag/304、改 md 热更新、systemctl restart 后仍 200
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 域名确定后给 systemd 单元补 SITE_URL 并重启
+- 等待用户指定下一项工作

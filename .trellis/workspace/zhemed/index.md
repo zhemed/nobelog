@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 107
+- **Total Sessions**: 108
 - **Last Active**: 2026-11-10
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~1508 | Active |
+| `journal-2.md` | ~1548 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 108 | 2026-11-10 | 接手项目：环境搭建、基线验证与本机部署 | `fb2f49d` | `main` |
 | 107 | 2026-11-10 | 补记：侧边栏方案 B 适配（11-01 遗留任务） | `d4df530`, `5b4f160` | `main` |
 | 106 | 2026-11-06 | 发版 0.0.37 | `aae968b` | `main` |
 | 105 | 2026-11-06 | Rust 改为系统级共享安装 | `fd18786` | `main` |
