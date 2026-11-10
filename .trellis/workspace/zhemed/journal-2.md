@@ -1473,3 +1473,36 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 ### Status
 
 [OK] **Completed**
+
+
+## Session 107: 补记：侧边栏方案 B 适配（11-01 遗留任务）
+<!-- trellis-session: v=2 fp=f683345e2b61b1c3 -->
+
+**Date**: 2026-11-10
+**Task**: 补记：侧边栏方案 B 适配（11-01 遗留任务）
+**Branch**: `main`
+
+### Summary
+
+补记 2026-11-01 未写入 journal 的会话：按用户方案 B 与最新参考图重做侧栏与标题区，最终实现以 d4df530 落地、5b4f160 同步文档；后续 11-02~11-04 继续迭代侧栏与版式。2026-11-10 接手复核无未提交残留后归档该任务。
+
+### Main Changes
+
+- vendor/patches/patch.css 侧栏/标题/装饰杠与版式按参考设计重做（+431 行）
+- docs/blog-tree.md 新增；tools/package.sh 发布记录域名脱敏；spec 域名说明修正
+- 任务目录归档至 archive/2026-11/，PRD 补收尾记录
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d4df530` | feat(ui): 侧栏与内容区按参考设计对齐、字体字重统一；发布记录域名脱敏 [task:11-01-sidebar-clean-adapt] |
+| `5b4f160` | docs: 修正脱敏后自相矛盾的域名说明（示例域名与已下线域名的语义） [task:11-01-sidebar-clean-adapt] |
+
+### Testing
+
+- [OK] [OK] 接手复核：fmt/clippy/test(98)/release build 全绿；diff 冻结基线仅首页相对日期漂移
+
+### Status
+
+[OK] **Completed**
