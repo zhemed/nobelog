@@ -26,11 +26,14 @@ regex = "1"
 pulldown-cmark = "0.13"
 axum = "0.8"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
-tower-http = { version = "0.6", features = ["fs", "set-header", "compression-gzip", "compression-br"] }
+tower-http = { version = "0.6", features = ["fs", "set-header", "compression-gzip", "compression-br", "catch-panic"] }
 syntect = { version = "5", default-features = false, features = ["default-fancy"] }
 
 [profile.release]
 lto = true
 codegen-units = 1
-panic = "abort"
+# 不要加回 panic = "abort"：动态模式下一次请求/重建 panic 不该让整站进程退出。
+# 默认 unwind + serve.rs 最外层 tower-http CatchPanicLayer，单请求 panic 返回 500、进程继续服务；
+# 重建任务 panic 由 spawn_blocking 的 JoinError 捕获并退避。
+# 发布包保留 strip：体积优先，panic 消息自带 file:line；完整 backtrace 用本地 debug 构建复现。
 strip = true

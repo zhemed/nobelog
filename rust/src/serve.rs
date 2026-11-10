@@ -30,6 +30,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::CompressionLayer;
 use tower_http::services::ServeFile;
 
@@ -299,10 +300,13 @@ pub async fn run(root: &Path, host: &str, port: u16, dynamic: bool) -> Result<()
         Router::new().fallback(handle).with_state(state)
     };
 
-    // 压缩层放在最外层：内层响应先写好 Vary / ETag / Range，压缩只改 body 与 Content-Length。
+    // 压缩层在内层：内层响应先写好 Vary / ETag / Range，压缩只改 body 与 Content-Length。
+    // 兜底层放最外层（最后 layer）：handler / 内层中间件 panic 时该请求返回 500，进程不退出
+    // （release 用默认 unwind；见 rust/Cargo.toml 的 [profile.release] 注释）。
     let app = app
         .layer(middleware::from_fn(add_accept_encoding_vary))
-        .layer(CompressionLayer::new().compress_when(should_compress_response));
+        .layer(CompressionLayer::new().compress_when(should_compress_response))
+        .layer(CatchPanicLayer::new());
 
     // 动态模式的 base_url 推断需要客户端 IP（peer 规则）。ConnectInfo 由 make service 注入
     // 请求扩展；`tap_io` 包装保留 axum 的 Listener 语义，连接地址仍然可用。
