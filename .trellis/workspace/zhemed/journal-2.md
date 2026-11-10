@@ -1590,3 +1590,46 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 
 - 推送远端后观察 CI 首跑（本任务未推送，徽章首次 push 前 404）
 - 如需让本机 nobelog-local 服务用上新二进制，重建后重启（属部署动作，另行确认）
+
+
+## Session 110: 维护 CI actions 并发布 0.0.38
+<!-- trellis-session: v=2 fp=8509d721000b6807 -->
+
+**Date**: 2026-11-10
+**Task**: 维护 CI actions 并发布 0.0.38
+**Branch**: `main`
+
+### Summary
+
+按用户指令维护 CI actions 版本并发布 0.0.38：checkout v4→v7、cache v4→v6（node24，消除 Node20 弃用提示）；版本 0.0.37→0.0.38，打包校验通过，tag v0.0.38 + GitHub Release（tarball+SHA256SUMS），main/tag 已推送；本机 nobelog-local 重启跑 0.0.38 并完成路由/CSS/feed 冒烟。另按用户决定：本机不配域名，SITE_URL 事项关闭。
+
+### Main Changes
+
+- CI：.github/workflows/ci.yml 升级 actions/checkout v7、actions/cache v6（node24）；其余工作流行为不变
+- 发版：Cargo.toml/Cargo.lock 0.0.37 → 0.0.38；VERSION=0.0.38 tools/package.sh 打包（默认 example.com 占位），sha256 校验通过
+- 发布：annotated tag v0.0.38 + GitHub Release（nobelog-0.0.38-linux-x86_64.tar.gz + SHA256SUMS）；main/tag 已推送
+- 上线：本机 nobelog-local 重启，PID 220164 跑 0.0.38 二进制；9 路由 + 404、CSS、feed 冒烟通过
+- 按用户决定：本机不配域名，SITE_URL 事项关闭
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ab6d0cb` | ci: 升级官方 actions 到 checkout v7 / cache v6 [task:11-10-ci-actions-update] |
+| `9bb7061` | chore: 发版 0.0.38 [task:11-10-release-0038] |
+
+### Testing
+
+- [OK] [OK] verifier 独立复核 7 项全 PASS：版本一致性/门禁 98/包 5,148,336 字节 sha256 f1366b2d…/110 条目/diff 42 同 0 不同
+- [OK] [OK] 推送后 CI run 42860166864 success（2m25s，11 步全绿，Node20 annotation 消失）
+- [OK] [OK] 解包 ./nobelog --version = nobelog 0.0.38；GitHub Release 两附件就绪
+- [OK] [OK] 本机重启后 9 路由全 200 + 404，CSS 200，feed pubDate 正常，进程 exe sha256 6e5bf048…
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 后续发版仍走 tools/package.sh + gh release；全新 clone 用 tools/fetch-baseline.sh 还原基线
+- CI 只剩 runner 侧 ubuntu-latest 迁移提示（非仓库问题）
