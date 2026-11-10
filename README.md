@@ -1,5 +1,7 @@
 # 吱吱
 
+[![CI](https://github.com/zhemed/nobelog/actions/workflows/ci.yml/badge.svg)](https://github.com/zhemed/nobelog/actions/workflows/ci.yml)
+
 一个用 Rust 写的个人博客：Markdown 即内容源，构建成纯静态页面，也支持服务端实时渲染。
 
 ## 写文章
@@ -69,6 +71,28 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
 
 静态服务用同一条 cargo 命令（去掉 `--dynamic` 即静态模式），端口用 `<port>` 占位，
 默认值见 `cargo run --manifest-path rust/Cargo.toml -- serve --help`。
+
+## 验证与基线
+
+提交前在本地跑完整门禁（CI 在 push 到 `main` / PR 时跑同样的命令，但不跑 `diff`）：
+
+```bash
+cd rust && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test --locked && cargo build --release --locked
+cd .. && SITE_URL=https://example.com ./rust/target/release/nobelog build --self-assets --out rust/dist
+```
+
+`nobelog diff` 以仓库根的 `public/` 作为逐字节冻结基准；它是 gitignored 的构建产物，全新 clone 里没有。
+先还原基线再对比：
+
+```bash
+tools/fetch-baseline.sh            # 默认取 GitHub 最新 release
+tools/fetch-baseline.sh v0.0.37    # 或固定某个 release tag
+SITE_URL=https://example.com ./rust/target/release/nobelog diff public rust/dist
+```
+
+脚本只写 `public/`（从 release 包内还原，校验 sha256 与包内 `VERSION`），不执行任何 git 操作；
+`NOBELOG_REPO` 可覆盖仓库。`diff` 允许的差异只有首页卡片相对日期（`N 天前`）这类时间漂移；
+改模板 / Markdown 输出后必须看 `diff`。
 
 ## 目录
 

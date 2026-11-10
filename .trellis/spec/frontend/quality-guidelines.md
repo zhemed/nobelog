@@ -15,6 +15,24 @@ cargo test
   `./rust/target/release/nobelog diff public dist`，确认差异只有预期部分（历史提交 `ad9cd3f` 就是 fmt/clippy 修复的样板）。
 - 只改文档/样式补丁时至少保证 `cargo build` 通过、`diff` 无意外变化。
 
+## CI 门禁
+
+`.github/workflows/ci.yml` 在 `push` 到 `main`、`pull_request`、`workflow_dispatch` 时跑与本地一致的门禁：
+
+1. `rustup show`（按 `rust-toolchain.toml` 安装/确认 1.99.1）→ `tools/check-rust.sh`；
+2. `cargo fmt --check`；
+3. `cargo clippy --all-targets -- -D warnings`；
+4. `cargo test --locked`；
+5. `cargo build --release --locked`；
+6. 站点构建冒烟：`SITE_URL=https://example.com nobelog build --self-assets --out rust/dist`。
+
+- CI **不跑** `nobelog diff`：冻结基准里首页卡片的相对日期（`N 天前`）随构建时刻漂移，每天都会红；
+  改渲染输出时本地仍必须自跑 diff。
+- CI 只是兜底，**本地仍需自跑上面整套命令**；CI 绿不等于 diff 无回归。
+- 只用官方 action（`actions/checkout`、`actions/cache`），不引入第三方 action；`permissions: contents: read`。
+- 全新 clone 没有 gitignored 的 `public/` 冻结基准，先 `tools/fetch-baseline.sh` 还原再跑 diff
+  （见 `build-serve-deploy.md` 的验证清单）。
+
 ## 提交信息
 
 历史风格：`<type>: <中文说明>`，type 用 `feat` / `fix` / `style` / `content` / `refactor` / `test` / `chore`。
@@ -36,7 +54,7 @@ Trellis 仓库的提交必须绑定任务锚点：`[task:<任务目录名>]`（�
 | --- | --- | --- |
 | 手改 `public/` | 它是逐字节对比的冻结基准，也是部署产物 | 改模板/`patch.css` 后重新构建 |
 | 改 `vendor/chirpy/*.css`、`vendor/github-markdown/*.css` | 上游产物，重新抓取即丢 | 写 `vendor/patches/patch.css`，按分区追加 |
-| 请求路径里 `unwrap()` / `expect()` | 触发 panic 直接 500，且会 abort（release `panic="abort"`） | 返回 404 或用 `anyhow` + `context` 上抛 |
+| 请求路径里 `unwrap()` / `expect()` | 触发 panic：该请求 500（release 为 unwind，`serve.rs` 最外层 `CatchPanicLayer` 兜底，进程不退出），但会打 panic 日志、丢该请求 | 返回 404 或用 `anyhow` + `context` 上抛 |
 | 手拼 URL / 手写 percent-encoding | 中文标签、特殊字符会不一致 | `url::encode/decode`、`templates::{post_url,tag_url,category_url}` |
 | 写死绝对地址 | `SITE_URL` 部署后链接错误 | 模板用 `ctx.base_url`，路由用 `Site::root_url` |
 | 在模板里输出未转义的 frontmatter | XSS/结构破坏 | `escape_html` |

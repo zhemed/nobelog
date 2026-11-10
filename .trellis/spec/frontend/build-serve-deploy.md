@@ -89,6 +89,10 @@ cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out
   为 https、拒绝本机地址与已下线域名，并校验 `VERSION` 与 `rust/Cargo.toml` 一致。
   当前发布包示例域名用 `https://example.com`；静态部署的客户必须用自己域名的 `SITE_URL` 重建 `public/`，
   动态部署不需要这样做，站点会按请求 Host 自动识别域名。旧域名已于 2026-10-30 下线，禁止再用。
+- release profile 用默认 `panic = "unwind"`（**不要加回 `panic = "abort"`**）+ `strip = true`：
+  单请求 panic 由 `serve.rs` 最外层的 `tower-http` `CatchPanicLayer` 返回 500，进程继续服务；
+  动态重建 panic 由 `spawn_blocking` 的 `JoinError` 分支捕获、记录日志并退避，继续用旧快照。
+  发布包保留 `strip` 以控制体积，panic 消息自带 `file:line`；需要完整 backtrace 时用本地 debug 构建复现。
 - 动态模式的内存开销来自"整站内容 + CSS/JS 常驻"；内容规模变大时先量内存再谈优化，不要随意改缓存策略。
 
 ## 部署拓扑
@@ -171,11 +175,19 @@ location ^~ /images/ {
 
 ## 验证清单（改完必做）
 
+全新 clone 没有 `public/`（gitignored 的逐字节冻结基准）：先 `tools/fetch-baseline.sh` 从 GitHub
+Release 还原（不传参取最新 release，也可传 `v0.0.37` 固定版本），再构建 + `diff`。
+
 ```bash
 cd rust && cargo fmt --check && cargo clippy --all-targets && cargo test
 cd .. && cargo run --release --manifest-path rust/Cargo.toml -- build --self-assets --out rust/dist
 ./rust/target/release/nobelog diff public rust/dist        # 只允许出现本次预期差异
 ```
+
+- `public/` 不存在时先 `tools/fetch-baseline.sh [tag]`：下载 release 包与 `SHA256SUMS`，校验 sha256
+  与包内 `VERSION` 后，用包内 `public/` 覆盖仓库根 `public/`。只写 `public/`，不执行任何 git 操作；
+  `NOBELOG_REPO` 可覆盖仓库。
+- CI（`.github/workflows/ci.yml`）**不跑** `diff`（相对日期每天漂移），所以 diff 这一步本地必须自跑。
 
 - `--out` 相对路径按**当前工作目录**解析，不是按仓库根：在仓库根写 `--out dist` 会清空
   仓库根的 `dist/`（历史发布包与 `SHA256SUMS` 所在地），而不是写 `rust/dist/`。
