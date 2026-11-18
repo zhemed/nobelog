@@ -11,14 +11,14 @@ description: 新机器到手后的常用命令：系统更新、Docker 与 SSH �
 
 ## 系统更新
 
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-
 装几个常用工具：
 
 ```bash
 apt update -y && apt install -y curl wget socat sudo unzip
+```
+
+```bash
+sudo apt update && sudo apt upgrade -y
 ```
 
 ## 开启 root 登录
