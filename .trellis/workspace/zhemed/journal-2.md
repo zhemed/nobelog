@@ -1633,3 +1633,40 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 
 - 后续发版仍走 tools/package.sh + gh release；全新 clone 用 tools/fetch-baseline.sh 还原基线
 - CI 只剩 runner 侧 ubuntu-latest 迁移提示（非仓库问题）
+
+
+## Session 111: 调换初始化命令顺序并记录内容编辑规则
+<!-- trellis-session: v=2 fp=299aab41da4ae2d9 -->
+
+**Date**: 2026-11-18
+**Task**: 调换初始化命令顺序并记录内容编辑规则
+**Branch**: `main`
+
+### Summary
+
+用户指出《常用服务器初始化命令》在刚装完的 Debian 上第一条 sudo 命令不可执行，只需调换两个代码块顺序。首版实现过度（加说明块、建用户步骤、Ubuntu 说明），被用户指出啰嗦；已撤销全部额外改动，只保留 4 增 4 删的顺序互换，并把「内容编辑只做最小改动」写入 spec。
+
+### Main Changes
+
+- content/posts/server-init-commands.md：仅调换「装工具（含 sudo）」与「sudo apt update && apt upgrade」两个代码块，4 增 4 删
+- .trellis/spec/frontend/quality-guidelines.md：新增「内容编辑（文章 / 单页）」小节，规定只做被点名的最小改动，并记录本次反例
+- 任务 11-18-init-sudo-order：PRD 记录复盘，归档
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4f6d0e3` | content: 调换初始化命令的 sudo 安装顺序 [task:11-18-init-sudo-order] |
+| `551e412` | docs(spec): 记录内容编辑只做最小改动的规则 [task:11-18-init-sudo-order] |
+
+### Testing
+
+- [OK] [OK] diff 仅 4 增 4 删；渲染顺序正确（工具在前、sudo 更新在后）；静态构建通过；动态服务热更新 200；阅读时长回到 1~2 分钟
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 提交未推送，等用户确认后推送
