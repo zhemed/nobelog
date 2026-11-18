@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-2.md`
-- **Total Sessions**: 111
+- **Total Sessions**: 112
 - **Last Active**: 2026-11-18
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-2.md` | ~1672 | Active |
+| `journal-2.md` | ~1713 | Active |
 | `journal-1.md` | ~2000 | Archived |
 <!-- @@@/auto:active-documents -->
 
@@ -30,6 +30,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 112 | 2026-11-18 | 发布 0.0.39（文章顺序修正） | `fcac514`, `0d74e66` | `main` |
 | 111 | 2026-11-18 | 调换初始化命令顺序并记录内容编辑规则 | `4f6d0e3`, `551e412` | `main` |
 | 110 | 2026-11-10 | 维护 CI actions 并发布 0.0.38 | `ab6d0cb`, `9bb7061` | `main` |
 | 109 | 2026-11-10 | 加固：CI 门禁、基线还原与 panic 韧性 | `a78f088`, `b702200`, `51da8c3`, `ed15f05` | `main` |

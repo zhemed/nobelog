@@ -1670,3 +1670,44 @@ toolchain 文件上移到仓库根，MSRV 收紧到 1.99.1，spec 同步；根�
 ### Next Steps
 
 - 提交未推送，等用户确认后推送
+
+
+## Session 112: 发布 0.0.39（文章顺序修正）
+<!-- trellis-session: v=2 fp=311e52e7825f2447 -->
+
+**Date**: 2026-11-18
+**Task**: 发布 0.0.39（文章顺序修正）
+**Branch**: `main`
+
+### Summary
+
+用户确认文章顺序「舒服了」后发版 0.0.39：把《常用服务器初始化命令》的「装几个常用工具（含 sudo）」独立成节并排到「系统更新」之前；版本 0.0.38→0.0.39，打包校验、tag、推送、GitHub Release、本机重启冒烟全部完成。
+
+### Main Changes
+
+- content/posts/server-init-commands.md：装工具独立成 ## 小节并排到系统更新之前（解决 Debian 默认无 sudo）
+- rust/Cargo.toml、rust/Cargo.lock：0.0.38 → 0.0.39
+- 发布：tag v0.0.39 + GitHub Release（nobelog-0.0.39-linux-x86_64.tar.gz + SHA256SUMS）；main 含积压 5 个提交已推送
+- 上线：nobelog-local 重启，运行 0.0.39 二进制
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fcac514` | content: 装工具独立成节并排在系统更新之前 [task:11-18-init-sudo-order] |
+| `0d74e66` | chore: 发版 0.0.39 [task:11-18-release-0039] |
+
+### Testing
+
+- [OK] [OK] fmt / clippy -D warnings / test 98 / build --release --locked 全绿
+- [OK] [OK] 包 5,148,429 字节 sha256 0bb26115…，110 条目，包内 VERSION/二进制 0.0.39，文章顺序正确
+- [OK] [OK] CI run 44303101223 success（2m2s）
+- [OK] [OK] 9 路由 + 404、CSS、feed 冒烟通过；线上顺序为 装工具 → 系统更新
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- 无；下个版本按需发布
