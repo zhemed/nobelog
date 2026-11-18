@@ -33,6 +33,16 @@ cargo test
 - 全新 clone 没有 gitignored 的 `public/` 冻结基准，先 `tools/fetch-baseline.sh` 还原再跑 diff
   （见 `build-serve-deploy.md` 的验证清单）。
 
+## 内容编辑（文章 / 单页）
+
+用户要求改 `content/posts/*.md`、`content/pages/*.md` 时，**只做被点名的最小改动**，不自由发挥：
+
+- 顺序问题就只调顺序；错别字就只改错别字；不要顺手补解释、提示块、示例、额外步骤。
+- 不改变原文的措辞、语气与结构（除非用户明确要求重写）。
+- 用户说「改一下」不等于「优化一下」：不加内容、不扩范围、不"顺便"修其它段落。
+- 改完先给 `git diff`，等用户确认再谈提交/推送。
+- 反例（2026-11-18，任务 `11-18-init-sudo-order`）：用户只要求把「装工具（含 sudo）」挪到「系统更新」前面，实现却加了解释块、建用户步骤和 Ubuntu 说明，被用户指出「啰啰嗦嗦瞎改瞎添加」。最终只保留两个代码块互换（4 增 4 删）。
+
 ## 提交信息
 
 历史风格：`<type>: <中文说明>`，type 用 `feat` / `fix` / `style` / `content` / `refactor` / `test` / `chore`。
