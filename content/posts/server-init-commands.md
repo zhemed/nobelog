@@ -9,13 +9,13 @@ description: 新机器到手后的常用命令：系统更新、Docker 与 SSH �
 
 新机器到手，先跑一遍这些。内容主要是 Debian/Ubuntu 系，个别是 OpenWrt。
 
-## 系统更新
-
-装几个常用工具：
+## 装几个常用工具
 
 ```bash
 apt update -y && apt install -y curl wget socat sudo unzip
 ```
+
+## 系统更新
 
 ```bash
 sudo apt update && sudo apt upgrade -y
